@@ -44,7 +44,8 @@ export default function TradeModal({
       const body: any = {
         roomId,
         sellerUsername: sellerUsername.replace("@","").trim(),
-        sats: parseInt(sats),
+        sats:      parseInt(sats),
+        tradeType: dir === "buy_sats" ? "fiat" : "lightning",
         asset:       dir === "buy_sats" ? "BTC/Lightning" : asset.toUpperCase(),
         assetAmount: dir === "buy_sats"
           ? `${fiatAmount} ${fiatCurrency} via ${fiatMethod}`

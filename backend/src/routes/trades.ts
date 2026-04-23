@@ -1,9 +1,23 @@
 import { Router } from "express";
+import multer from "multer";
+import path from "path";
 import { db } from "../db/index.js";
-import { vbcTradesTable, chatUsersTable, chatMembersTable, chatRoomsTable } from "../db/schema.js";
+import { vbcTradesTable, chatUsersTable } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { createInvoice, checkInvoice } from "../lib/lightning.js";
 import { notifyUser } from "../lib/ws.js";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.join(__dirname, "..", "..", "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename:    (_req, file, cb) => cb(null, `proof-${Date.now()}${path.extname(file.originalname)}`),
+});
+const upload = multer({ storage, limits: { fileSize: 8 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -12,169 +26,160 @@ function auth(req: any, res: any, next: any) {
   next();
 }
 
-// Create a new trade — buyer initiates
+async function withParties(trade: any) {
+  const [buyer]  = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.buyerId)).limit(1);
+  const [seller] = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.sellerId)).limit(1);
+  return { ...trade, buyer, seller };
+}
+
+async function broadcast(trade: any) {
+  const full = await withParties(trade);
+  notifyUser(trade.buyerId,  { type: "trade_update", trade: full });
+  notifyUser(trade.sellerId, { type: "trade_update", trade: full });
+  return full;
+}
+
+// POST /api/trades — create trade
 router.post("/", auth, async (req, res) => {
   const buyerId = (req.session as any).userId;
-  const { roomId, sellerUsername, sats, asset, assetAmount } = req.body;
+  const { roomId, sellerUsername, sats, asset, assetAmount, tradeType } = req.body;
 
-  if (!sats || !asset || !assetAmount || !roomId) {
+  if (!sats || !asset || !assetAmount || !roomId)
     return res.status(400).json({ error: "Missing fields" });
-  }
 
   const [seller] = await db.select().from(chatUsersTable)
     .where(eq(chatUsersTable.username, sellerUsername)).limit(1);
   if (!seller) return res.status(404).json({ error: "Seller not found" });
   if (seller.id === buyerId) return res.status(400).json({ error: "Cannot trade with yourself" });
 
-  const [buyer] = await db.select().from(chatUsersTable)
-    .where(eq(chatUsersTable.id, buyerId)).limit(1);
+  const type = tradeType === "fiat" ? "fiat" : "lightning";
 
-  // Create Lightning escrow invoice
-  const invoice = await createInvoice(sats, `VBC Escrow: ${assetAmount} ${asset}`);
+  // For lightning trades: create escrow invoice
+  let invoice: { pr: string; checkoutId: string } | null = null;
+  if (type === "lightning") {
+    invoice = await createInvoice(sats, `VBC Escrow: ${assetAmount} ${asset}`);
+  }
 
   const [trade] = await db.insert(vbcTradesTable).values({
     roomId,
     buyerId,
-    sellerId: seller.id,
+    sellerId:      seller.id,
     sats,
-    asset: asset.toUpperCase(),
+    asset:         asset.toUpperCase(),
     assetAmount,
-    invoicePr:     invoice.pr,
-    sbpCheckoutId: invoice.checkoutId,
-    status: "pending",
+    invoicePr:     invoice?.pr,
+    sbpCheckoutId: invoice?.checkoutId,
+    tradeType:     type,
+    status:        "pending",
   }).returning();
 
-  // Notify both parties via WS
-  const payload = { type: "trade_update", trade: { ...trade, buyer, seller } };
-  notifyUser(buyerId,   payload);
-  notifyUser(seller.id, payload);
-
-  res.json({ trade: { ...trade, buyer, seller }, invoice });
+  const full = await broadcast(trade);
+  res.json({ trade: full, invoice });
 });
 
-// Get trade details
+// GET /api/trades/:id
 router.get("/:id", auth, async (req, res) => {
   const userId  = (req.session as any).userId;
   const tradeId = parseInt(req.params.id);
-
   const [trade] = await db.select().from(vbcTradesTable)
     .where(eq(vbcTradesTable.id, tradeId)).limit(1);
   if (!trade) return res.status(404).json({ error: "Not found" });
   if (trade.buyerId !== userId && trade.sellerId !== userId)
     return res.status(403).json({ error: "Forbidden" });
-
-  const [buyer]  = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.buyerId)).limit(1);
-  const [seller] = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.sellerId)).limit(1);
-
-  res.json({ ...trade, buyer, seller });
+  res.json(await withParties(trade));
 });
 
-// Poll payment status
+// POST /api/trades/:id/check-payment — poll Lightning payment
 router.post("/:id/check-payment", auth, async (req, res) => {
   const userId  = (req.session as any).userId;
   const tradeId = parseInt(req.params.id);
-
   const [trade] = await db.select().from(vbcTradesTable)
     .where(and(eq(vbcTradesTable.id, tradeId), eq(vbcTradesTable.buyerId, userId))).limit(1);
   if (!trade) return res.status(404).json({ error: "Not found" });
-  if (trade.status !== "pending") return res.json({ trade, alreadyFunded: true });
+  if (trade.status !== "pending") return res.json({ trade: await withParties(trade), alreadyFunded: true });
 
   const paid = trade.sbpCheckoutId ? await checkInvoice(trade.sbpCheckoutId) : false;
-
   if (paid) {
     const [updated] = await db.update(vbcTradesTable)
       .set({ status: "funded", updatedAt: new Date() })
       .where(eq(vbcTradesTable.id, tradeId)).returning();
-
-    const [buyer]  = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.buyerId)).limit(1);
-    const [seller] = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.sellerId)).limit(1);
-    const payload  = { type: "trade_update", trade: { ...updated, buyer, seller } };
-    notifyUser(trade.buyerId,  payload);
-    notifyUser(trade.sellerId, payload);
-
-    return res.json({ trade: updated, paid: true });
+    return res.json({ trade: await broadcast(updated), paid: true });
   }
-
-  res.json({ trade, paid: false });
+  res.json({ trade: await withParties(trade), paid: false });
 });
 
-// Buyer sets their crypto address
+// POST /api/trades/:id/address — buyer sets receiving crypto address
 router.post("/:id/address", auth, async (req, res) => {
   const buyerId = (req.session as any).userId;
   const { buyerAddress } = req.body;
   const tradeId = parseInt(req.params.id);
-
   const [trade] = await db.select().from(vbcTradesTable)
     .where(and(eq(vbcTradesTable.id, tradeId), eq(vbcTradesTable.buyerId, buyerId))).limit(1);
   if (!trade) return res.status(404).json({ error: "Not found" });
-  if (!["funded", "pending"].includes(trade.status))
-    return res.status(400).json({ error: "Trade not in correct state" });
-
   const [updated] = await db.update(vbcTradesTable)
     .set({ buyerAddress, status: "address_shared", updatedAt: new Date() })
     .where(eq(vbcTradesTable.id, tradeId)).returning();
-
-  const [buyer]  = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.buyerId)).limit(1);
-  const [seller] = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.sellerId)).limit(1);
-  const payload  = { type: "trade_update", trade: { ...updated, buyer, seller } };
-  notifyUser(trade.buyerId,  payload);
-  notifyUser(trade.sellerId, payload);
-
-  res.json({ trade: { ...updated, buyer, seller } });
+  res.json({ trade: await broadcast(updated) });
 });
 
-// Buyer confirms received crypto → release escrow to seller's Lightning
-router.post("/:id/confirm", auth, async (req, res) => {
+// POST /api/trades/:id/proof — buyer uploads Revolut/fiat payment screenshot
+router.post("/:id/proof", auth, upload.single("proof"), async (req: any, res) => {
   const buyerId = (req.session as any).userId;
   const tradeId = parseInt(req.params.id);
 
   const [trade] = await db.select().from(vbcTradesTable)
     .where(and(eq(vbcTradesTable.id, tradeId), eq(vbcTradesTable.buyerId, buyerId))).limit(1);
   if (!trade) return res.status(404).json({ error: "Not found" });
-  if (trade.status !== "address_shared")
-    return res.status(400).json({ error: "Address not shared yet" });
+  if (!req.file)  return res.status(400).json({ error: "No file uploaded" });
 
-  const [seller] = await db.select().from(chatUsersTable)
-    .where(eq(chatUsersTable.id, trade.sellerId)).limit(1);
+  const proofUrl = `/uploads/${req.file.filename}`;
+  const [updated] = await db.update(vbcTradesTable)
+    .set({ paymentProofUrl: proofUrl, status: "proof_submitted", updatedAt: new Date() })
+    .where(eq(vbcTradesTable.id, tradeId)).returning();
 
-  // Pay seller via Lightning (SBP lnurl-pay or manual — mark as released)
-  // In production: integrate SBP payout API to seller's lightningAddress
-  // For now: mark as released, admin manually pays if needed
+  res.json({ trade: await broadcast(updated) });
+});
+
+// POST /api/trades/:id/confirm — buyer confirms received crypto (lightning) OR seller confirms received fiat (fiat trade)
+router.post("/:id/confirm", auth, async (req, res) => {
+  const userId  = (req.session as any).userId;
+  const tradeId = parseInt(req.params.id);
+  const [trade] = await db.select().from(vbcTradesTable)
+    .where(eq(vbcTradesTable.id, tradeId)).limit(1);
+  if (!trade) return res.status(404).json({ error: "Not found" });
+
+  // Fiat trade: SELLER confirms they received fiat → releases sats to buyer's Lightning
+  if (trade.tradeType === "fiat") {
+    if (trade.sellerId !== userId) return res.status(403).json({ error: "Only seller confirms fiat receipt" });
+    if (trade.status !== "proof_submitted") return res.status(400).json({ error: "No proof submitted yet" });
+    const [updated] = await db.update(vbcTradesTable)
+      .set({ status: "released", updatedAt: new Date() })
+      .where(eq(vbcTradesTable.id, tradeId)).returning();
+    return res.json({ trade: await broadcast(updated) });
+  }
+
+  // Lightning trade: BUYER confirms they received crypto
+  if (trade.buyerId !== userId) return res.status(403).json({ error: "Only buyer confirms" });
+  if (trade.status !== "address_shared") return res.status(400).json({ error: "Wrong state" });
   const [updated] = await db.update(vbcTradesTable)
     .set({ status: "released", updatedAt: new Date() })
     .where(eq(vbcTradesTable.id, tradeId)).returning();
-
-  const [buyer] = await db.select().from(chatUsersTable)
-    .where(eq(chatUsersTable.id, trade.buyerId)).limit(1);
-  const payload = { type: "trade_update", trade: { ...updated, buyer, seller } };
-  notifyUser(trade.buyerId,  payload);
-  notifyUser(trade.sellerId, payload);
-
-  res.json({ trade: { ...updated, buyer, seller } });
+  res.json({ trade: await broadcast(updated) });
 });
 
-// Open dispute
+// POST /api/trades/:id/dispute
 router.post("/:id/dispute", auth, async (req, res) => {
   const userId  = (req.session as any).userId;
   const tradeId = parseInt(req.params.id);
-
   const [trade] = await db.select().from(vbcTradesTable)
     .where(eq(vbcTradesTable.id, tradeId)).limit(1);
   if (!trade) return res.status(404).json({ error: "Not found" });
   if (trade.buyerId !== userId && trade.sellerId !== userId)
     return res.status(403).json({ error: "Forbidden" });
-
   const [updated] = await db.update(vbcTradesTable)
     .set({ status: "disputed", updatedAt: new Date() })
     .where(eq(vbcTradesTable.id, tradeId)).returning();
-
-  const [buyer]  = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.buyerId)).limit(1);
-  const [seller] = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, trade.sellerId)).limit(1);
-  const payload  = { type: "trade_update", trade: { ...updated, buyer, seller } };
-  notifyUser(trade.buyerId,  payload);
-  notifyUser(trade.sellerId, payload);
-
-  res.json({ trade: { ...updated, buyer, seller } });
+  res.json({ trade: await broadcast(updated) });
 });
 
 export default router;

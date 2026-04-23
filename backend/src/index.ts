@@ -113,10 +113,14 @@ async function migrate() {
       buyer_address   TEXT,
       invoice_pr      TEXT,
       sbp_checkout_id TEXT,
-      status          VARCHAR(30) NOT NULL DEFAULT 'pending',
-      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      status            VARCHAR(30) NOT NULL DEFAULT 'pending',
+      payment_proof_url TEXT,
+      trade_type        VARCHAR(20) NOT NULL DEFAULT 'lightning',
+      created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS payment_proof_url TEXT;
+    ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS trade_type VARCHAR(20) NOT NULL DEFAULT 'lightning';
 
     CREATE TABLE IF NOT EXISTS chat_reports (
       id          SERIAL PRIMARY KEY,

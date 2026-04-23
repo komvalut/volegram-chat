@@ -66,11 +66,13 @@ export const vbcTradesTable = pgTable("vbc_trades", {
   asset:         varchar("asset", { length: 30 }).notNull(),
   assetAmount:   varchar("asset_amount", { length: 60 }).notNull(),
   buyerAddress:  text("buyer_address"),
-  invoicePr:     text("invoice_pr"),
-  sbpCheckoutId: text("sbp_checkout_id"),
-  status:        varchar("status", { length: 30 }).notNull().default("pending"),
-  createdAt:     timestamp("created_at").notNull().defaultNow(),
-  updatedAt:     timestamp("updated_at").notNull().defaultNow(),
+  invoicePr:       text("invoice_pr"),
+  sbpCheckoutId:   text("sbp_checkout_id"),
+  status:          varchar("status", { length: 30 }).notNull().default("pending"),
+  paymentProofUrl: text("payment_proof_url"),
+  tradeType:       varchar("trade_type", { length: 20 }).notNull().default("lightning"),
+  createdAt:       timestamp("created_at").notNull().defaultNow(),
+  updatedAt:       timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const chatRewardsTable = pgTable("chat_rewards", {
