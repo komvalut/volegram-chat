@@ -52,9 +52,11 @@ router.post("/", auth, async (req, res) => {
   if (!seller) return res.status(404).json({ error: "Seller not found" });
   if (seller.id === buyerId) return res.status(400).json({ error: "Cannot trade with yourself" });
 
-  const type = tradeType === "fiat" ? "fiat" : "lightning";
+  const type    = tradeType === "fiat" ? "fiat" : "lightning";
+  const feeRate = parseFloat(process.env.TRADE_FEE_RATE ?? "0.01");
+  const feeSats = Math.ceil(sats * feeRate);
 
-  // For lightning trades: create escrow invoice
+  // For lightning trades: buyer pays full sats (escrow), seller receives sats - fee
   let invoice: { pr: string; checkoutId: string } | null = null;
   if (type === "lightning") {
     invoice = await createInvoice(sats, `VBC Escrow: ${assetAmount} ${asset}`);
@@ -70,6 +72,8 @@ router.post("/", auth, async (req, res) => {
     invoicePr:     invoice?.pr,
     sbpCheckoutId: invoice?.checkoutId,
     tradeType:     type,
+    feeSats,
+    feeRate:       feeRate.toString(),
     status:        "pending",
   }).returning();
 

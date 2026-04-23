@@ -159,6 +159,14 @@ export default function TradeCard({
             <span>Buyer: @{trade.buyer.username}</span>
             <span>Seller: @{trade.seller.username}</span>
           </div>
+          {/* Fee breakdown */}
+          {trade.feeSats > 0 && (
+            <div className="mt-2 pt-2 border-t border-white/5 grid grid-cols-3 text-[8px] text-neutral-700">
+              <span>Escrow: {trade.sats.toLocaleString()} ⚡</span>
+              <span className="text-center">Fee: {trade.feeSats.toLocaleString()} ⚡ ({parseFloat(trade.feeRate) * 100}%)</span>
+              <span className="text-right text-neutral-500">Seller gets: {(trade.sats - trade.feeSats).toLocaleString()} ⚡</span>
+            </div>
+          )}
         </div>
 
         {/* Status */}

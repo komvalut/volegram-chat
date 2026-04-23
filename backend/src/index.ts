@@ -121,6 +121,8 @@ async function migrate() {
     );
     ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS payment_proof_url TEXT;
     ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS trade_type VARCHAR(20) NOT NULL DEFAULT 'lightning';
+    ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS fee_sats   INTEGER     NOT NULL DEFAULT 0;
+    ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS fee_rate   VARCHAR(10) NOT NULL DEFAULT '0.01';
 
     CREATE TABLE IF NOT EXISTS chat_reports (
       id          SERIAL PRIMARY KEY,

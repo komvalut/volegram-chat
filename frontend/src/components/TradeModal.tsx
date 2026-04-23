@@ -158,12 +158,20 @@ export default function TradeModal({
               </div>
             </div>
 
-            {sats && assetAmount && asset && (
-              <div className={`border px-3 py-2 text-[10px] ${isPrivacy ? "bg-purple-900/10 border-purple-900/40 text-purple-300" : "bg-[#FF6A00]/5 border-[#FF6A00]/20 text-neutral-400"}`}>
-                {isPrivacy && <p className="font-black mb-0.5">🏴‍☠️ Privacy coin — untraceable</p>}
-                ⚡ {parseInt(sats).toLocaleString()} sats → {assetAmount} {asset}
-              </div>
-            )}
+            {sats && assetAmount && asset && (() => {
+              const s   = parseInt(sats) || 0;
+              const fee = Math.ceil(s * 0.01);
+              return (
+                <div className={`border px-3 py-2 text-[10px] ${isPrivacy ? "bg-purple-900/10 border-purple-900/40 text-purple-300" : "bg-[#FF6A00]/5 border-[#FF6A00]/20 text-neutral-400"}`}>
+                  {isPrivacy && <p className="font-black mb-0.5">🏴‍☠️ Privacy coin — untraceable</p>}
+                  <p>⚡ {s.toLocaleString()} sats → {assetAmount} {asset}</p>
+                  <div className="flex gap-3 mt-1.5 pt-1.5 border-t border-white/5 text-[9px] text-neutral-600">
+                    <span>Provizija 1%: {fee.toLocaleString()} ⚡</span>
+                    <span className="ml-auto">Prodavač prima: {(s - fee).toLocaleString()} ⚡</span>
+                  </div>
+                </div>
+              );
+            })()}
           </>)}
 
           {/* ── BUY SATS: pay fiat ── */}

@@ -71,6 +71,8 @@ export const vbcTradesTable = pgTable("vbc_trades", {
   status:          varchar("status", { length: 30 }).notNull().default("pending"),
   paymentProofUrl: text("payment_proof_url"),
   tradeType:       varchar("trade_type", { length: 20 }).notNull().default("lightning"),
+  feeSats:         integer("fee_sats").notNull().default(0),
+  feeRate:         varchar("fee_rate", { length: 10 }).notNull().default("0.01"),
   createdAt:       timestamp("created_at").notNull().defaultNow(),
   updatedAt:       timestamp("updated_at").notNull().defaultNow(),
 });
