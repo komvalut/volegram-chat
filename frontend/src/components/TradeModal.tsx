@@ -1,21 +1,33 @@
 import { useState } from "react";
-import { ArrowLeftRight, X } from "lucide-react";
+import { ArrowLeftRight, X, Zap, Banknote } from "lucide-react";
 
 const PRIVACY_COINS = [
   "ARRR", "XMR",  "ZEC",  "DASH", "FIRO", "BEAM",
   "GRIN", "OXEN", "PIVX", "ZANO", "SCRT", "DUSK",
   "NAV",  "PART", "ROSE", "MINA",
 ];
-
 const OTHER_COINS = ["BTC", "ETH", "ADA", "SOL", "USDT", "USDC", "DOT", "DOGE"];
+
+const FIAT_METHODS = [
+  "Revolut", "Wise", "SEPA", "PayPal", "Skrill",
+  "Cash", "Paysafe", "Crypto.com Pay", "Other",
+];
+
+// direction: "buy_crypto"  → I pay Lightning, I get crypto
+//            "buy_sats"    → I pay fiat, I get BTC/sats
+type Direction = "buy_crypto" | "buy_sats";
 
 export default function TradeModal({
   roomId, onClose, onSent,
 }: { roomId: number; onClose: () => void; onSent: (trade: any) => void }) {
+  const [dir, setDir]               = useState<Direction>("buy_crypto");
   const [sellerUsername, setSeller] = useState("");
   const [sats, setSats]             = useState("");
-  const [asset, setAsset]           = useState("ADA");
+  const [asset, setAsset]           = useState("ARRR");
   const [assetAmount, setAmount]    = useState("");
+  const [fiatMethod, setFiatM]      = useState("Revolut");
+  const [fiatAmount, setFiatA]      = useState("");
+  const [fiatCurrency, setFiatC]    = useState("EUR");
   const [loading, setLoading]       = useState(false);
   const [err, setErr]               = useState("");
 
@@ -23,21 +35,25 @@ export default function TradeModal({
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault(); setErr("");
-    if (!sellerUsername.trim() || !sats || !assetAmount) {
-      setErr("Fill in all fields"); return;
-    }
+    if (!sellerUsername.trim() || !sats) { setErr("Fill in all fields"); return; }
+    if (dir === "buy_crypto" && !assetAmount) { setErr("Enter amount to receive"); return; }
+    if (dir === "buy_sats"   && !fiatAmount)  { setErr("Enter fiat amount"); return; }
+
     setLoading(true);
     try {
+      const body: any = {
+        roomId,
+        sellerUsername: sellerUsername.replace("@","").trim(),
+        sats: parseInt(sats),
+        asset:       dir === "buy_sats" ? "BTC/Lightning" : asset.toUpperCase(),
+        assetAmount: dir === "buy_sats"
+          ? `${fiatAmount} ${fiatCurrency} via ${fiatMethod}`
+          : assetAmount.trim(),
+      };
       const r = await fetch(`${BASE}/api/trades`, {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          roomId,
-          sellerUsername: sellerUsername.replace("@","").trim(),
-          sats: parseInt(sats),
-          asset: asset.toUpperCase(),
-          assetAmount: assetAmount.trim(),
-        }),
+        body: JSON.stringify(body),
       });
       if (!r.ok) { const d = await r.json(); throw new Error(d.error ?? "Failed"); }
       const { trade } = await r.json();
@@ -48,104 +64,158 @@ export default function TradeModal({
     } finally { setLoading(false); }
   };
 
+  const isPrivacy = PRIVACY_COINS.includes(asset);
+
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#080808] border border-[#FF6A00]/30 w-full max-w-sm p-6 relative" onClick={e => e.stopPropagation()}>
+      <div className="bg-[#080808] border border-[#FF6A00]/30 w-full max-w-sm p-5 relative max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-3 right-3 text-neutral-600 hover:text-white"><X size={16}/></button>
 
-        <div className="flex items-center gap-2 mb-5">
+        <div className="flex items-center gap-2 mb-4">
           <ArrowLeftRight size={16} className="text-[#FF6A00]"/>
           <h2 className="font-black uppercase tracking-widest text-sm text-[#FF6A00]">New P2P Trade</h2>
         </div>
 
-        <p className="text-[10px] text-neutral-600 mb-4">
-          You pay Lightning → escrow holds sats until you confirm receiving the crypto.
-        </p>
+        {/* Direction toggle */}
+        <div className="grid grid-cols-2 gap-1 mb-4 border border-[#1a1a1a] p-1">
+          <button type="button" onClick={() => setDir("buy_crypto")}
+            className={`flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-wider transition-colors
+              ${dir === "buy_crypto" ? "bg-[#FF6A00] text-black" : "text-neutral-600 hover:text-white"}`}>
+            <Zap size={11}/> Pay Lightning → Get Crypto
+          </button>
+          <button type="button" onClick={() => setDir("buy_sats")}
+            className={`flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase tracking-wider transition-colors
+              ${dir === "buy_sats" ? "bg-[#FF6A00] text-black" : "text-neutral-600 hover:text-white"}`}>
+            <Banknote size={11}/> Pay Fiat → Get BTC ⚡
+          </button>
+        </div>
 
         <form onSubmit={create} className="space-y-3">
+
+          {/* Mode explanation */}
+          {dir === "buy_crypto" ? (
+            <p className="text-[10px] text-neutral-600 bg-[#0a0a0a] border border-[#1a1a1a] px-3 py-2">
+              ⚡ Ti platiš Lightning invoice → sats idu u escrow → prodavač šalje crypto → ti potvrdiš → escrow se oslobodi.
+            </p>
+          ) : (
+            <p className="text-[10px] text-neutral-600 bg-[#0a0a0a] border border-[#1a1a1a] px-3 py-2">
+              💶 Ti pošalješ fiat (Revolut, SEPA…) → prodavač potvrdi → šalje ti sats/BTC na Lightning adresu.
+            </p>
+          )}
+
+          {/* Counterparty */}
           <div>
-            <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Seller Username</label>
+            <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">
+              {dir === "buy_crypto" ? "Seller Username" : "BTC Seller Username"}
+            </label>
             <input value={sellerUsername} onChange={e => setSeller(e.target.value)}
               placeholder="@satoshi" autoComplete="off"
               className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
           </div>
 
-          <div>
-            <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">You Pay (sats → escrow)</label>
-            <input value={sats} onChange={e => setSats(e.target.value)} type="number" min="1" placeholder="50000"
-              className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
-          </div>
+          {/* ── BUY CRYPTO: pay Lightning ── */}
+          {dir === "buy_crypto" && (<>
+            <div>
+              <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">You Pay (sats → escrow)</label>
+              <input value={sats} onChange={e => setSats(e.target.value)} type="number" min="1" placeholder="50000"
+                className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+            </div>
 
-          <div>
-            <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1.5">Select Crypto</label>
+            <div>
+              <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1.5">You Receive</label>
+              <div className="mb-2">
+                <p className="text-[8px] text-purple-500 uppercase tracking-widest font-bold mb-1">🏴‍☠️ Privacy Coins</p>
+                <div className="grid grid-cols-4 gap-1">
+                  {PRIVACY_COINS.map(c => (
+                    <button key={c} type="button" onClick={() => setAsset(c)}
+                      className={`text-[9px] py-1 border font-bold transition-colors
+                        ${asset === c ? "border-purple-500 text-purple-300 bg-purple-900/20" : "border-purple-900/30 text-neutral-600 hover:border-purple-600 hover:text-purple-400"}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-2">
+                <p className="text-[8px] text-neutral-700 uppercase tracking-widest font-bold mb-1">Other</p>
+                <div className="grid grid-cols-4 gap-1">
+                  {OTHER_COINS.map(c => (
+                    <button key={c} type="button" onClick={() => setAsset(c)}
+                      className={`text-[9px] py-1 border font-bold transition-colors
+                        ${asset === c ? "border-[#FF6A00] text-[#FF6A00] bg-[#FF6A00]/10" : "border-[#1a1a1a] text-neutral-600 hover:border-[#FF6A00]/40"}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input value={asset} onChange={e => setAsset(e.target.value.toUpperCase())}
+                  placeholder="Custom ticker"
+                  className={`bg-[#0a0a0a] border text-white text-xs px-2 py-1.5 outline-none font-mono uppercase
+                    ${isPrivacy ? "border-purple-900/40 focus:border-purple-500" : "border-[#1a1a1a] focus:border-[#FF6A00]"}`}/>
+                <input value={assetAmount} onChange={e => setAmount(e.target.value)} placeholder="Amount (e.g. 1000)"
+                  className="bg-[#0a0a0a] border border-[#1a1a1a] text-white text-xs px-2 py-1.5 outline-none focus:border-[#FF6A00] font-mono"/>
+              </div>
+            </div>
 
-            {/* Privacy coins */}
-            <div className="mb-2">
-              <p className="text-[8px] text-purple-500 uppercase tracking-widest font-bold mb-1">🏴‍☠️ Privacy Coins</p>
-              <div className="grid grid-cols-4 gap-1">
-                {PRIVACY_COINS.map(c => (
-                  <button key={c} type="button" onClick={() => setAsset(c)}
-                    className={`text-[9px] py-1 border font-bold transition-colors
-                      ${asset === c
-                        ? "border-purple-500 text-purple-300 bg-purple-900/20"
-                        : "border-purple-900/30 text-neutral-600 hover:border-purple-600 hover:text-purple-400"}`}>
-                    {c}
+            {sats && assetAmount && asset && (
+              <div className={`border px-3 py-2 text-[10px] ${isPrivacy ? "bg-purple-900/10 border-purple-900/40 text-purple-300" : "bg-[#FF6A00]/5 border-[#FF6A00]/20 text-neutral-400"}`}>
+                {isPrivacy && <p className="font-black mb-0.5">🏴‍☠️ Privacy coin — untraceable</p>}
+                ⚡ {parseInt(sats).toLocaleString()} sats → {assetAmount} {asset}
+              </div>
+            )}
+          </>)}
+
+          {/* ── BUY SATS: pay fiat ── */}
+          {dir === "buy_sats" && (<>
+            <div>
+              <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">You Want (sats)</label>
+              <div className="flex gap-2 items-center">
+                <input value={sats} onChange={e => setSats(e.target.value)} type="number" min="1" placeholder="100000"
+                  className="flex-1 bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+                <span className="text-[10px] text-neutral-600 shrink-0">sats ⚡</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">You Pay (fiat)</label>
+              <div className="flex gap-2">
+                <input value={fiatAmount} onChange={e => setFiatA(e.target.value)} placeholder="5" type="number" min="0.01" step="0.01"
+                  className="w-20 bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+                <select value={fiatCurrency} onChange={e => setFiatC(e.target.value)}
+                  className="bg-[#0a0a0a] border border-[#1a1a1a] text-white text-xs px-2 py-2 outline-none focus:border-[#FF6A00]">
+                  {["EUR","USD","RSD","GBP","CHF","SEK","PLN","CZK","HRK","BAM","RON","HUF"].map(c =>
+                    <option key={c} value={c}>{c}</option>
+                  )}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1.5">Payment Method</label>
+              <div className="grid grid-cols-3 gap-1">
+                {FIAT_METHODS.map(m => (
+                  <button key={m} type="button" onClick={() => setFiatM(m)}
+                    className={`text-[9px] py-1.5 border font-bold transition-colors
+                      ${fiatMethod === m ? "border-[#FF6A00] text-[#FF6A00] bg-[#FF6A00]/10" : "border-[#1a1a1a] text-neutral-600 hover:border-[#FF6A00]/40"}`}>
+                    {m}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Other coins */}
-            <div className="mb-2">
-              <p className="text-[8px] text-neutral-700 uppercase tracking-widest font-bold mb-1">Other</p>
-              <div className="grid grid-cols-4 gap-1">
-                {OTHER_COINS.map(c => (
-                  <button key={c} type="button" onClick={() => setAsset(c)}
-                    className={`text-[9px] py-1 border font-bold transition-colors
-                      ${asset === c
-                        ? "border-[#FF6A00] text-[#FF6A00] bg-[#FF6A00]/10"
-                        : "border-[#1a1a1a] text-neutral-600 hover:border-[#FF6A00]/40"}`}>
-                    {c}
-                  </button>
-                ))}
+            {sats && fiatAmount && (
+              <div className="bg-blue-900/10 border border-blue-900/40 px-3 py-2 text-[10px] text-blue-300">
+                <p className="font-black mb-0.5">💶 Fiat → ⚡ BTC/Lightning</p>
+                {fiatAmount} {fiatCurrency} via {fiatMethod} → {parseInt(sats).toLocaleString()} sats
               </div>
-            </div>
-
-            {/* Custom ticker */}
-            <input value={asset} onChange={e => setAsset(e.target.value.toUpperCase())}
-              placeholder="Or type ticker: DOT, MATIC…"
-              className={`w-full bg-[#0a0a0a] border text-white text-xs px-2 py-1.5 outline-none font-mono uppercase
-                ${PRIVACY_COINS.includes(asset)
-                  ? "border-purple-900/40 focus:border-purple-500"
-                  : "border-[#1a1a1a] focus:border-[#FF6A00]"}`}/>
-          </div>
-
-          <div>
-            <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Amount</label>
-            <input value={assetAmount} onChange={e => setAmount(e.target.value)} placeholder="1000"
-              className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
-          </div>
-
-          {sats && assetAmount && asset && (
-            <div className={`border px-3 py-2 text-[10px] ${
-              PRIVACY_COINS.includes(asset)
-                ? "bg-purple-900/10 border-purple-900/40 text-purple-300"
-                : "bg-[#FF6A00]/5 border-[#FF6A00]/20 text-neutral-400"
-            }`}>
-              {PRIVACY_COINS.includes(asset) && (
-                <p className="font-black mb-0.5 tracking-wider">
-                  🏴‍☠️ Privacy coin — untraceable
-                </p>
-              )}
-              ⚡ {parseInt(sats).toLocaleString()} sats → {assetAmount} {asset}
-            </div>
-          )}
+            )}
+          </>)}
 
           {err && <p className="text-xs text-red-500">{err}</p>}
 
           <button type="submit" disabled={loading}
             className="w-full bg-[#FF6A00] text-black font-black uppercase tracking-widest text-sm py-3 hover:bg-[#e55500] disabled:opacity-40 transition-colors">
-            {loading ? "CREATING ESCROW…" : "CREATE TRADE ⚡"}
+            {loading ? "CREATING TRADE…" : dir === "buy_crypto" ? "CREATE TRADE ⚡" : "CREATE FIAT TRADE 💶"}
           </button>
         </form>
       </div>
