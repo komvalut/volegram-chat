@@ -10,6 +10,7 @@ import messageRoutes from "./routes/messages.js";
 import adminRoutes   from "./routes/admin.js";
 import profileRoutes from "./routes/profile.js";
 import swapRoutes    from "./routes/swap.js";
+import tradeRoutes   from "./routes/trades.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -37,6 +38,7 @@ app.use("/api/auth",     authRoutes);
 app.use("/api/admin",    adminRoutes);
 app.use("/api/profile",  profileRoutes);
 app.use("/api/swap",     swapRoutes);
+app.use("/api/trades",   tradeRoutes);
 app.use("/api",          messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 
@@ -99,6 +101,22 @@ async function migrate() {
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS expires_at  TIMESTAMPTZ;
     ALTER TABLE chat_rooms    ADD COLUMN IF NOT EXISTS is_incognito BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_rooms    ADD COLUMN IF NOT EXISTS invite_code  VARCHAR(32);
+
+    CREATE TABLE IF NOT EXISTS vbc_trades (
+      id              SERIAL PRIMARY KEY,
+      room_id         INTEGER     NOT NULL REFERENCES chat_rooms(id),
+      buyer_id        INTEGER     NOT NULL REFERENCES chat_users(id),
+      seller_id       INTEGER     NOT NULL REFERENCES chat_users(id),
+      sats            INTEGER     NOT NULL,
+      asset           VARCHAR(30) NOT NULL,
+      asset_amount    VARCHAR(60) NOT NULL,
+      buyer_address   TEXT,
+      invoice_pr      TEXT,
+      sbp_checkout_id TEXT,
+      status          VARCHAR(30) NOT NULL DEFAULT 'pending',
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
 
     CREATE TABLE IF NOT EXISTS chat_reports (
       id          SERIAL PRIMARY KEY,

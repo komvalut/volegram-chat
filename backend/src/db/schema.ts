@@ -57,6 +57,22 @@ export const chatReportsTable = pgTable("chat_reports", {
   createdAt:  timestamp("created_at").notNull().defaultNow(),
 });
 
+export const vbcTradesTable = pgTable("vbc_trades", {
+  id:            serial("id").primaryKey(),
+  roomId:        integer("room_id").notNull().references(() => chatRoomsTable.id),
+  buyerId:       integer("buyer_id").notNull().references(() => chatUsersTable.id),
+  sellerId:      integer("seller_id").notNull().references(() => chatUsersTable.id),
+  sats:          integer("sats").notNull(),
+  asset:         varchar("asset", { length: 30 }).notNull(),
+  assetAmount:   varchar("asset_amount", { length: 60 }).notNull(),
+  buyerAddress:  text("buyer_address"),
+  invoicePr:     text("invoice_pr"),
+  sbpCheckoutId: text("sbp_checkout_id"),
+  status:        varchar("status", { length: 30 }).notNull().default("pending"),
+  createdAt:     timestamp("created_at").notNull().defaultNow(),
+  updatedAt:     timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const chatRewardsTable = pgTable("chat_rewards", {
   id:        serial("id").primaryKey(),
   userId:    integer("user_id").notNull().references(() => chatUsersTable.id),
