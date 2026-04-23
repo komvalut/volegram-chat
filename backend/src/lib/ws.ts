@@ -43,7 +43,11 @@ async function handleMessage(client: Client, msg: any) {
   }
 
   if (msg.type === "message") {
-    const { roomId, content, msgType = "text", fileUrl, sats, invoicePr } = msg;
+    const { roomId, content, msgType = "text", fileUrl, sats, invoicePr, burnSecs } = msg;
+
+    const expiresAt = burnSecs && burnSecs > 0
+      ? new Date(Date.now() + burnSecs * 1000)
+      : null;
 
     const [saved] = await db.insert(chatMessagesTable).values({
       roomId,
@@ -53,6 +57,7 @@ async function handleMessage(client: Client, msg: any) {
       fileUrl: fileUrl ?? null,
       sats: sats ?? null,
       invoicePr: invoicePr ?? null,
+      expiresAt: expiresAt ?? undefined,
     }).returning();
 
     const [sender] = await db.select().from(chatUsersTable)

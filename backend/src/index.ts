@@ -9,6 +9,7 @@ import authRoutes    from "./routes/auth.js";
 import messageRoutes from "./routes/messages.js";
 import adminRoutes   from "./routes/admin.js";
 import profileRoutes from "./routes/profile.js";
+import swapRoutes    from "./routes/swap.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -31,11 +32,12 @@ app.use(session({
   },
 }));
 
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
-app.use("/api/auth",    authRoutes);
-app.use("/api/admin",   adminRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api",         messageRoutes);
+app.use("/uploads",      express.static(path.join(__dirname, "..", "uploads")));
+app.use("/api/auth",     authRoutes);
+app.use("/api/admin",    adminRoutes);
+app.use("/api/profile",  profileRoutes);
+app.use("/api/swap",     swapRoutes);
+app.use("/api",          messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 
 async function migrate() {
@@ -61,12 +63,12 @@ async function migrate() {
       is_blocked        BOOLEAN      NOT NULL DEFAULT FALSE,
       created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     );
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS avatar_url  TEXT;
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS bio         TEXT;
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS email       VARCHAR(200);
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS phone       VARCHAR(40);
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_admin    BOOLEAN NOT NULL DEFAULT FALSE;
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_blocked  BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS bio        TEXT;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS email      VARCHAR(200);
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS phone      VARCHAR(40);
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_admin   BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN NOT NULL DEFAULT FALSE;
 
     CREATE TABLE IF NOT EXISTS chat_rooms (
       id         SERIAL PRIMARY KEY,
@@ -75,9 +77,9 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE TABLE IF NOT EXISTS chat_members (
-      room_id    INTEGER NOT NULL REFERENCES chat_rooms(id),
-      user_id    INTEGER NOT NULL REFERENCES chat_users(id),
-      joined_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      room_id   INTEGER NOT NULL REFERENCES chat_rooms(id),
+      user_id   INTEGER NOT NULL REFERENCES chat_users(id),
+      joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE TABLE IF NOT EXISTS chat_messages (
       id           SERIAL PRIMARY KEY,
@@ -90,9 +92,11 @@ async function migrate() {
       file_url     TEXT,
       sats         INTEGER,
       is_deleted   BOOLEAN    NOT NULL DEFAULT FALSE,
+      expires_at   TIMESTAMPTZ,
       created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
 
     CREATE TABLE IF NOT EXISTS chat_reports (
       id          SERIAL PRIMARY KEY,
@@ -110,6 +114,17 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+
+  // Purge expired messages every minute
+  setInterval(async () => {
+    try {
+      await db.execute(sql`
+        UPDATE chat_messages SET is_deleted = TRUE
+        WHERE expires_at IS NOT NULL AND expires_at < NOW() AND is_deleted = FALSE
+      `);
+    } catch {}
+  }, 60_000);
+
   console.log("[VBC] DB ready");
 }
 

@@ -42,6 +42,7 @@ export const chatMessagesTable = pgTable("chat_messages", {
   fileUrl:     text("file_url"),
   sats:        integer("sats"),
   isDeleted:   boolean("is_deleted").notNull().default(false),
+  expiresAt:   timestamp("expires_at"),
   createdAt:   timestamp("created_at").notNull().defaultNow(),
 });
 
