@@ -162,6 +162,26 @@ export default function Profile({ currentUser }: { currentUser: any }) {
           </div>
         )}
 
+        {/* Self-destruct */}
+        {isMe && (
+          <div className="mt-6 border border-red-900/30 bg-red-900/5 p-4">
+            <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">Danger Zone</p>
+            <p className="text-[10px] text-neutral-600 mb-3">
+              Permanently delete your account, all messages and data.<br/>
+              This cannot be undone.
+            </p>
+            <button
+              onClick={async () => {
+                if (!window.confirm("Delete your VBC account permanently? This cannot be undone.")) return;
+                await api.deleteAccount();
+                window.location.href = "/login";
+              }}
+              className="text-[10px] border border-red-800 text-red-400 px-4 py-2 hover:bg-red-900/30 font-bold uppercase tracking-widest transition-colors">
+              DELETE ACCOUNT
+            </button>
+          </div>
+        )}
+
         {showReport && (
           <div className="mt-3 border border-red-900/40 bg-red-900/5 p-4">
             <p className="text-xs text-red-400 font-bold mb-2">Report @{profile.username}</p>

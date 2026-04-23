@@ -19,10 +19,12 @@ export const chatUsersTable = pgTable("chat_users", {
 });
 
 export const chatRoomsTable = pgTable("chat_rooms", {
-  id:        serial("id").primaryKey(),
-  type:      roomTypeEnum("type").notNull().default("dm"),
-  name:      varchar("name", { length: 100 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  id:          serial("id").primaryKey(),
+  type:        roomTypeEnum("type").notNull().default("dm"),
+  name:        varchar("name", { length: 100 }),
+  isIncognito: boolean("is_incognito").notNull().default(false),
+  inviteCode:  varchar("invite_code", { length: 32 }),
+  createdAt:   timestamp("created_at").notNull().defaultNow(),
 });
 
 export const chatMembersTable = pgTable("chat_members", {

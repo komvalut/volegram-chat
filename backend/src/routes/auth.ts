@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/index.js";
-import { chatUsersTable, chatRewardsTable } from "../db/schema.js";
+import { chatUsersTable, chatRewardsTable, chatMembersTable, chatMessagesTable } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -23,9 +23,7 @@ router.post("/login", async (req, res) => {
 
     [user] = await db.insert(chatUsersTable).values({
       lightningAddress: lightningAddress.trim().toLowerCase(),
-      username,
-      avatarSeed: seed,
-      satsBalance: 1000,
+      username, avatarSeed: seed, satsBalance: 1000,
     }).returning();
 
     await db.insert(chatRewardsTable).values({ userId: user.id, action: "welcome_bonus", sats: 1000 });
@@ -41,15 +39,26 @@ router.get("/me", async (req, res) => {
   const [user] = await db.select().from(chatUsersTable)
     .where(eq(chatUsersTable.id, userId)).limit(1);
   if (!user) return res.status(401).json({ error: "Not found" });
-  if (user.isBlocked) {
-    req.session.destroy(() => {});
-    return res.status(403).json({ error: "Account suspended" });
-  }
+  if (user.isBlocked) { req.session.destroy(() => {}); return res.status(403).json({ error: "Account suspended" }); }
   res.json({ user });
 });
 
 router.post("/logout", (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
+});
+
+// Self-destruct — deletes ALL user data permanently
+router.delete("/account", async (req, res) => {
+  const userId = (req.session as any).userId;
+  if (!userId) return res.status(401).json({ error: "Not logged in" });
+
+  // Delete messages, memberships, rewards, then user
+  await db.delete(chatMessagesTable).where(eq(chatMessagesTable.senderId, userId));
+  await db.delete(chatMembersTable).where(eq(chatMembersTable.userId, userId));
+  await db.delete(chatRewardsTable).where(eq(chatRewardsTable.userId, userId));
+  await db.delete(chatUsersTable).where(eq(chatUsersTable.id, userId));
+
+  req.session.destroy(() => res.json({ ok: true, message: "Account deleted" }));
 });
 
 export default router;
