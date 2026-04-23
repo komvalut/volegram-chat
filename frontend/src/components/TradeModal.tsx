@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowLeftRight, X } from "lucide-react";
 
-const POPULAR = ["ADA", "ETH", "USDT", "SOL", "XMR", "BTC", "DOGE", "DOT"];
+const POPULAR = ["ARRR", "XMR", "ADA", "ETH", "USDT", "SOL", "BTC", "DOGE"];
 
 export default function TradeModal({
   roomId, onClose, onSent,
@@ -94,7 +94,16 @@ export default function TradeModal({
           </div>
 
           {sats && assetAmount && asset && (
-            <div className="bg-[#FF6A00]/5 border border-[#FF6A00]/20 px-3 py-2 text-[10px] text-neutral-400">
+            <div className={`border px-3 py-2 text-[10px] ${
+              ["ARRR","XMR"].includes(asset)
+                ? "bg-purple-900/10 border-purple-900/40 text-purple-300"
+                : "bg-[#FF6A00]/5 border-[#FF6A00]/20 text-neutral-400"
+            }`}>
+              {["ARRR","XMR"].includes(asset) && (
+                <p className="font-black mb-0.5 tracking-wider">
+                  🏴‍☠️ {asset === "ARRR" ? "Pirate Chain" : "Monero"} — 100% private, untraceable
+                </p>
+              )}
               ⚡ {parseInt(sats).toLocaleString()} sats → {assetAmount} {asset}
             </div>
           )}
