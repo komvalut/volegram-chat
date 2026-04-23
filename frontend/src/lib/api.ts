@@ -12,14 +12,25 @@ async function req(method: string, path: string, body?: object) {
 }
 
 export const api = {
-  login:       (lightningAddress: string) => req("POST", "/api/auth/login", { lightningAddress }),
-  me:          () => req("GET", "/api/auth/me"),
-  logout:      () => req("POST", "/api/auth/logout"),
-  rooms:       () => req("GET", "/api/rooms"),
-  openDM:      (targetUsername: string) => req("POST", "/api/rooms/dm", { targetUsername }),
-  messages:    (roomId: number) => req("GET", `/api/rooms/${roomId}/messages`),
-  sendInvoice: (roomId: number, sats: number, note: string) =>
+  login:         (lightningAddress: string) => req("POST", "/api/auth/login", { lightningAddress }),
+  me:            () => req("GET", "/api/auth/me"),
+  logout:        () => req("POST", "/api/auth/logout"),
+  updateProfile: (data: object) => req("PUT", "/api/profile/me/update", data),
+  getProfile:    (username: string) => req("GET", `/api/profile/${username}`),
+  report:        (targetId: number, reason: string) => req("POST", "/api/profile/report", { targetId, reason }),
+  rooms:         () => req("GET", "/api/rooms"),
+  openDM:        (targetUsername: string) => req("POST", "/api/rooms/dm", { targetUsername }),
+  messages:      (roomId: number) => req("GET", `/api/rooms/${roomId}/messages`),
+  sendInvoice:   (roomId: number, sats: number, note: string) =>
     req("POST", `/api/rooms/${roomId}/invoice`, { sats, note }),
+  admin: {
+    users:          () => req("GET", "/api/admin/users"),
+    block:          (id: number) => req("POST", `/api/admin/block/${id}`),
+    unblock:        (id: number) => req("POST", `/api/admin/unblock/${id}`),
+    reports:        () => req("GET", "/api/admin/reports"),
+    resolveReport:  (id: number) => req("POST", `/api/admin/reports/${id}/resolve`),
+    deleteMessage:  (id: number) => req("POST", `/api/admin/delete-message/${id}`),
+  },
 };
 
 export async function uploadFile(file: File): Promise<string> {

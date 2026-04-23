@@ -4,10 +4,11 @@ import cors from "cors";
 import { createServer } from "http";
 import { setupWS } from "./lib/ws.js";
 import { db } from "./db/index.js";
-import { chatUsersTable, chatRoomsTable, chatMembersTable, chatMessagesTable, chatRewardsTable } from "./db/schema.js";
 import { sql } from "drizzle-orm";
-import authRoutes from "./routes/auth.js";
+import authRoutes    from "./routes/auth.js";
 import messageRoutes from "./routes/messages.js";
+import adminRoutes   from "./routes/admin.js";
+import profileRoutes from "./routes/profile.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -21,35 +22,52 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(session({
-  secret: process.env.SESSION_SECRET ?? "volegram-dev-secret",
+  secret: process.env.SESSION_SECRET ?? "vbc-dev-secret",
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === "production", maxAge: 30 * 24 * 60 * 60 * 1000 },
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  },
 }));
 
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
-app.use("/api/auth", authRoutes);
-app.use("/api", messageRoutes);
-
-app.get("/health", (_req, res) => res.json({ ok: true }));
+app.use("/api/auth",    authRoutes);
+app.use("/api/admin",   adminRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api",         messageRoutes);
+app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 
 async function migrate() {
   await db.execute(sql`
     DO $$ BEGIN
-      CREATE TYPE IF NOT EXISTS msg_type AS ENUM ('text','image','lightning','voice');
+      CREATE TYPE IF NOT EXISTS msg_type  AS ENUM ('text','image','lightning','voice');
     EXCEPTION WHEN duplicate_object THEN NULL; END $$;
     DO $$ BEGIN
       CREATE TYPE IF NOT EXISTS room_type AS ENUM ('dm','group');
     EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
     CREATE TABLE IF NOT EXISTS chat_users (
-      id               SERIAL PRIMARY KEY,
+      id                SERIAL PRIMARY KEY,
       lightning_address VARCHAR(200) UNIQUE NOT NULL,
-      username         VARCHAR(80)  UNIQUE NOT NULL,
-      avatar_seed      VARCHAR(40)  NOT NULL,
-      sats_balance     INTEGER      NOT NULL DEFAULT 0,
-      created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      username          VARCHAR(80)  UNIQUE NOT NULL,
+      avatar_seed       VARCHAR(40)  NOT NULL,
+      avatar_url        TEXT,
+      bio               TEXT,
+      email             VARCHAR(200),
+      phone             VARCHAR(40),
+      sats_balance      INTEGER      NOT NULL DEFAULT 0,
+      is_admin          BOOLEAN      NOT NULL DEFAULT FALSE,
+      is_blocked        BOOLEAN      NOT NULL DEFAULT FALSE,
+      created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS avatar_url  TEXT;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS bio         TEXT;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS email       VARCHAR(200);
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS phone       VARCHAR(40);
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_admin    BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_blocked  BOOLEAN NOT NULL DEFAULT FALSE;
+
     CREATE TABLE IF NOT EXISTS chat_rooms (
       id         SERIAL PRIMARY KEY,
       type       room_type   NOT NULL DEFAULT 'dm',
@@ -71,7 +89,18 @@ async function migrate() {
       invoice_paid BOOLEAN    NOT NULL DEFAULT FALSE,
       file_url     TEXT,
       sats         INTEGER,
+      is_deleted   BOOLEAN    NOT NULL DEFAULT FALSE,
       created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
+
+    CREATE TABLE IF NOT EXISTS chat_reports (
+      id          SERIAL PRIMARY KEY,
+      reporter_id INTEGER     NOT NULL REFERENCES chat_users(id),
+      target_id   INTEGER     NOT NULL REFERENCES chat_users(id),
+      reason      TEXT        NOT NULL,
+      resolved    BOOLEAN     NOT NULL DEFAULT FALSE,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE TABLE IF NOT EXISTS chat_rewards (
       id         SERIAL PRIMARY KEY,
@@ -81,12 +110,12 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
-  console.log("DB ready");
+  console.log("[VBC] DB ready");
 }
 
 const server = createServer(app);
 setupWS(server);
 
 migrate().then(() => {
-  server.listen(PORT, () => console.log(`VOLEGRAM backend → port ${PORT}`));
+  server.listen(PORT, () => console.log(`[VBC] Backend → port ${PORT}`));
 });

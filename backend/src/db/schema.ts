@@ -1,14 +1,20 @@
 import { pgTable, serial, varchar, text, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
 
 export const messageTypeEnum = pgEnum("msg_type", ["text", "image", "lightning", "voice"]);
-export const roomTypeEnum = pgEnum("room_type", ["dm", "group"]);
+export const roomTypeEnum    = pgEnum("room_type", ["dm", "group"]);
 
 export const chatUsersTable = pgTable("chat_users", {
   id:               serial("id").primaryKey(),
   lightningAddress: varchar("lightning_address", { length: 200 }).notNull().unique(),
   username:         varchar("username", { length: 80 }).notNull().unique(),
   avatarSeed:       varchar("avatar_seed", { length: 40 }).notNull(),
+  avatarUrl:        text("avatar_url"),
+  bio:              text("bio"),
+  email:            varchar("email", { length: 200 }),
+  phone:            varchar("phone", { length: 40 }),
   satsBalance:      integer("sats_balance").notNull().default(0),
+  isAdmin:          boolean("is_admin").notNull().default(false),
+  isBlocked:        boolean("is_blocked").notNull().default(false),
   createdAt:        timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -35,7 +41,17 @@ export const chatMessagesTable = pgTable("chat_messages", {
   invoicePaid: boolean("invoice_paid").notNull().default(false),
   fileUrl:     text("file_url"),
   sats:        integer("sats"),
+  isDeleted:   boolean("is_deleted").notNull().default(false),
   createdAt:   timestamp("created_at").notNull().defaultNow(),
+});
+
+export const chatReportsTable = pgTable("chat_reports", {
+  id:         serial("id").primaryKey(),
+  reporterId: integer("reporter_id").notNull().references(() => chatUsersTable.id),
+  targetId:   integer("target_id").notNull().references(() => chatUsersTable.id),
+  reason:     text("reason").notNull(),
+  resolved:   boolean("resolved").notNull().default(false),
+  createdAt:  timestamp("created_at").notNull().defaultNow(),
 });
 
 export const chatRewardsTable = pgTable("chat_rewards", {
