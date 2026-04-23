@@ -124,6 +124,28 @@ async function migrate() {
     ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS fee_sats   INTEGER     NOT NULL DEFAULT 0;
     ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS fee_rate   VARCHAR(10) NOT NULL DEFAULT '0.01';
 
+    CREATE TABLE IF NOT EXISTS vbc_splits (
+      id                SERIAL PRIMARY KEY,
+      room_id           INTEGER      NOT NULL REFERENCES chat_rooms(id),
+      creator_id        INTEGER      NOT NULL REFERENCES chat_users(id),
+      total_sats        INTEGER      NOT NULL,
+      per_sats          INTEGER      NOT NULL,
+      description       TEXT,
+      participant_count INTEGER      NOT NULL DEFAULT 1,
+      completed         BOOLEAN      NOT NULL DEFAULT FALSE,
+      created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS vbc_split_participants (
+      id              SERIAL PRIMARY KEY,
+      split_id        INTEGER      NOT NULL REFERENCES vbc_splits(id),
+      user_id         INTEGER      REFERENCES chat_users(id),
+      username        VARCHAR(100) NOT NULL,
+      invoice_pr      TEXT,
+      sbp_checkout_id TEXT,
+      paid            BOOLEAN      NOT NULL DEFAULT FALSE,
+      created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS chat_reports (
       id          SERIAL PRIMARY KEY,
       reporter_id INTEGER     NOT NULL REFERENCES chat_users(id),
