@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'Space Mono', ui-monospace, monospace;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+  --color-background: #000000;
+  --color-foreground: #f0f0f0;
+  --color-border: #1a1a1a;
+  --color-accent: #FF6A00;
+  --color-primary: #FF6A00;
+  --color-muted: #0c0c0c;
+  --color-muted-foreground: #707070;
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+}
+
+:root {
+  --neon: #FF6A00;
+}
+
+*, *::before, *::after { border-color: #1a1a1a; box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  background: #000;
+  color: #f0f0f0;
+  font-family: 'Space Mono', ui-monospace, monospace;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #050505; }
+::-webkit-scrollbar-thumb { background: #FF6A00; border-radius: 0; }
+
+.neon-text { text-shadow: 0 0 4px currentColor, 0 0 14px currentColor; }
+.neon-box  { box-shadow: 0 0 0 1px var(--neon), 0 0 22px -4px var(--neon); }
+
+.msg-bubble-me {
+  background: linear-gradient(135deg, #FF6A00 0%, #e55500 100%);
+  color: #000;
+  border-radius: 12px 12px 2px 12px;
+}
+.msg-bubble-them {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  color: #f0f0f0;
+  border-radius: 12px 12px 12px 2px;
+}
+
+.lightning-bubble {
+  background: linear-gradient(135deg, #1a1200 0%, #0d0800 100%);
+  border: 1px solid #FF6A00;
+  border-radius: 8px;
+}
+
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 1px solid var(--neon);
+  outline-offset: 2px;
+}
