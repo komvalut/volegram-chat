@@ -72,7 +72,31 @@ export default function Chat({
                 <div className="border border-[#2a2a2a] px-4 py-4 hover:border-white/30 transition-colors">🔥 Burn messages</div>
                 <div className="border border-[#2a2a2a] px-4 py-4 hover:border-white/30 transition-colors">🔒 Zero KYC</div>
               </div>
-              <p className="text-sm text-neutral-600 mt-6">
+
+              {/* Invite & Install */}
+              <div className="mt-8 max-w-xs w-full border border-[#1e1e1e] bg-[#070707] px-5 py-4 text-center">
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: "var(--accent)" }}>
+                  ⚡ Invite &amp; Install
+                </p>
+                <p className="text-[11px] text-neutral-500 mb-3 leading-relaxed">
+                  Know someone who values privacy &amp; Bitcoin?<br/>Send them the link — no sign-up, no KYC.
+                </p>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText("https://volegram-chat.onrender.com");
+                    alert("Link copied! Share it with your Bitcoin friends.");
+                  }}
+                  className="w-full text-[11px] font-black uppercase tracking-widest py-2.5 mb-2 transition-colors hover:opacity-80"
+                  style={{ background: "var(--accent)", color: "var(--accent-text)" }}
+                >
+                  Copy Invite Link
+                </button>
+                <p className="text-[9px] text-neutral-700">
+                  Install as app: tap browser menu → <strong className="text-neutral-500">Add to Home Screen</strong>
+                </p>
+              </div>
+
+              <p className="text-xs text-neutral-700 mt-4">
                 Tap <span className="text-white font-bold">SWAP</span> in sidebar to browse MICROSWAP listings
               </p>
             </div>
