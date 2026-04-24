@@ -1,17 +1,19 @@
-const CACHE_NAME = "vbc-v1";
+const CACHE_NAME = "vbc-v2";
 const SHELL = [
   "/",
   "/index.html",
   "/manifest.json",
   "/icons/icon.svg",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
 ];
 
-// Install — cache app shell
+// Install — cache app shell (skip failed fetches gracefully)
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then((c) => c.addAll(SHELL))
+    caches.open(CACHE_NAME).then((c) =>
+      Promise.allSettled(SHELL.map((url) =>
+        fetch(url).then((res) => { if (res.ok) c.put(url, res); }).catch(() => {})
+      ))
+    )
   );
   self.skipWaiting();
 });
@@ -26,51 +28,55 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
-// Fetch — network first, fallback to cache
+// Fetch — network first for HTML, cache first for assets
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
 
-  // Skip non-GET, WebSocket, and API calls
+  // Skip non-GET, cross-origin, API calls, WebSocket
   if (
     e.request.method !== "GET" ||
+    url.origin !== self.location.origin ||
     url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/uploads/") ||
-    url.protocol === "ws:" ||
-    url.protocol === "wss:"
+    url.pathname.startsWith("/uploads/")
   ) return;
 
-  // Assets (JS/CSS/fonts) — cache first
-  if (
-    url.pathname.match(/\.(js|css|woff2?|ttf|svg|png|ico)$/)
-  ) {
+  // Assets (JS/CSS/fonts/images) — cache first
+  if (url.pathname.match(/\.(js|css|woff2?|ttf|svg|png|ico|webp)$/)) {
     e.respondWith(
       caches.match(e.request).then((cached) =>
         cached || fetch(e.request).then((res) => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+          }
           return res;
-        })
+        }).catch(() => cached)
       )
     );
     return;
   }
 
-  // HTML pages — network first, fallback to index.html (SPA)
+  // HTML — network first, fallback to cached index.html (SPA)
   e.respondWith(
-    fetch(e.request).catch(() =>
-      caches.match("/index.html")
-    )
+    fetch(e.request)
+      .then((res) => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match("/index.html"))
   );
 });
 
-// Push notifications (Lightning payment received)
+// Push notifications
 self.addEventListener("push", (e) => {
   const data = e.data?.json() ?? {};
   e.waitUntil(
     self.registration.showNotification(data.title ?? "VBC ⚡", {
       body:    data.body ?? "Nova poruka",
-      icon:    "/icons/icon-192.png",
-      badge:   "/icons/icon-72.png",
+      icon:    "/icons/icon.svg",
       vibrate: [100, 50, 100],
       data:    { url: data.url ?? "/" },
       actions: [
