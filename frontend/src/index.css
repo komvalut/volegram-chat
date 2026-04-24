@@ -1,10 +1,9 @@
 @import "tailwindcss";
 
 /* ══════════════════════════════════════════
-   VBC — BITCOIN LIGHTNING DESIGN SYSTEM
-   Official Bitcoin Orange: #F7931A
-   Deep Black: #000000
-   Lightning Yellow: #FCD34D
+   VBC — BLACK & WHITE DESIGN SYSTEM
+   Pure Black: #000000
+   Pure White: #ffffff
    ══════════════════════════════════════════ */
 
 @theme inline {
@@ -13,8 +12,8 @@
   --color-background:        #000000;
   --color-foreground:        #f0f0f0;
   --color-border:            #1c1c1c;
-  --color-accent:            #F7931A;
-  --color-primary:           #F7931A;
+  --color-accent:            #ffffff;
+  --color-primary:           #ffffff;
   --color-muted:             #0a0a0a;
   --color-muted-foreground:  #5a5a5a;
   --radius-sm: 0px;
@@ -23,20 +22,16 @@
 }
 
 :root {
-  --btc:        #F7931A;       /* Official Bitcoin orange */
-  --btc-dark:   #c97415;
-  --btc-dim:    rgba(247,147,26,0.12);
-  --btc-glow:   rgba(247,147,26,0.35);
-  --lightning:  #FCD34D;       /* Lightning yellow */
-  --sats:       #F7931A;
-  --black:      #000000;
-  --black-1:    #080808;
-  --black-2:    #0f0f0f;
-  --black-3:    #181818;
-  --neon:       #F7931A;
-  --privacy:    #a855f7;       /* Purple for privacy coins/incognito */
-  --safe:       #22c55e;
-  --danger:     #ef4444;
+  --accent:      #ffffff;
+  --accent-dim:  rgba(255,255,255,0.08);
+  --accent-glow: rgba(255,255,255,0.15);
+  --black:       #000000;
+  --black-1:     #080808;
+  --black-2:     #0f0f0f;
+  --black-3:     #181818;
+  --privacy:     #a855f7;
+  --safe:        #22c55e;
+  --danger:      #ef4444;
 }
 
 /* ── Base ──────────────────────────────── */
@@ -49,7 +44,6 @@
 html {
   height: 100%;
   background: #000;
-  /* iOS safe areas */
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
            env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
@@ -68,94 +62,44 @@ body, #root {
 /* ── Scrollbars ─────────────────────────── */
 ::-webkit-scrollbar       { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--btc-dark); }
+::-webkit-scrollbar-thumb { background: #333; }
 
 /* ── Selection ─────────────────────────── */
-::selection { background: var(--btc); color: #000; }
+::selection { background: #ffffff; color: #000; }
 
-/* ── Bitcoin / Glow effects ─────────────── */
-.btc-glow {
-  text-shadow: 0 0 6px var(--btc-glow), 0 0 20px var(--btc-glow);
-}
-.btc-box-glow {
-  box-shadow: 0 0 0 1px var(--btc), 0 0 24px -4px var(--btc-glow), inset 0 0 30px -20px var(--btc-dim);
-}
-.neon-text {
-  text-shadow: 0 0 4px currentColor, 0 0 14px currentColor;
-}
-.neon-box {
-  box-shadow: 0 0 0 1px var(--btc), 0 0 22px -4px var(--btc-glow);
-}
-
-/* ── Bitcoin grid background pattern ──── */
-.btc-grid-bg {
-  background-image:
-    linear-gradient(rgba(247,147,26,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(247,147,26,0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
-
-/* ── Scanlines overlay ──────────────────── */
-.scanlines::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
-  );
-  pointer-events: none;
-}
-
-/* ── Lightning bolt decoration ──────────── */
-.lightning-decor::before {
-  content: "⚡";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 200px;
-  opacity: 0.015;
-  pointer-events: none;
-  user-select: none;
+/* ── Focus visible ─────────────────────── */
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 1px solid #ffffff;
+  outline-offset: 2px;
 }
 
 /* ── Message Bubbles ────────────────────── */
 .msg-bubble-me {
-  background: linear-gradient(135deg, #1a0d00 0%, #120800 100%);
-  border: 1px solid var(--btc);
-  border-radius: 12px 12px 2px 12px;
+  background: #111111;
+  border: 1px solid #ffffff;
+  border-radius: 14px 14px 2px 14px;
   color: #f0f0f0;
-  position: relative;
-}
-.msg-bubble-me::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--btc-dim) 0%, transparent 60%);
-  pointer-events: none;
 }
 
 .msg-bubble-them {
-  background: var(--black-2);
-  border: 1px solid #1e1e1e;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
   color: #e0e0e0;
-  border-radius: 12px 12px 12px 2px;
+  border-radius: 14px 14px 14px 2px;
 }
 
 /* ── Lightning invoice bubble ────────────── */
 .lightning-bubble {
-  background: linear-gradient(135deg, #1a0d00 0%, #0d0800 100%);
-  border: 1px solid var(--btc);
-  box-shadow: 0 0 18px -6px var(--btc-glow);
+  background: #111;
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 20px -6px rgba(255,255,255,0.1);
 }
 
 /* ── Trade card ──────────────────────────── */
 .trade-card {
-  background: linear-gradient(160deg, #100800 0%, #060400 100%);
-  border: 1px solid var(--btc);
-  box-shadow: 0 0 30px -10px var(--btc-glow);
+  background: #0d0d0d;
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 30px -10px rgba(255,255,255,0.08);
 }
 
 /* ── Incognito / Privacy purple ─────────── */
@@ -165,104 +109,18 @@ body, #root {
 }
 .incognito-text { color: var(--privacy) !important; }
 
-/* ── Sats counter glow ───────────────────── */
-.sats-glow {
-  color: var(--btc);
-  text-shadow: 0 0 8px var(--btc-glow);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ── Buttons ──────────────────────────────── */
-.btn-btc {
-  background: var(--btc);
-  color: #000;
-  font-weight: 700;
-  font-family: 'Space Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-}
-.btn-btc:hover {
-  background: #e8841a;
-  box-shadow: 0 0 16px var(--btc-glow);
-}
-.btn-btc:active { background: var(--btc-dark); }
-
-.btn-ghost {
-  background: transparent;
-  border: 1px solid #222;
-  color: #666;
-  font-family: 'Space Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-.btn-ghost:hover {
-  border-color: var(--btc);
-  color: var(--btc);
-}
-
-/* ── Inputs ───────────────────────────────── */
-.input-btc {
-  background: var(--black-1);
-  border: 1px solid #1c1c1c;
-  color: #f0f0f0;
-  font-family: 'Space Mono', monospace;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-.input-btc:focus {
-  border-color: var(--btc);
-  box-shadow: 0 0 0 1px var(--btc-dim);
-}
-
-/* ── Focus visible ─────────────────────── */
-button:focus-visible, input:focus-visible, textarea:focus-visible {
-  outline: 1px solid var(--btc);
-  outline-offset: 2px;
-}
-
-/* ── Status badge ───────────────────────── */
-.badge-btc {
-  background: var(--btc-dim);
-  border: 1px solid var(--btc);
-  color: var(--btc);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  padding: 2px 8px;
-}
-.badge-online {
-  background: rgba(34,197,94,0.1);
-  border: 1px solid rgba(34,197,94,0.3);
-  color: #22c55e;
-}
-
 /* ── Animations ─────────────────────────── */
 @keyframes btc-pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
 }
-@keyframes lightning-flash {
-  0%, 90%, 100% { opacity: 0; }
-  92%, 96%      { opacity: 0.15; }
-}
 @keyframes slide-up {
   from { transform: translateY(8px); opacity: 0; }
   to   { transform: translateY(0);   opacity: 1; }
 }
-@keyframes sats-count {
-  from { transform: scale(0.9); }
-  to   { transform: scale(1); }
-}
 
 .animate-btc-pulse  { animation: btc-pulse 2s ease-in-out infinite; }
 .animate-slide-up   { animation: slide-up 0.2s ease-out forwards; }
-.animate-sats       { animation: sats-count 0.3s cubic-bezier(0.34,1.56,0.64,1); }
 
 /* ── PWA / Mobile safe area ─────────────── */
 .safe-top    { padding-top:    env(safe-area-inset-top, 0px); }
@@ -270,24 +128,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 .safe-left   { padding-left:   env(safe-area-inset-left,  0px); }
 .safe-right  { padding-right:  env(safe-area-inset-right, 0px); }
 
-/* iOS PWA overscroll */
 html.ios-pwa body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-}
-
-/* ── Bitcoin logo ASCII decoration ──────── */
-.btc-watermark {
-  position: absolute;
-  bottom: -20px;
-  right: -10px;
-  font-size: 120px;
-  color: var(--btc);
-  opacity: 0.04;
-  font-weight: 900;
-  pointer-events: none;
-  user-select: none;
-  line-height: 1;
 }
 
 /* ── Install prompt banner ──────────────── */
@@ -295,13 +138,12 @@ html.ios-pwa body {
   position: fixed;
   bottom: env(safe-area-inset-bottom, 0px);
   left: 0; right: 0;
-  background: linear-gradient(90deg, #0d0800, #1a0d00);
-  border-top: 1px solid var(--btc);
+  background: #0d0d0d;
+  border-top: 1px solid #ffffff;
   padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
   z-index: 9000;
-  box-shadow: 0 -8px 32px var(--btc-glow);
   font-family: 'Space Mono', monospace;
 }

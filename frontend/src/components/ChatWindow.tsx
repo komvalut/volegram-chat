@@ -110,7 +110,7 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
       {/* Header */}
       <div className="px-5 py-3.5 border-b border-[#1a1a1a] bg-[#030303] flex items-center gap-3">
         <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-sm font-black shrink-0
-          ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-[#F7931A]/30 bg-[#F7931A]/10 text-[#F7931A]"}`}>
+          ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-white/20 bg-white/5 text-white"}`}>
           {room.isIncognito ? "🔒" : room.type === "group" ? "#" : "D"}
         </div>
         <div className="flex-1">
@@ -181,18 +181,18 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
       <div className="px-4 py-3 border-t border-[#1a1a1a] bg-[#030303]">
         <div className="flex items-end gap-2">
           <div className="flex gap-0.5 pb-1">
-            <label className="cursor-pointer p-1.5 text-neutral-600 hover:text-[#FF6A00] transition-colors" title="Send image">
+            <label className="cursor-pointer p-1.5 text-neutral-600 hover:text-white transition-colors" title="Send image">
               <Image size={15}/>
               <input type="file" accept="image/*" className="hidden" onChange={sendPhoto}/>
             </label>
-            <button onClick={() => setShowLN(true)} className="p-1.5 text-neutral-600 hover:text-[#FF6A00] transition-colors" title="Send Lightning invoice">
+            <button onClick={() => setShowLN(true)} className="p-1.5 text-neutral-600 hover:text-white transition-colors" title="Send Lightning invoice">
               <Zap size={15}/>
             </button>
             <button onClick={() => setShowTr(true)} className="p-1.5 text-neutral-600 hover:text-green-400 transition-colors" title="Start P2P trade">
               <ArrowLeftRight size={15}/>
             </button>
             <button onClick={toggleRecording}
-              className={`p-1.5 transition-colors ${recording ? "text-red-500 animate-pulse" : "text-neutral-600 hover:text-[#FF6A00]"}`}
+              className={`p-1.5 transition-colors ${recording ? "text-red-500 animate-pulse" : "text-neutral-600 hover:text-white"}`}
               title="Voice message">
               <Mic size={15}/>
             </button>
@@ -206,14 +206,14 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
           <textarea value={text} onChange={e => setText(e.target.value)} onKeyDown={onKeyDown}
             placeholder={burnSecs > 0 ? `Message (burns in ${activeBurn?.label})…` : "Message…"}
             rows={1}
-            className={`flex-1 bg-[#0a0a0a] border text-white text-sm px-3 py-2 outline-none resize-none font-mono placeholder:text-neutral-700 leading-relaxed transition-colors
-              ${burnSecs > 0 ? "border-orange-900/60 focus:border-orange-600" : "border-[#1a1a1a] focus:border-[#FF6A00]"}`}
+            className={`flex-1 bg-[#0a0a0a] border text-white text-sm px-3 py-2.5 outline-none resize-none font-mono placeholder:text-neutral-700 leading-relaxed transition-colors
+              ${burnSecs > 0 ? "border-orange-900/60 focus:border-orange-600" : "border-[#2a2a2a] focus:border-white"}`}
             style={{ maxHeight: "120px" }}
           />
 
           <button onClick={sendText} disabled={!text.trim()}
-            className={`p-2.5 text-black disabled:opacity-40 transition-colors
-              ${burnSecs > 0 ? "bg-orange-600 hover:bg-orange-500" : "bg-[#FF6A00] hover:bg-[#e55500]"}`}>
+            className={`p-2.5 disabled:opacity-40 transition-colors
+              ${burnSecs > 0 ? "bg-orange-600 text-white hover:bg-orange-500" : "bg-white text-black hover:bg-neutral-200"}`}>
             <Send size={15}/>
           </button>
         </div>

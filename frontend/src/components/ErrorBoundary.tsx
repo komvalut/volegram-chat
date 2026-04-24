@@ -14,7 +14,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (this.state.error) {
       return (
         <div style={{
-          background: "#000", color: "#F7931A", fontFamily: "monospace",
+          background: "#000", color: "#ffffff", fontFamily: "monospace",
           padding: "24px", minHeight: "100vh", whiteSpace: "pre-wrap",
           wordBreak: "break-all"
         }}>
@@ -28,7 +28,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <button
             onClick={() => window.location.reload()}
             style={{
-              marginTop: "20px", background: "#F7931A", color: "#000",
+              marginTop: "20px", background: "#ffffff", color: "#000",
               border: "none", padding: "10px 24px", fontFamily: "monospace",
               fontWeight: "bold", cursor: "pointer", display: "block"
             }}>

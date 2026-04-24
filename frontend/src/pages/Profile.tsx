@@ -73,16 +73,16 @@ export default function Profile({ currentUser }: { currentUser: any }) {
           <div className="flex items-start gap-5">
             {/* Avatar */}
             <div className="relative shrink-0">
-              <div className="w-20 h-20 rounded-full border-2 border-[#FF6A00]/40 overflow-hidden bg-[#111]">
+              <div className="w-20 h-20 rounded-full border-2 border-[white]/40 overflow-hidden bg-[#111]">
                 {(avatarPrev || profile.avatarUrl)
                   ? <img src={avatarPrev || profile.avatarUrl} className="w-full h-full object-cover" alt="avatar"/>
-                  : <div className="w-full h-full flex items-center justify-center text-3xl text-[#FF6A00] font-black">
+                  : <div className="w-full h-full flex items-center justify-center text-3xl text-[white] font-black">
                       {profile.username.slice(0,1).toUpperCase()}
                     </div>
                 }
               </div>
               {isMe && editing && (
-                <label className="absolute bottom-0 right-0 cursor-pointer bg-[#FF6A00] rounded-full p-1">
+                <label className="absolute bottom-0 right-0 cursor-pointer bg-[white] rounded-full p-1">
                   <Camera size={10} className="text-black"/>
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatar}/>
                 </label>
@@ -92,9 +92,9 @@ export default function Profile({ currentUser }: { currentUser: any }) {
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-black text-white">@{profile.username}</h1>
               <div className="flex items-center gap-2 mt-1">
-                <Zap size={11} className="text-[#FF6A00]"/>
+                <Zap size={11} className="text-[white]"/>
                 <span className="text-xs text-neutral-500 font-mono truncate">{profile.lightningAddress}</span>
-                <button onClick={copyLN} className="text-neutral-700 hover:text-[#FF6A00] transition-colors">
+                <button onClick={copyLN} className="text-neutral-700 hover:text-[white] transition-colors">
                   {copied ? <Check size={11} className="text-green-400"/> : <Copy size={11}/>}
                 </button>
               </div>
@@ -103,7 +103,7 @@ export default function Profile({ currentUser }: { currentUser: any }) {
 
             {isMe && !editing && (
               <button onClick={() => setEditing(true)}
-                className="text-[10px] border border-[#2a2a2a] text-neutral-500 hover:text-white hover:border-[#FF6A00] px-3 py-1.5 transition-colors">
+                className="text-[10px] border border-[#2a2a2a] text-neutral-500 hover:text-white hover:border-[white] px-3 py-1.5 transition-colors">
                 EDIT
               </button>
             )}
@@ -116,40 +116,40 @@ export default function Profile({ currentUser }: { currentUser: any }) {
 
         {/* Edit Form */}
         {isMe && editing && (
-          <form onSubmit={saveProfile} className="border border-[#F7931A]/30 bg-[#050505] p-5 mb-4 space-y-3">
-            <h2 className="text-sm font-black uppercase tracking-widest text-[#F7931A] mb-3">Edit Profile</h2>
+          <form onSubmit={saveProfile} className="border border-[white]/30 bg-[#050505] p-5 mb-4 space-y-3">
+            <h2 className="text-sm font-black uppercase tracking-widest text-[white] mb-3">Edit Profile</h2>
             <div>
               <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Username</label>
               <input value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value.replace(/[^a-zA-Z0-9_]/g,"").slice(0,30) }))}
-                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[#F7931A] font-mono"/>
+                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
             </div>
             <div>
               <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Lightning Address ⚡</label>
               <input value={form.lightningAddress} onChange={e => setForm(f => ({ ...f, lightningAddress: e.target.value.trim() }))}
                 placeholder="you@walletofsatoshi.com"
-                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[#F7931A] font-mono"/>
+                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
               <p className="text-[11px] text-neutral-700 mt-1">Changing this will be your new login identity</p>
             </div>
             <div>
               <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Bio</label>
               <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} rows={3} maxLength={160}
-                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 outline-none focus:border-[#F7931A] font-mono resize-none"/>
+                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 outline-none focus:border-[white] font-mono resize-none"/>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email (private)</label>
                 <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} type="email"
-                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[#F7931A] font-mono"/>
+                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
               </div>
               <div>
                 <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Phone (private)</label>
                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} type="tel"
-                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[#F7931A] font-mono"/>
+                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
               </div>
             </div>
             <div className="flex gap-2 pt-1">
               <button type="submit" disabled={loading}
-                className="bg-[#FF6A00] text-black font-black text-xs uppercase tracking-widest px-5 py-2 hover:bg-[#e55500] disabled:opacity-40">
+                className="bg-[white] text-black font-black text-xs uppercase tracking-widest px-5 py-2 hover:bg-neutral-200 disabled:opacity-40">
                 {loading ? "SAVING…" : "SAVE"}
               </button>
               <button type="button" onClick={() => setEditing(false)} className="text-xs text-neutral-600 hover:text-white px-3 py-2">

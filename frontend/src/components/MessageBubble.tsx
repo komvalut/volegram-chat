@@ -1,4 +1,4 @@
-import { Zap, Image, Mic, Check } from "lucide-react";
+import { Zap, Mic, Check } from "lucide-react";
 
 interface Msg {
   id: number;
@@ -19,7 +19,7 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
   return (
     <div className={`flex gap-3 mb-4 ${msg.isMe ? "flex-row-reverse" : "flex-row"}`}>
       {/* Avatar */}
-      <div className="w-9 h-9 rounded-full bg-[#F7931A]/20 border border-[#F7931A]/30 flex items-center justify-center text-sm font-black text-[#F7931A] shrink-0 mt-auto">
+      <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-sm font-black text-white shrink-0 mt-auto">
         {msg.sender.username.slice(0, 1).toUpperCase()}
       </div>
 
@@ -37,7 +37,7 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
 
         {/* Image */}
         {msg.type === "image" && msg.fileUrl && (
-          <div className={`overflow-hidden rounded-lg ${msg.isMe ? "rounded-tr-sm" : "rounded-tl-sm"}`}>
+          <div className={`overflow-hidden rounded-xl ${msg.isMe ? "rounded-tr-sm" : "rounded-tl-sm"}`}>
             <img src={msg.fileUrl} alt="img" className="max-w-[280px] max-h-[220px] object-cover" />
           </div>
         )}
@@ -45,7 +45,7 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
         {/* Voice */}
         {msg.type === "voice" && msg.fileUrl && (
           <div className={`px-4 py-3 flex items-center gap-2 ${msg.isMe ? "msg-bubble-me" : "msg-bubble-them"}`}>
-            <Mic size={16} />
+            <Mic size={16} className="text-neutral-400"/>
             <audio src={msg.fileUrl} controls className="h-8 w-44" />
           </div>
         )}
@@ -54,8 +54,8 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
         {msg.type === "lightning" && (
           <div className="lightning-bubble px-4 py-3 min-w-[200px]">
             <div className="flex items-center gap-2 mb-2">
-              <Zap size={16} className="text-[#F7931A]" />
-              <span className="text-sm font-black text-[#F7931A] uppercase tracking-wider">Lightning Invoice</span>
+              <Zap size={16} className="text-white" />
+              <span className="text-sm font-black text-white uppercase tracking-wider">Lightning Invoice</span>
             </div>
             <div className="text-2xl font-black text-white mb-1">⚡ {msg.sats?.toLocaleString()} sats</div>
             {msg.content && <p className="text-sm text-neutral-400 mb-2">{msg.content}</p>}
@@ -66,7 +66,7 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
             ) : (
               <button
                 onClick={() => navigator.clipboard.writeText(msg.invoicePr ?? "")}
-                className="w-full mt-1 text-sm bg-[#F7931A] text-black font-black py-2 hover:bg-[#e07d10] transition-colors"
+                className="w-full mt-1 text-sm bg-white text-black font-black py-2 hover:bg-neutral-200 transition-colors"
               >
                 COPY INVOICE
               </button>

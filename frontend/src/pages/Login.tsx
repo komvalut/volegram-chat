@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Zap, Shield, MessageCircle, Coins, ArrowRight, Camera } from "lucide-react";
+import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera } from "lucide-react";
 import { api, uploadFile } from "../lib/api";
 
 type Step = "address" | "profile";
@@ -61,65 +61,66 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
 
   return (
     <div className="h-full bg-black flex flex-col items-center justify-center px-4 relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.025)_0,rgba(255,255,255,0.025)_1px,transparent_1px,transparent_3px)]" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF6A00]/8 rounded-full blur-[120px] pointer-events-none" />
+      {/* Subtle grid */}
+      <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.02)_0,rgba(255,255,255,0.02)_1px,transparent_1px,transparent_3px)]" />
 
       <div className="relative z-10 w-full max-w-sm">
-        {/* Logo */}
+        {/* Logo — ⚡ with BTC below */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <span className="text-[#FF6A00] text-3xl">⚡</span>
-            <span className="text-2xl font-black tracking-widest text-white uppercase">VBC</span>
+          <div className="inline-flex flex-col items-center mb-4">
+            <span className="text-white text-5xl leading-none">⚡</span>
+            <span className="text-[10px] font-black tracking-[0.3em] text-white/40 uppercase mt-1">BTC</span>
           </div>
-          <h1 className="text-xs tracking-[0.3em] text-[#FF6A00] uppercase font-bold">Volegram Bitcoin Chat</h1>
-          <p className="text-[10px] text-neutral-600 mt-1">Zero KYC · Lightning Native · P2P</p>
+          <h1 className="text-2xl font-black tracking-[0.2em] text-white uppercase mb-1">VBC</h1>
+          <p className="text-xs tracking-widest text-neutral-500 uppercase">Volegram Bitcoin Chat</p>
+          <p className="text-xs text-neutral-700 mt-1">Zero KYC · Lightning Native · P2P</p>
         </div>
 
         {step === "address" && (
           <>
             <div className="grid grid-cols-2 gap-1.5 mb-6">
               {[
-                { icon: <MessageCircle size={12}/>, t: "Real-time Chat" },
-                { icon: <Zap size={12}/>, t: "Send Sats" },
-                { icon: <Shield size={12}/>, t: "No KYC" },
-                { icon: <Coins size={12}/>, t: "+1000 sats bonus" },
+                { icon: <MessageCircle size={13}/>, t: "Real-time Chat" },
+                { icon: <Zap size={13}/>, t: "Send Sats" },
+                { icon: <Shield size={13}/>, t: "No KYC" },
+                { icon: <Coins size={13}/>, t: "+1000 sats bonus" },
               ].map(f => (
-                <div key={f.t} className="flex items-center gap-2 bg-white/3 border border-white/5 px-3 py-2 text-[10px] text-neutral-500">
-                  <span className="text-[#FF6A00]">{f.icon}</span>{f.t}
+                <div key={f.t} className="flex items-center gap-2 bg-white/3 border border-white/8 px-3 py-2.5 text-xs text-neutral-400">
+                  <span className="text-white">{f.icon}</span>{f.t}
                 </div>
               ))}
             </div>
 
             <form onSubmit={handleAddress} className="space-y-3">
               <div>
-                <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Lightning Address</label>
+                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1.5">Lightning Address</label>
                 <input
                   value={addr} onChange={e => setAddr(e.target.value)}
                   placeholder="satoshi@walletofsatoshi.com"
-                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 outline-none focus:border-[#FF6A00] font-mono placeholder:text-neutral-800 transition-colors"
+                  className="w-full bg-[#080808] border border-[#2a2a2a] text-white text-base px-3 py-3 outline-none focus:border-white font-mono placeholder:text-neutral-800 transition-colors"
                 />
               </div>
-              {err && <p className="text-xs text-red-500">{err}</p>}
+              {err && <p className="text-sm text-red-500">{err}</p>}
               <button type="submit" disabled={loading || !addr}
-                className="w-full bg-[#FF6A00] text-black font-black uppercase tracking-widest text-sm py-3 hover:bg-[#e55500] disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
+                className="w-full bg-white text-black font-black uppercase tracking-widest text-sm py-3.5 hover:bg-neutral-200 disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
                 {loading ? "CONNECTING…" : <><span>ENTER VBC</span><ArrowRight size={14}/></>}
               </button>
             </form>
-            <p className="text-center text-[10px] text-neutral-700 mt-5">Your Lightning address = your identity. No password needed.</p>
+            <p className="text-center text-xs text-neutral-700 mt-5">Your Lightning address = your identity. No password needed.</p>
           </>
         )}
 
         {step === "profile" && (
           <>
-            <p className="text-xs text-neutral-500 mb-5 text-center">Welcome! Set up your profile to continue.</p>
+            <p className="text-sm text-neutral-500 mb-5 text-center">Welcome! Set up your profile to continue.</p>
             <form onSubmit={handleProfile} className="space-y-3">
               {/* Avatar */}
               <div className="flex justify-center mb-2">
                 <label className="cursor-pointer relative group">
-                  <div className="w-20 h-20 rounded-full border-2 border-[#FF6A00]/40 overflow-hidden bg-[#111] flex items-center justify-center">
+                  <div className="w-20 h-20 rounded-full border-2 border-white/20 overflow-hidden bg-[#111] flex items-center justify-center">
                     {avatarPrev
                       ? <img src={avatarPrev} className="w-full h-full object-cover" alt="avatar"/>
-                      : <span className="text-3xl text-[#FF6A00]">{username.slice(0,1).toUpperCase() || "?"}</span>
+                      : <span className="text-3xl text-white font-black">{username.slice(0,1).toUpperCase() || "?"}</span>
                     }
                   </div>
                   <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -130,32 +131,32 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Username</label>
+                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Username</label>
                 <input value={username} onChange={e => setUname(e.target.value.replace(/[^a-zA-Z0-9_]/g,"").slice(0,30))}
                   placeholder="satoshi_nakamoto"
-                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+                  className="w-full bg-[#080808] border border-[#2a2a2a] text-white text-base px-3 py-2.5 outline-none focus:border-white font-mono"/>
               </div>
               <div>
-                <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Bio <span className="text-neutral-700">(optional)</span></label>
+                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Bio <span className="text-neutral-700">(optional)</span></label>
                 <textarea value={bio} onChange={e => setBio(e.target.value)} rows={2} maxLength={160}
                   placeholder="Bitcoin maximalist, hodler since 2013…"
-                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono resize-none"/>
+                  className="w-full bg-[#080808] border border-[#2a2a2a] text-white text-sm px-3 py-2.5 outline-none focus:border-white font-mono resize-none"/>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Email <span className="text-neutral-700">(opt)</span></label>
+                  <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email <span className="text-neutral-700">(opt)</span></label>
                   <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="private@mail.com"
-                    className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-xs px-2 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+                    className="w-full bg-[#080808] border border-[#2a2a2a] text-white text-sm px-2 py-2 outline-none focus:border-white font-mono"/>
                 </div>
                 <div>
-                  <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Phone <span className="text-neutral-700">(opt)</span></label>
+                  <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Phone <span className="text-neutral-700">(opt)</span></label>
                   <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="+387…"
-                    className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-xs px-2 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+                    className="w-full bg-[#080808] border border-[#2a2a2a] text-white text-sm px-2 py-2 outline-none focus:border-white font-mono"/>
                 </div>
               </div>
-              {err && <p className="text-xs text-red-500">{err}</p>}
+              {err && <p className="text-sm text-red-500">{err}</p>}
               <button type="submit" disabled={loading}
-                className="w-full bg-[#FF6A00] text-black font-black uppercase tracking-widest text-sm py-3 hover:bg-[#e55500] disabled:opacity-40 transition-colors">
+                className="w-full bg-white text-black font-black uppercase tracking-widest text-sm py-3.5 hover:bg-neutral-200 disabled:opacity-40 transition-colors">
                 {loading ? "SAVING…" : "ENTER VBC ⚡"}
               </button>
               <button type="button" onClick={() => onLogin(user)} className="w-full text-xs text-neutral-600 hover:text-neutral-400 py-2">

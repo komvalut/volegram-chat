@@ -55,11 +55,11 @@ export default function InstallPWA() {
   return (
     <div id="pwa-install-banner" className="animate-slide-up">
       <div className="flex items-center gap-2 shrink-0">
-        <div className="w-9 h-9 bg-[#F7931A] flex items-center justify-center text-black text-lg font-black shrink-0">
+        <div className="w-9 h-9 bg-white flex items-center justify-center text-black text-lg font-black shrink-0">
           ⚡
         </div>
         <div>
-          <p className="text-[11px] font-black text-[#F7931A] uppercase tracking-widest leading-none">
+          <p className="text-[11px] font-black text-white uppercase tracking-widest leading-none">
             Install VBC
           </p>
           <p className="text-[9px] text-neutral-500 mt-0.5">
@@ -70,12 +70,12 @@ export default function InstallPWA() {
 
       {isIOS ? (
         <div className="flex-1 flex items-center gap-1.5 text-[9px] text-neutral-600">
-          <Smartphone size={11} className="text-[#F7931A] shrink-0"/>
+          <Smartphone size={11} className="text-white shrink-0"/>
           <span>Safari: tap <strong className="text-white">⬆</strong> then <strong className="text-white">Add to Home Screen</strong></span>
         </div>
       ) : (
         <button onClick={install}
-          className="ml-auto shrink-0 flex items-center gap-1.5 bg-[#F7931A] text-black text-[10px] font-black px-3 py-2 uppercase tracking-wider hover:bg-[#e8841a] transition-colors">
+          className="ml-auto shrink-0 flex items-center gap-1.5 bg-white text-black text-[10px] font-black px-3 py-2 uppercase tracking-wider hover:bg-neutral-200 transition-colors">
           <Download size={11}/> Install
         </button>
       )}

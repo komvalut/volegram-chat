@@ -34,15 +34,15 @@ export default function LightningModal({
         </button>
 
         <div className="flex items-center gap-2 mb-5">
-          <Zap size={18} className="text-[#FF6A00]" />
-          <h2 className="font-black uppercase tracking-widest text-sm text-[#FF6A00]">Send Lightning</h2>
+          <Zap size={18} className="text-white" />
+          <h2 className="font-black uppercase tracking-widest text-sm text-white">Send Lightning</h2>
         </div>
 
         <div className="grid grid-cols-4 gap-2 mb-4">
           {presets.map(p => (
             <button key={p}
               onClick={() => setSats(String(p))}
-              className={`text-xs py-2 border transition-colors ${sats === String(p) ? "border-[#FF6A00] text-[#FF6A00] bg-[#FF6A00]/10" : "border-[#1a1a1a] text-neutral-500 hover:border-[#FF6A00]/40"}`}
+              className={`text-xs py-2 border transition-colors ${sats === String(p) ? "border-white text-white bg-white/5" : "border-[#1a1a1a] text-neutral-500 hover:border-white/25"}`}
             >
               {p >= 1000 ? `${p / 1000}k` : p}
             </button>
@@ -54,20 +54,20 @@ export default function LightningModal({
           value={sats}
           onChange={e => setSats(e.target.value)}
           placeholder="Amount in sats"
-          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 mb-3 outline-none focus:border-[#FF6A00] font-mono"
+          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 mb-3 outline-none focus:border-white font-mono"
         />
         <input
           type="text"
           value={note}
           onChange={e => setNote(e.target.value)}
           placeholder="Note (optional)"
-          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 mb-4 outline-none focus:border-[#FF6A00] font-mono"
+          className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 mb-4 outline-none focus:border-white font-mono"
         />
 
         <button
           onClick={send}
           disabled={loading || !sats}
-          className="w-full bg-[#FF6A00] text-black font-black uppercase tracking-widest text-sm py-3 hover:bg-[#e55500] disabled:opacity-40 transition-colors"
+          className="w-full bg-white text-black font-black uppercase tracking-widest text-sm py-3 hover:bg-neutral-200 disabled:opacity-40 transition-colors"
         >
           {loading ? "CREATING…" : `CREATE INVOICE ⚡`}
         </button>

@@ -20,7 +20,7 @@ export default function App() {
       <div className="text-center z-10">
         <div className="text-6xl mb-4 btc-glow animate-btc-pulse">⚡</div>
         <p className="text-[10px] font-black tracking-[0.4em] uppercase mb-1"
-           style={{ color: "#F7931A" }}>Volegram Bitcoin Chat</p>
+           style={{ color: "#ffffff" }}>Volegram Bitcoin Chat</p>
         <p className="text-[8px] text-neutral-700 tracking-widest uppercase">Loading…</p>
       </div>
       <div className="btc-watermark">₿</div>

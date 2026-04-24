@@ -44,8 +44,8 @@ export default function Admin({ user }: { user: any }) {
           <ArrowLeft size={16}/>
         </button>
         <div className="flex items-center gap-2">
-          <Shield size={16} className="text-[#FF6A00]"/>
-          <span className="font-black uppercase tracking-widest text-sm text-[#FF6A00]">VBC Admin</span>
+          <Shield size={16} className="text-white"/>
+          <span className="font-black uppercase tracking-widest text-sm text-white">VBC Admin</span>
         </div>
         <div className="ml-auto flex gap-4 text-xs text-neutral-600">
           <span>{users.length} users</span>
@@ -58,7 +58,7 @@ export default function Admin({ user }: { user: any }) {
         {([["users","Users", <Users size={13}/>], ["reports","Reports", <Flag size={13}/>]] as any[]).map(([id, label, icon]) => (
           <button key={id} onClick={() => setTab(id)}
             className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-widest transition-colors border-b-2
-              ${tab === id ? "border-[#FF6A00] text-[#FF6A00]" : "border-transparent text-neutral-600 hover:text-white"}`}>
+              ${tab === id ? "border-white text-white" : "border-transparent text-neutral-600 hover:text-white"}`}>
             {icon}{label}
           </button>
         ))}
@@ -69,20 +69,20 @@ export default function Admin({ user }: { user: any }) {
           <>
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search username or Lightning address…"
-              className="w-full max-w-md bg-[#0a0a0a] border border-[#1a1a1a] text-white text-xs px-3 py-2 mb-4 outline-none focus:border-[#FF6A00] font-mono"/>
+              className="w-full max-w-md bg-[#0a0a0a] border border-[#1a1a1a] text-white text-xs px-3 py-2 mb-4 outline-none focus:border-white font-mono"/>
             <div className="space-y-1">
               {filtered.map(u => (
                 <div key={u.id} className={`flex items-center gap-4 px-4 py-3 border ${u.isBlocked ? "border-red-900/30 bg-red-900/5" : "border-[#1a1a1a] bg-[#050505]"} hover:border-[#2a2a2a]`}>
                   <div className="w-8 h-8 rounded-full border border-[#2a2a2a] overflow-hidden flex-shrink-0">
                     {u.avatarUrl
                       ? <img src={u.avatarUrl} className="w-full h-full object-cover" alt=""/>
-                      : <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-xs text-[#FF6A00] font-black">{u.username.slice(0,1).toUpperCase()}</div>
+                      : <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-xs text-white font-black">{u.username.slice(0,1).toUpperCase()}</div>
                     }
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-white">@{u.username}</span>
-                      {u.isAdmin   && <span className="text-[10px] bg-[#FF6A00]/20 text-[#FF6A00] px-1.5 py-0.5">ADMIN</span>}
+                      {u.isAdmin   && <span className="text-[10px] bg-white/10 text-white px-1.5 py-0.5">ADMIN</span>}
                       {u.isBlocked && <span className="text-[10px] bg-red-900/30 text-red-400 px-1.5 py-0.5">BLOCKED</span>}
                     </div>
                     <p className="text-[10px] text-neutral-600 truncate">{u.lightningAddress}</p>

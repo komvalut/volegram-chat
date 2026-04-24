@@ -60,17 +60,20 @@ export default function Chat({
             <ChatWindow room={activeRoom} user={user}/>
           ) : !showSwap ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-              <div className="text-6xl mb-4">⚡</div>
-              <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-[#F7931A] mb-2">VBC</h2>
+              <div className="flex flex-col items-center mb-4">
+                <span className="text-6xl leading-none">⚡</span>
+                <span className="text-[10px] font-black tracking-[0.3em] text-white/30 uppercase mt-1">BTC</span>
+              </div>
+              <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white mb-2">VBC</h2>
               <p className="text-sm tracking-widest text-neutral-500 uppercase mb-8">Volegram Bitcoin Chat</p>
               <div className="grid grid-cols-2 gap-3 text-sm text-neutral-400 max-w-xs">
-                <div className="border border-[#1a1a1a] px-4 py-4">⚡ Send sats</div>
-                <div className="border border-[#1a1a1a] px-4 py-4">🖼️ Share photos</div>
-                <div className="border border-[#1a1a1a] px-4 py-4">🔥 Burn messages</div>
-                <div className="border border-[#1a1a1a] px-4 py-4">🔒 Zero KYC</div>
+                <div className="border border-[#2a2a2a] px-4 py-4 hover:border-white/30 transition-colors">⚡ Send sats</div>
+                <div className="border border-[#2a2a2a] px-4 py-4 hover:border-white/30 transition-colors">🖼️ Share photos</div>
+                <div className="border border-[#2a2a2a] px-4 py-4 hover:border-white/30 transition-colors">🔥 Burn messages</div>
+                <div className="border border-[#2a2a2a] px-4 py-4 hover:border-white/30 transition-colors">🔒 Zero KYC</div>
               </div>
               <p className="text-sm text-neutral-600 mt-6">
-                Tap <span className="text-[#F7931A] font-bold">SWAP</span> in sidebar to browse MICROSWAP listings
+                Tap <span className="text-white font-bold">SWAP</span> in sidebar to browse MICROSWAP listings
               </p>
             </div>
           ) : activeRoom ? (

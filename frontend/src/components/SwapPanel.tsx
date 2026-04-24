@@ -52,12 +52,12 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
     <div className="flex flex-col h-full bg-[#020202] border-l border-[#1a1a1a]">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center gap-3">
-        <Zap size={14} className="text-[#FF6A00]"/>
+        <Zap size={14} className="text-white"/>
         <div className="flex-1">
-          <p className="text-xs font-black uppercase tracking-widest text-[#FF6A00]">MICROSWAP</p>
+          <p className="text-xs font-black uppercase tracking-widest text-white">MICROSWAP</p>
           <p className="text-[9px] text-neutral-700">P2P market — buy without leaving chat</p>
         </div>
-        <button onClick={load} className="text-neutral-700 hover:text-[#FF6A00] transition-colors">
+        <button onClick={load} className="text-neutral-700 hover:text-white transition-colors">
           <RefreshCw size={12}/>
         </button>
         <button onClick={onClose} className="text-neutral-700 hover:text-white transition-colors">
@@ -73,7 +73,7 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
             value={search} onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === "Enter" && load()}
             placeholder="Search listings…"
-            className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-xs pl-8 pr-3 py-1.5 outline-none focus:border-[#FF6A00] font-mono"
+            className="w-full bg-[#0a0a0a] border border-[#1a1a1a] text-white text-xs pl-8 pr-3 py-1.5 outline-none focus:border-white font-mono"
           />
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
         {CATEGORIES.map(c => (
           <button key={c} onClick={() => setCat(c)}
             className={`shrink-0 text-[9px] px-2.5 py-1 font-bold uppercase tracking-wider border transition-colors
-              ${cat === c ? "border-[#FF6A00] text-[#FF6A00] bg-[#FF6A00]/10" : "border-[#1a1a1a] text-neutral-600 hover:border-[#FF6A00]/40"}`}>
+              ${cat === c ? "border-white text-white bg-white/5" : "border-[#1a1a1a] text-neutral-600 hover:border-white/25"}`}>
             {c}
           </button>
         ))}
@@ -93,14 +93,14 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
       <div className="flex-1 overflow-y-auto">
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <span className="text-[#FF6A00] text-xs animate-pulse">Loading MICROSWAP…</span>
+            <span className="text-white text-xs animate-pulse">Loading MICROSWAP…</span>
           </div>
         )}
 
         {err && (
           <div className="px-4 py-6 text-center">
             <p className="text-xs text-red-500 mb-2">{err}</p>
-            <button onClick={load} className="text-[10px] text-[#FF6A00] hover:underline">Retry</button>
+            <button onClick={load} className="text-[10px] text-white hover:underline">Retry</button>
           </div>
         )}
 
@@ -118,7 +118,7 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
                 <p className="text-xs font-bold text-white truncate">{l.title}</p>
                 <p className="text-[10px] text-neutral-600 truncate mt-0.5">{l.description?.slice(0, 60)}{l.description?.length > 60 ? "…" : ""}</p>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[#FF6A00] text-xs font-black">⚡{(l.priceSats ?? l.price_sats ?? 0).toLocaleString()}</span>
+                  <span className="text-white text-xs font-black">⚡{(l.priceSats ?? l.price_sats ?? 0).toLocaleString()}</span>
                   <span className="text-[9px] text-neutral-700">sats</span>
                   {l.category && (
                     <span className="text-[9px] bg-white/5 text-neutral-600 px-1.5 py-0.5">{l.category}</span>
@@ -134,7 +134,7 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
                 className={`flex-1 flex items-center justify-center gap-1.5 text-[10px] font-black py-1.5 transition-colors
                   ${bought === l.id
                     ? "bg-green-700 text-white"
-                    : "bg-[#FF6A00] text-black hover:bg-[#e55500] disabled:opacity-40"}`}
+                    : "bg-white text-black hover:bg-neutral-200 disabled:opacity-40"}`}
               >
                 {buying === l.id ? (
                   <span className="animate-pulse">OPENING CHAT…</span>
@@ -145,7 +145,7 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
                 )}
               </button>
               <a href={`https://sonero-p2p.onrender.com/listing/${l.id}`} target="_blank" rel="noreferrer"
-                className="px-2 py-1.5 border border-[#1a1a1a] text-neutral-600 hover:text-[#FF6A00] hover:border-[#FF6A00]/40 transition-colors">
+                className="px-2 py-1.5 border border-[#1a1a1a] text-neutral-600 hover:text-white hover:border-white/25 transition-colors">
                 <ExternalLink size={10}/>
               </a>
             </div>

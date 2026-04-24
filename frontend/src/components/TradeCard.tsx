@@ -131,11 +131,11 @@ export default function TradeCard({
 
   return (
     <>
-      <div className="border border-[#FF6A00]/30 bg-gradient-to-b from-[#0d0800] to-[#060400] p-4 max-w-[320px] w-full">
+      <div className="border border-white/20 bg-gradient-to-b from-[#0d0800] to-[#060400] p-4 max-w-[320px] w-full">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">
-          <Zap size={13} className="text-[#FF6A00]"/>
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#FF6A00]">
+          <Zap size={13} className="text-white"/>
+          <span className="text-[10px] font-black uppercase tracking-widest text-white">
             VBC {isFiat ? "💶 Fiat" : "⚡ Lightning"} Trade #{trade.id}
           </span>
         </div>
@@ -147,11 +147,11 @@ export default function TradeCard({
               <>
                 <span className="text-blue-300">{trade.assetAmount}</span>
                 <ArrowRight size={11} className="text-neutral-600"/>
-                <span className="text-[#FF6A00]">⚡ {trade.sats.toLocaleString()} sats</span>
+                <span className="text-white">⚡ {trade.sats.toLocaleString()} sats</span>
               </>
             ) : (
               <>
-                <span className="text-[#FF6A00]">⚡ {trade.sats.toLocaleString()} sats</span>
+                <span className="text-white">⚡ {trade.sats.toLocaleString()} sats</span>
                 <ArrowRight size={11} className="text-neutral-600"/>
                 <span className="text-white">{trade.assetAmount} {trade.asset}</span>
               </>
@@ -185,12 +185,12 @@ export default function TradeCard({
           {/* Step 1 — Pay invoice */}
           {isBuyer && trade.status === "pending" && trade.invoicePr && (
             <div className="space-y-2">
-              <div className="bg-black/60 border border-[#FF6A00]/20 px-2 py-1.5">
+              <div className="bg-black/60 border border-white/10 px-2 py-1.5">
                 <p className="text-[9px] text-neutral-600 mb-1">Lightning Escrow Invoice:</p>
                 <p className="text-[9px] text-neutral-500 font-mono break-all">{trade.invoicePr.slice(0,50)}…</p>
               </div>
               <button onClick={copyInvoice}
-                className="w-full flex items-center justify-center gap-2 bg-[#FF6A00] text-black text-[10px] font-black py-2 hover:bg-[#e55500]">
+                className="w-full flex items-center justify-center gap-2 bg-white text-black text-[10px] font-black py-2 hover:bg-neutral-200">
                 {copied ? <><CheckCircle size={11}/>COPIED!</> : <><Copy size={11}/>COPY INVOICE & PAY</>}
               </button>
               {polling && <p className="text-[9px] text-neutral-600 text-center animate-pulse">Checking payment…</p>}
@@ -199,12 +199,12 @@ export default function TradeCard({
           {/* Step 2 — Share address */}
           {isBuyer && trade.status === "funded" && (
             <div className="space-y-2">
-              <p className="text-[9px] text-[#FF6A00] font-bold">Enter your {trade.asset} address:</p>
+              <p className="text-[9px] text-white font-bold">Enter your {trade.asset} address:</p>
               <input value={address} onChange={e => setAddress(e.target.value)}
                 placeholder={`Your ${trade.asset} wallet address`}
-                className="w-full bg-black/60 border border-[#1a1a1a] text-white text-[10px] px-2 py-1.5 outline-none focus:border-[#FF6A00] font-mono"/>
+                className="w-full bg-black/60 border border-[#1a1a1a] text-white text-[10px] px-2 py-1.5 outline-none focus:border-white font-mono"/>
               <button onClick={shareAddress} disabled={!address.trim() || loading}
-                className="w-full bg-[#FF6A00] text-black text-[10px] font-black py-2 disabled:opacity-40">
+                className="w-full bg-white text-black text-[10px] font-black py-2 disabled:opacity-40">
                 {loading ? "SHARING…" : `SHARE ${trade.asset} ADDRESS`}
               </button>
             </div>
@@ -215,7 +215,7 @@ export default function TradeCard({
               <p className="text-[9px] text-purple-400 font-bold mb-1">Send {trade.assetAmount} {trade.asset} to:</p>
               <div className="flex items-center gap-2">
                 <code className="text-[10px] text-white font-mono break-all flex-1">{trade.buyerAddress}</code>
-                <button onClick={() => navigator.clipboard.writeText(trade.buyerAddress ?? "")} className="shrink-0 text-neutral-700 hover:text-[#FF6A00]">
+                <button onClick={() => navigator.clipboard.writeText(trade.buyerAddress ?? "")} className="shrink-0 text-neutral-700 hover:text-white">
                   <Copy size={10}/>
                 </button>
               </div>
@@ -248,11 +248,11 @@ export default function TradeCard({
                   Contact @{trade.seller.username} for their payment details, then upload your Revolut / bank screenshot below.
                 </p>
               </div>
-              <p className="text-[9px] text-[#FF6A00] font-bold mt-1">2. Upload payment proof:</p>
+              <p className="text-[9px] text-white font-bold mt-1">2. Upload payment proof:</p>
               <input ref={fileRef} type="file" accept="image/*" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) uploadProof(f); }}/>
               <button onClick={() => fileRef.current?.click()} disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-[#FF6A00] text-black text-[10px] font-black py-2 hover:bg-[#e55500] disabled:opacity-40">
+                className="w-full flex items-center justify-center gap-2 bg-white text-black text-[10px] font-black py-2 hover:bg-neutral-200 disabled:opacity-40">
                 <Upload size={11}/>
                 {loading ? "UPLOADING…" : "UPLOAD PAYMENT SCREENSHOT"}
               </button>
@@ -273,7 +273,7 @@ export default function TradeCard({
             <div className="space-y-2">
               {trade.paymentProofUrl && (
                 <div>
-                  <p className="text-[9px] text-[#FF6A00] font-bold mb-1.5">Payment proof from buyer:</p>
+                  <p className="text-[9px] text-white font-bold mb-1.5">Payment proof from buyer:</p>
                   <div className="relative border border-[#1a1a1a] overflow-hidden cursor-zoom-in group"
                     onClick={() => setZoom(true)}>
                     <img src={`${BASE}${trade.paymentProofUrl}`} alt="Payment proof"
@@ -313,7 +313,7 @@ export default function TradeCard({
           {isBuyer && trade.seller.lightningAddress && (
             <div className="bg-[#0a0a0a] border border-[#1a1a1a] px-3 py-2 mt-2">
               <p className="text-[9px] text-neutral-600 mb-1">After seller confirms, BTC arrives at your Lightning address:</p>
-              <code className="text-[9px] text-[#FF6A00] font-mono">{trade.buyer.lightningAddress}</code>
+              <code className="text-[9px] text-white font-mono">{trade.buyer.lightningAddress}</code>
             </div>
           )}
         </>)}
@@ -356,7 +356,7 @@ export default function TradeCard({
       {/* Fullscreen zoom */}
       {zoom && trade.paymentProofUrl && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4" onClick={() => setZoom(false)}>
-          <button onClick={() => setZoom(false)} className="absolute top-4 right-4 text-white hover:text-[#FF6A00]">
+          <button onClick={() => setZoom(false)} className="absolute top-4 right-4 text-white hover:text-white">
             <X size={24}/>
           </button>
           <img src={`${BASE}${trade.paymentProofUrl}`} alt="Payment proof"
