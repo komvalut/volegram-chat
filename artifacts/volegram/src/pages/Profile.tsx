@@ -121,30 +121,30 @@ export default function Profile({ currentUser }: { currentUser: any }) {
             <div>
               <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Username</label>
               <input value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value.replace(/[^a-zA-Z0-9_]/g,"").slice(0,30) }))}
-                className="w-full bg-neutral-900 border border-neutral-200 text-black text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
+                className="w-full bg-neutral-900 border border-neutral-700 text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
             </div>
             <div>
               <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Lightning Address ⚡</label>
               <input value={form.lightningAddress} onChange={e => setForm(f => ({ ...f, lightningAddress: e.target.value.trim() }))}
                 placeholder="you@walletofsatoshi.com"
-                className="w-full bg-neutral-900 border border-neutral-200 text-black text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
+                className="w-full bg-neutral-900 border border-neutral-700 text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
               <p className="text-sm text-neutral-500 mt-1">Changing this will be your new login identity</p>
             </div>
             <div>
               <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Bio</label>
               <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} rows={3} maxLength={160}
-                className="w-full bg-neutral-900 border border-neutral-200 text-black text-sm px-3 py-2.5 outline-none focus:border-[white] font-mono resize-none"/>
+                className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-3 py-2.5 outline-none focus:border-[white] font-mono resize-none"/>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email (private)</label>
                 <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} type="email"
-                  className="w-full bg-neutral-900 border border-neutral-200 text-black text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
+                  className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
               </div>
               <div>
                 <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Phone (private)</label>
                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} type="tel"
-                  className="w-full bg-neutral-900 border border-neutral-200 text-black text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
+                  className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
               </div>
             </div>
             <div className="flex gap-2 pt-1">
@@ -194,7 +194,7 @@ export default function Profile({ currentUser }: { currentUser: any }) {
             <p className="text-xs text-red-400 font-bold mb-2">Report @{profile.username}</p>
             <textarea value={reportReason} onChange={e => setRR(e.target.value)} rows={3}
               placeholder="Describe the issue (scam, spam, abusive behaviour…)"
-              className="w-full bg-neutral-900 border border-neutral-200 text-black text-xs px-3 py-2 outline-none focus:border-red-500 font-mono resize-none mb-2"/>
+              className="w-full bg-neutral-900 border border-neutral-700 text-white text-xs px-3 py-2 outline-none focus:border-red-500 font-mono resize-none mb-2"/>
             <button onClick={sendReport} disabled={!reportReason.trim()}
               className="text-xs bg-red-700 text-white font-bold px-4 py-2 hover:bg-red-600 disabled:opacity-40">
               SUBMIT REPORT

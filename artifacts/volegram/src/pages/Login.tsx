@@ -97,7 +97,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                 <input
                   value={addr} onChange={e => setAddr(e.target.value)}
                   placeholder="you@walletofsatoshi.com"
-                  className="w-full bg-neutral-900 border border-neutral-300 text-black text-base px-3 py-3 outline-none focus:border-black font-mono placeholder:text-neutral-400 transition-colors"
+                  className="w-full bg-neutral-900 border border-neutral-700 text-white text-base px-3 py-3 outline-none focus:border-black font-mono placeholder:text-neutral-500 transition-colors"
                 />
               </div>
               {err && <p className="text-sm text-red-500">{err}</p>}
@@ -108,7 +108,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
             </form>
             <div className="mt-5 border border-neutral-200 bg-neutral-900 px-4 py-3">
               <p className="text-sm text-neutral-500 leading-relaxed">
-                <span style={{ color: "var(--accent)" }}>⚡ Note:</span> A <strong className="text-neutral-300">valid Lightning address</strong> is required for sending sats and Lightning payments to work. We accept any input — if your address doesn't work, that's on you.
+                <span style={{ color: "var(--accent)" }}>⚡ Note:</span> A <strong className="text-white">valid Lightning address</strong> is required for sending sats and Lightning payments to work. We accept any input — if your address doesn't work, that's on you.
               </p>
               <p className="text-xs text-neutral-500 mt-1.5">
                 Examples: <span className="font-mono">user@walletofsatoshi.com</span> · <span className="font-mono">you@muun.com</span> · <span className="font-mono">satoshi@blink.sv</span>
@@ -141,24 +141,24 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                 <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Username</label>
                 <input value={username} onChange={e => setUname(e.target.value.replace(/[^a-zA-Z0-9_]/g,"").slice(0,30))}
                   placeholder="satoshi_nakamoto"
-                  className="w-full bg-neutral-900 border border-neutral-300 text-black text-base px-3 py-2.5 outline-none focus:border-black font-mono"/>
+                  className="w-full bg-neutral-900 border border-neutral-700 text-white text-base px-3 py-2.5 outline-none focus:border-black font-mono"/>
               </div>
               <div>
                 <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Bio <span className="text-neutral-500">(optional)</span></label>
                 <textarea value={bio} onChange={e => setBio(e.target.value)} rows={2} maxLength={160}
                   placeholder="Bitcoin maximalist, hodler since 2013…"
-                  className="w-full bg-neutral-900 border border-neutral-300 text-black text-sm px-3 py-2.5 outline-none focus:border-black font-mono resize-none"/>
+                  className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-3 py-2.5 outline-none focus:border-black font-mono resize-none"/>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email <span className="text-neutral-500">(opt)</span></label>
                   <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="private@mail.com"
-                    className="w-full bg-neutral-900 border border-neutral-300 text-black text-sm px-2 py-2 outline-none focus:border-black font-mono"/>
+                    className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-2 py-2 outline-none focus:border-black font-mono"/>
                 </div>
                 <div>
                   <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Phone <span className="text-neutral-500">(opt)</span></label>
                   <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="+387…"
-                    className="w-full bg-neutral-900 border border-neutral-300 text-black text-sm px-2 py-2 outline-none focus:border-black font-mono"/>
+                    className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-2 py-2 outline-none focus:border-black font-mono"/>
                 </div>
               </div>
               {err && <p className="text-sm text-red-500">{err}</p>}
@@ -178,7 +178,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
       <div className="relative z-10 w-full max-w-sm mt-6 border border-neutral-200 bg-[#060606] px-4 py-3 flex items-center gap-3">
         <span className="text-lg shrink-0" style={{ color: "var(--accent)" }}>⚡</span>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-black uppercase tracking-widest text-black">Invite friends · Install app</p>
+          <p className="text-xs font-black uppercase tracking-widest text-white">Invite friends · Install app</p>
           <p className="text-xs text-neutral-600 truncate">No sign-up. No KYC. Just Bitcoin.</p>
         </div>
         <button
