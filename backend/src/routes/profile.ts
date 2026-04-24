@@ -29,7 +29,7 @@ router.get("/:username", async (req, res) => {
 
 router.put("/me/update", auth, async (req, res) => {
   const userId = (req.session as any).userId;
-  const { bio, email, phone, avatarUrl, username } = req.body;
+  const { bio, email, phone, avatarUrl, username, lightningAddress } = req.body;
 
   if (username) {
     const [existing] = await db.select().from(chatUsersTable)
@@ -39,12 +39,21 @@ router.put("/me/update", auth, async (req, res) => {
     }
   }
 
+  if (lightningAddress) {
+    const [existing] = await db.select().from(chatUsersTable)
+      .where(eq(chatUsersTable.lightningAddress, lightningAddress)).limit(1);
+    if (existing && existing.id !== userId) {
+      return res.status(409).json({ error: "Lightning address already in use" });
+    }
+  }
+
   const update: Record<string, any> = {};
-  if (bio       !== undefined) update.bio       = bio;
-  if (email     !== undefined) update.email     = email;
-  if (phone     !== undefined) update.phone     = phone;
-  if (avatarUrl !== undefined) update.avatarUrl = avatarUrl;
-  if (username  !== undefined) update.username  = username;
+  if (bio              !== undefined) update.bio              = bio;
+  if (email            !== undefined) update.email            = email;
+  if (phone            !== undefined) update.phone            = phone;
+  if (avatarUrl        !== undefined) update.avatarUrl        = avatarUrl;
+  if (username         !== undefined) update.username         = username;
+  if (lightningAddress !== undefined) update.lightningAddress = lightningAddress;
 
   const [updated] = await db.update(chatUsersTable).set(update)
     .where(eq(chatUsersTable.id, userId)).returning();

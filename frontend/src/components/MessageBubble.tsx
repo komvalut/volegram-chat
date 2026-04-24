@@ -17,20 +17,20 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
   const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className={`flex gap-2 mb-3 ${msg.isMe ? "flex-row-reverse" : "flex-row"}`}>
+    <div className={`flex gap-3 mb-4 ${msg.isMe ? "flex-row-reverse" : "flex-row"}`}>
       {/* Avatar */}
-      <div className="w-7 h-7 rounded-full bg-[#FF6A00]/20 border border-[#FF6A00]/30 flex items-center justify-center text-xs font-black text-[#FF6A00] shrink-0 mt-auto">
+      <div className="w-9 h-9 rounded-full bg-[#F7931A]/20 border border-[#F7931A]/30 flex items-center justify-center text-sm font-black text-[#F7931A] shrink-0 mt-auto">
         {msg.sender.username.slice(0, 1).toUpperCase()}
       </div>
 
-      <div className={`max-w-[72%] ${msg.isMe ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
+      <div className={`max-w-[72%] ${msg.isMe ? "items-end" : "items-start"} flex flex-col gap-1`}>
         {!msg.isMe && (
-          <span className="text-[10px] text-neutral-600 px-1">@{msg.sender.username}</span>
+          <span className="text-xs text-neutral-500 px-1 font-bold">@{msg.sender.username}</span>
         )}
 
         {/* Text */}
         {msg.type === "text" && (
-          <div className={`px-3 py-2 text-sm leading-relaxed ${msg.isMe ? "msg-bubble-me" : "msg-bubble-them"}`}>
+          <div className={`px-4 py-2.5 text-base leading-relaxed ${msg.isMe ? "msg-bubble-me" : "msg-bubble-them"}`}>
             {msg.content}
           </div>
         )}
@@ -38,35 +38,35 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
         {/* Image */}
         {msg.type === "image" && msg.fileUrl && (
           <div className={`overflow-hidden rounded-lg ${msg.isMe ? "rounded-tr-sm" : "rounded-tl-sm"}`}>
-            <img src={msg.fileUrl} alt="img" className="max-w-[260px] max-h-[200px] object-cover" />
+            <img src={msg.fileUrl} alt="img" className="max-w-[280px] max-h-[220px] object-cover" />
           </div>
         )}
 
         {/* Voice */}
         {msg.type === "voice" && msg.fileUrl && (
-          <div className={`px-3 py-2 flex items-center gap-2 ${msg.isMe ? "msg-bubble-me" : "msg-bubble-them"}`}>
-            <Mic size={14} />
-            <audio src={msg.fileUrl} controls className="h-7 w-40" />
+          <div className={`px-4 py-3 flex items-center gap-2 ${msg.isMe ? "msg-bubble-me" : "msg-bubble-them"}`}>
+            <Mic size={16} />
+            <audio src={msg.fileUrl} controls className="h-8 w-44" />
           </div>
         )}
 
         {/* Lightning */}
         {msg.type === "lightning" && (
-          <div className="lightning-bubble px-4 py-3 min-w-[180px]">
+          <div className="lightning-bubble px-4 py-3 min-w-[200px]">
             <div className="flex items-center gap-2 mb-2">
-              <Zap size={14} className="text-[#FF6A00]" />
-              <span className="text-xs font-black text-[#FF6A00] uppercase tracking-wider">Lightning Invoice</span>
+              <Zap size={16} className="text-[#F7931A]" />
+              <span className="text-sm font-black text-[#F7931A] uppercase tracking-wider">Lightning Invoice</span>
             </div>
-            <div className="text-xl font-black text-white mb-1">⚡ {msg.sats?.toLocaleString()} sats</div>
-            {msg.content && <p className="text-xs text-neutral-500 mb-2">{msg.content}</p>}
+            <div className="text-2xl font-black text-white mb-1">⚡ {msg.sats?.toLocaleString()} sats</div>
+            {msg.content && <p className="text-sm text-neutral-400 mb-2">{msg.content}</p>}
             {msg.invoicePaid ? (
-              <div className="flex items-center gap-1 text-xs text-green-400 font-bold">
-                <Check size={12} /> PAID
+              <div className="flex items-center gap-1 text-sm text-green-400 font-bold">
+                <Check size={14} /> PAID
               </div>
             ) : (
               <button
                 onClick={() => navigator.clipboard.writeText(msg.invoicePr ?? "")}
-                className="w-full mt-1 text-xs bg-[#FF6A00] text-black font-black py-1.5 hover:bg-[#e55500] transition-colors"
+                className="w-full mt-1 text-sm bg-[#F7931A] text-black font-black py-2 hover:bg-[#e07d10] transition-colors"
               >
                 COPY INVOICE
               </button>
@@ -74,7 +74,7 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
           </div>
         )}
 
-        <span className={`text-[10px] text-neutral-700 px-1 ${msg.isMe ? "text-right" : "text-left"}`}>{time}</span>
+        <span className={`text-xs text-neutral-600 px-1 ${msg.isMe ? "text-right" : "text-left"}`}>{time}</span>
       </div>
     </div>
   );

@@ -59,9 +59,9 @@ export default function ChatSidebar({
   };
 
   const roomIcon = (room: any) => {
-    if (room.isIncognito) return <EyeOff size={11} className="text-purple-400"/>;
-    if (room.type === "group") return <span className="text-[10px] font-black text-[#FF6A00]">#</span>;
-    return <span className="text-[10px] font-black text-[#FF6A00]">D</span>;
+    if (room.isIncognito) return <EyeOff size={13} className="text-purple-400"/>;
+    if (room.type === "group") return <span className="text-sm font-black text-[#F7931A]">#</span>;
+    return <span className="text-sm font-black text-[#F7931A]">D</span>;
   };
 
   return (
@@ -69,41 +69,41 @@ export default function ChatSidebar({
       {/* Brand */}
       <div className="px-4 py-3 border-b border-[#1a1a1a] bg-[#020202]">
         <div className="flex items-center gap-2">
-          <span className="text-[#FF6A00] text-xl">⚡</span>
+          <span className="text-[#F7931A] text-2xl">⚡</span>
           <div>
-            <p className="font-black text-[11px] tracking-[0.2em] uppercase text-[#FF6A00] leading-none">VBC</p>
-            <p className="text-[8px] text-neutral-700 tracking-widest uppercase mt-0.5">Volegram Bitcoin Chat</p>
+            <p className="font-black text-sm tracking-[0.2em] uppercase text-[#F7931A] leading-none">VBC</p>
+            <p className="text-[11px] text-neutral-600 tracking-widest uppercase mt-0.5">Volegram Bitcoin Chat</p>
           </div>
         </div>
       </div>
 
       {/* User strip */}
       <button onClick={() => nav(`/u/${user.username}`)}
-        className="px-4 py-2.5 border-b border-[#1a1a1a] flex items-center gap-3 hover:bg-white/3 transition-colors text-left group">
-        <div className="w-8 h-8 rounded-full border border-[#FF6A00]/30 overflow-hidden bg-[#111] shrink-0">
+        className="px-4 py-3 border-b border-[#1a1a1a] flex items-center gap-3 hover:bg-white/3 transition-colors text-left group">
+        <div className="w-10 h-10 rounded-full border border-[#F7931A]/30 overflow-hidden bg-[#111] shrink-0">
           {user.avatarUrl
             ? <img src={user.avatarUrl} className="w-full h-full object-cover" alt=""/>
-            : <div className="w-full h-full flex items-center justify-center text-sm font-black text-[#FF6A00]">
+            : <div className="w-full h-full flex items-center justify-center text-base font-black text-[#F7931A]">
                 {user.username.slice(0,1).toUpperCase()}
               </div>
           }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-white truncate group-hover:text-[#FF6A00] transition-colors">@{user.username}</p>
+          <p className="text-sm font-bold text-white truncate group-hover:text-[#F7931A] transition-colors">@{user.username}</p>
           <div className="flex items-center gap-1">
-            <Coins size={9} className="text-[#FF6A00]"/>
-            <span className="text-[10px] text-[#FF6A00]">⚡{user.satsBalance?.toLocaleString() ?? 0}</span>
+            <Coins size={11} className="text-[#F7931A]"/>
+            <span className="text-xs text-[#F7931A]">⚡{user.satsBalance?.toLocaleString() ?? 0}</span>
           </div>
         </div>
-        <User size={11} className="text-neutral-700 group-hover:text-[#FF6A00]"/>
+        <User size={13} className="text-neutral-700 group-hover:text-[#F7931A]"/>
       </button>
 
       {/* Tabs */}
       <div className="flex border-b border-[#1a1a1a]">
-        {[["chats", "Chats", <MessageCircle size={11}/>], ["swap", "Swap", <Zap size={11}/>]].map(([id, label, icon]: any) => (
+        {[["chats", "Chats", <MessageCircle size={13}/>], ["swap", "Swap", <Zap size={13}/>]].map(([id, label, icon]: any) => (
           <button key={id} onClick={() => { setTab(id); if (id === "swap") onToggleSwap(); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase tracking-widest border-b-2 transition-colors
-              ${(tab === id || (id === "swap" && showSwap)) ? "border-[#FF6A00] text-[#FF6A00]" : "border-transparent text-neutral-600 hover:text-white"}`}>
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-widest border-b-2 transition-colors
+              ${(tab === id || (id === "swap" && showSwap)) ? "border-[#F7931A] text-[#F7931A]" : "border-transparent text-neutral-600 hover:text-white"}`}>
             {icon}{label}
           </button>
         ))}
@@ -182,24 +182,24 @@ export default function ChatSidebar({
         <div className="flex-1 overflow-y-auto">
           {rooms.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <MessageCircle size={20} className="text-neutral-800 mx-auto mb-2"/>
-              <p className="text-[10px] text-neutral-700">No chats yet.</p>
+              <MessageCircle size={24} className="text-neutral-800 mx-auto mb-2"/>
+              <p className="text-sm text-neutral-600">No chats yet.</p>
             </div>
           ) : rooms.map(room => (
             <button key={room.id} onClick={() => onSelectRoom(room)}
-              className={`w-full px-4 py-3 text-left flex items-center gap-3 border-b border-[#0d0d0d] transition-colors
+              className={`w-full px-4 py-3.5 text-left flex items-center gap-3 border-b border-[#0d0d0d] transition-colors
                 ${activeRoomId === room.id
-                  ? room.isIncognito ? "bg-purple-900/10 border-l-2 border-l-purple-600" : "bg-[#FF6A00]/10 border-l-2 border-l-[#FF6A00]"
+                  ? room.isIncognito ? "bg-purple-900/10 border-l-2 border-l-purple-600" : "bg-[#F7931A]/10 border-l-2 border-l-[#F7931A]"
                   : "hover:bg-white/3"}`}>
-              <div className={`w-7 h-7 rounded-full border flex items-center justify-center shrink-0
+              <div className={`w-9 h-9 rounded-full border flex items-center justify-center shrink-0
                 ${room.isIncognito ? "border-purple-800 bg-purple-900/20" : "border-[#2a2a2a] bg-[#1a1a1a]"}`}>
                 {roomIcon(room)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-xs font-bold truncate ${room.isIncognito ? "text-purple-300" : "text-white"}`}>
+                <p className={`text-sm font-bold truncate ${room.isIncognito ? "text-purple-300" : "text-white"}`}>
                   {room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}
                 </p>
-                <p className={`text-[9px] ${room.isIncognito ? "text-purple-700" : "text-neutral-700"}`}>
+                <p className={`text-xs ${room.isIncognito ? "text-purple-700" : "text-neutral-600"}`}>
                   {room.isIncognito ? "🔒 incognito" : room.type}
                 </p>
               </div>
@@ -220,13 +220,13 @@ export default function ChatSidebar({
       <div className="border-t border-[#1a1a1a] px-4 py-3 space-y-2">
         {user.isAdmin && (
           <button onClick={() => nav("/admin")}
-            className="w-full flex items-center gap-2 text-[10px] text-[#FF6A00] hover:text-white font-bold uppercase tracking-widest transition-colors">
-            <Shield size={10}/> Admin Panel
+            className="w-full flex items-center gap-2 text-xs text-[#F7931A] hover:text-white font-bold uppercase tracking-widest transition-colors">
+            <Shield size={13}/> Admin Panel
           </button>
         )}
         <button onClick={() => { api.logout(); onLogout(); }}
-          className="w-full flex items-center gap-2 text-[10px] text-neutral-700 hover:text-red-400 transition-colors">
-          <LogOut size={10}/> Sign out
+          className="w-full flex items-center gap-2 text-xs text-neutral-600 hover:text-red-400 transition-colors">
+          <LogOut size={13}/> Sign out
         </button>
       </div>
     </div>

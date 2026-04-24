@@ -8,7 +8,7 @@ export default function Profile({ currentUser }: { currentUser: any }) {
   const nav = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [editing, setEditing] = useState(false);
-  const [form, setForm]       = useState({ bio: "", email: "", phone: "", username: "" });
+  const [form, setForm]       = useState({ bio: "", email: "", phone: "", username: "", lightningAddress: "" });
   const [avatarPrev, setAvPr] = useState("");
   const [avatarUrl, setAvUrl] = useState("");
   const [copied, setCopied]   = useState(false);
@@ -22,7 +22,7 @@ export default function Profile({ currentUser }: { currentUser: any }) {
     if (!username) return;
     api.getProfile(username).then(p => {
       setProfile(p);
-      setForm({ bio: p.bio ?? "", email: p.email ?? "", phone: p.phone ?? "", username: p.username });
+      setForm({ bio: p.bio ?? "", email: p.email ?? "", phone: p.phone ?? "", username: p.username, lightningAddress: p.lightningAddress ?? "" });
       setAvPr(p.avatarUrl ?? "");
     }).catch(() => setProfile(null));
   }, [username]);
@@ -116,28 +116,35 @@ export default function Profile({ currentUser }: { currentUser: any }) {
 
         {/* Edit Form */}
         {isMe && editing && (
-          <form onSubmit={saveProfile} className="border border-[#FF6A00]/30 bg-[#050505] p-5 mb-4 space-y-3">
-            <h2 className="text-xs font-black uppercase tracking-widest text-[#FF6A00] mb-3">Edit Profile</h2>
+          <form onSubmit={saveProfile} className="border border-[#F7931A]/30 bg-[#050505] p-5 mb-4 space-y-3">
+            <h2 className="text-sm font-black uppercase tracking-widest text-[#F7931A] mb-3">Edit Profile</h2>
             <div>
-              <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Username</label>
+              <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Username</label>
               <input value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value.replace(/[^a-zA-Z0-9_]/g,"").slice(0,30) }))}
-                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[#F7931A] font-mono"/>
             </div>
             <div>
-              <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Bio</label>
+              <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Lightning Address ⚡</label>
+              <input value={form.lightningAddress} onChange={e => setForm(f => ({ ...f, lightningAddress: e.target.value.trim() }))}
+                placeholder="you@walletofsatoshi.com"
+                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[#F7931A] font-mono"/>
+              <p className="text-[11px] text-neutral-700 mt-1">Changing this will be your new login identity</p>
+            </div>
+            <div>
+              <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Bio</label>
               <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} rows={3} maxLength={160}
-                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2 outline-none focus:border-[#FF6A00] font-mono resize-none"/>
+                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 outline-none focus:border-[#F7931A] font-mono resize-none"/>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Email (private)</label>
+                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email (private)</label>
                 <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} type="email"
-                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-xs px-2 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[#F7931A] font-mono"/>
               </div>
               <div>
-                <label className="block text-[10px] text-neutral-600 uppercase tracking-widest mb-1">Phone (private)</label>
+                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Phone (private)</label>
                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} type="tel"
-                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-xs px-2 py-2 outline-none focus:border-[#FF6A00] font-mono"/>
+                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[#F7931A] font-mono"/>
               </div>
             </div>
             <div className="flex gap-2 pt-1">

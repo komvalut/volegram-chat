@@ -60,17 +60,17 @@ export default function Chat({
             <ChatWindow room={activeRoom} user={user}/>
           ) : !showSwap ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-              <div className="text-5xl mb-4">⚡</div>
-              <h2 className="text-xl font-black uppercase tracking-[0.2em] text-[#FF6A00] mb-1">VBC</h2>
-              <p className="text-[10px] tracking-widest text-neutral-600 uppercase mb-6">Volegram Bitcoin Chat</p>
-              <div className="grid grid-cols-2 gap-2 text-[10px] text-neutral-700 max-w-xs">
-                <div className="border border-[#1a1a1a] px-4 py-3">⚡ Send sats</div>
-                <div className="border border-[#1a1a1a] px-4 py-3">🖼️ Share photos</div>
-                <div className="border border-[#1a1a1a] px-4 py-3">🔥 Burn messages</div>
-                <div className="border border-[#1a1a1a] px-4 py-3">🔒 Zero KYC</div>
+              <div className="text-6xl mb-4">⚡</div>
+              <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-[#F7931A] mb-2">VBC</h2>
+              <p className="text-sm tracking-widest text-neutral-500 uppercase mb-8">Volegram Bitcoin Chat</p>
+              <div className="grid grid-cols-2 gap-3 text-sm text-neutral-400 max-w-xs">
+                <div className="border border-[#1a1a1a] px-4 py-4">⚡ Send sats</div>
+                <div className="border border-[#1a1a1a] px-4 py-4">🖼️ Share photos</div>
+                <div className="border border-[#1a1a1a] px-4 py-4">🔥 Burn messages</div>
+                <div className="border border-[#1a1a1a] px-4 py-4">🔒 Zero KYC</div>
               </div>
-              <p className="text-[10px] text-neutral-700 mt-5">
-                Tap <span className="text-[#FF6A00]">SWAP</span> in sidebar to browse MICROSWAP listings →
+              <p className="text-sm text-neutral-600 mt-6">
+                Tap <span className="text-[#F7931A] font-bold">SWAP</span> in sidebar to browse MICROSWAP listings
               </p>
             </div>
           ) : activeRoom ? (

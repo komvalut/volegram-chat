@@ -108,20 +108,20 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-5 py-3 border-b border-[#1a1a1a] bg-[#030303] flex items-center gap-3">
-        <div className={`w-8 h-8 rounded-full border flex items-center justify-center text-xs font-black shrink-0
-          ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-[#FF6A00]/30 bg-[#FF6A00]/10 text-[#FF6A00]"}`}>
+      <div className="px-5 py-3.5 border-b border-[#1a1a1a] bg-[#030303] flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-sm font-black shrink-0
+          ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-[#F7931A]/30 bg-[#F7931A]/10 text-[#F7931A]"}`}>
           {room.isIncognito ? "🔒" : room.type === "group" ? "#" : "D"}
         </div>
         <div className="flex-1">
-          <p className="text-sm font-black text-white">{room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}</p>
-          <p className={`text-[10px] ${room.isIncognito ? "text-purple-600" : "text-neutral-600"}`}>
+          <p className="text-base font-black text-white">{room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}</p>
+          <p className={`text-xs ${room.isIncognito ? "text-purple-600" : "text-neutral-500"}`}>
             {room.isIncognito ? "🔒 Incognito — messages not saved" : `${room.type} · encrypted`}
           </p>
         </div>
         {burnSecs > 0 && (
-          <div className="flex items-center gap-1 text-[10px] text-orange-400 border border-orange-900/40 px-2 py-1">
-            <Flame size={10}/> {activeBurn?.label} burn
+          <div className="flex items-center gap-1 text-xs text-orange-400 border border-orange-900/40 px-2 py-1">
+            <Flame size={12}/> {activeBurn?.label} burn
           </div>
         )}
       </div>
@@ -129,7 +129,7 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
         {messages.length === 0 && (
-          <div className="text-center py-10 text-[10px] text-neutral-700">No messages yet ⚡</div>
+          <div className="text-center py-10 text-sm text-neutral-600">No messages yet ⚡</div>
         )}
 
         {messages.map(m => {
@@ -154,7 +154,7 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
         })}
 
         {typing && (
-          <div className="flex items-center gap-2 text-[10px] text-neutral-600 ml-9">
+          <div className="flex items-center gap-2 text-sm text-neutral-500 ml-11">
             <span className="animate-pulse tracking-widest">● ● ●</span>
           </div>
         )}
