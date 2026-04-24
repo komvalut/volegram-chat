@@ -7,8 +7,8 @@ const router = Router();
 
 router.post("/login", async (req, res) => {
   const { lightningAddress } = req.body;
-  if (!lightningAddress?.includes("@"))
-    return res.status(400).json({ error: "Invalid Lightning address" });
+  if (!lightningAddress || typeof lightningAddress !== "string" || lightningAddress.trim().length < 1)
+    return res.status(400).json({ error: "Address required" });
 
   let [user] = await db.select().from(chatUsersTable)
     .where(eq(chatUsersTable.lightningAddress, lightningAddress.trim().toLowerCase())).limit(1);
@@ -17,7 +17,7 @@ router.post("/login", async (req, res) => {
 
   const isNew = !user;
   if (!user) {
-    const rawLocal = lightningAddress.split("@")[0];
+    const rawLocal = lightningAddress.includes("@") ? lightningAddress.split("@")[0] : lightningAddress;
     const cleaned  = rawLocal.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 20);
     const base     = cleaned.length >= 2 ? cleaned : "user";
     const suffix   = Math.floor(Math.random() * 9000 + 1000);

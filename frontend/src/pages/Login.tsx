@@ -19,7 +19,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
 
   const handleAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addr.includes("@")) { setErr("Enter a valid Lightning address"); return; }
+    if (!addr.trim()) { setErr("Enter your address"); return; }
     setLoading(true); setErr("");
     try {
       const { user: u, isNew } = await api.login(addr.trim().toLowerCase());
@@ -96,7 +96,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                 <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1.5">Lightning Address</label>
                 <input
                   value={addr} onChange={e => setAddr(e.target.value)}
-                  placeholder="satoshi@walletofsatoshi.com"
+                  placeholder="sonero@layerz.com  ili  user@walletofsatoshi.com"
                   className="w-full bg-[#080808] border border-[#2a2a2a] text-white text-base px-3 py-3 outline-none focus:border-white font-mono placeholder:text-neutral-800 transition-colors"
                 />
               </div>
