@@ -1,27 +1,45 @@
-# Workspace
+# Volegram Bitcoin Chat (VBC) — Replit Setup
 
-## Overview
+A self-contained port of `komvalut/volegram-chat` running on Replit as two artifacts in a pnpm monorepo.
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+## Architecture
 
-## Stack
+- **`artifacts/api-server`** — Express + ws + Drizzle backend (port 8080)
+  - Mounted paths: `/api`, `/uploads`, `/ws`
+  - Auto-runs `CREATE TABLE IF NOT EXISTS` migrations on startup against the Replit Postgres database (`DATABASE_URL`)
+  - Sessions via `express-session` (`SESSION_SECRET`)
+  - Lightning invoice creation via Speed (SBP) — gracefully no-ops when `SBP_API_KEY` is not set
+  - Routes: `auth`, `messages`, `admin`, `profile` (incl. `/api/profile/admin`), `swap`, `trades`
+  - Dev script: `tsx watch src/index.ts`
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- **`artifacts/volegram`** — React 18 + Vite 5 + Tailwind v4 frontend (root `/`)
+  - Single-domain: client uses relative `/api/...` and `wss://${host}/ws`, no CORS / proxy layer needed
+  - Routes: `/login`, `/chat`, `/profile`, `/admin` (react-router-dom v6)
 
-## Key Commands
+## Design changes applied to the upstream repo
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
+- OLED-white theme: white background, black text, black cards (replaces the dark-mode default)
+- All tiny `text-[8/9/10/11px]` classes upgraded to `text-xs` / `text-sm` for readability
+- Removed `ThemeProvider` / `ThemeToggle` (single fixed theme)
+- New action cards above chat: **Buy**, **Sell**, **Swap**, **Contact Admin**
+  - Buy/Sell open `TradeModal` with the new `defaultDir` prop preset
+  - Swap opens `SwapPanel`
+  - Contact Admin fetches `/api/profile/admin` and opens a DM room with that user
 
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+## Environment
+
+| Var               | Required | Notes                                              |
+|-------------------|----------|----------------------------------------------------|
+| `DATABASE_URL`    | yes      | Replit Postgres (auto-provisioned)                 |
+| `SESSION_SECRET`  | yes      | Used by `express-session`                          |
+| `SBP_API_KEY`     | no       | Speed Lightning. Without it, invoice ops no-op     |
+| `MICROSWAP_API_URL` | no     | Defaults to `https://sonero-p2p.onrender.com`      |
+
+## Running locally on Replit
+
+Both workflows are auto-managed by the artifact system:
+
+- `artifacts/api-server: API Server` → `pnpm --filter @workspace/api-server run dev`
+- `artifacts/volegram: web` → `pnpm --filter @workspace/volegram run dev`
+
+The preview pane proxies `/` → volegram and `/api`, `/uploads`, `/ws` → api-server.
