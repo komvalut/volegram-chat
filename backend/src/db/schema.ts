@@ -46,7 +46,15 @@ export const chatMessagesTable = pgTable("chat_messages", {
   sats:        integer("sats"),
   isDeleted:   boolean("is_deleted").notNull().default(false),
   expiresAt:   timestamp("expires_at"),
+  replyToId:   integer("reply_to_id"),
+  reactions:   text("reactions").notNull().default("{}"),
   createdAt:   timestamp("created_at").notNull().defaultNow(),
+});
+
+export const messageReadsTable = pgTable("message_reads", {
+  messageId: integer("message_id").notNull().references(() => chatMessagesTable.id),
+  userId:    integer("user_id").notNull().references(() => chatUsersTable.id),
+  readAt:    timestamp("read_at").notNull().defaultNow(),
 });
 
 export const chatReportsTable = pgTable("chat_reports", {

@@ -106,7 +106,14 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                 {loading ? "CONNECTING…" : <><span>ENTER VBC</span><ArrowRight size={14}/></>}
               </button>
             </form>
-            <p className="text-center text-xs text-neutral-700 mt-5">Your Lightning address = your identity. No password needed.</p>
+            <div className="mt-5 border border-[#1e1e1e] bg-[#080808] px-4 py-3">
+              <p className="text-[11px] text-neutral-500 leading-relaxed">
+                <span style={{ color: "var(--accent)" }}>⚡ Napomena:</span> Potrebna je <strong className="text-neutral-300">validna Lightning adresa</strong> da bi slanje satoshija i Lightning plaćanja funkcionisali. Prihvatamo bilo šta što unesete — ako adresa ne radi, to je stvar korisnika.
+              </p>
+              <p className="text-[10px] text-neutral-700 mt-1.5">
+                Primjeri: <span className="font-mono">user@walletofsatoshi.com</span> · <span className="font-mono">ime@muun.com</span> · <span className="font-mono">satoshi@blink.sv</span>
+              </p>
+            </div>
           </>
         )}
 

@@ -119,8 +119,17 @@ async function migrate() {
     );
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted  BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS expires_at  TIMESTAMPTZ;
+    ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER;
+    ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS reactions   TEXT NOT NULL DEFAULT '{}';
     ALTER TABLE chat_rooms    ADD COLUMN IF NOT EXISTS is_incognito BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_rooms    ADD COLUMN IF NOT EXISTS invite_code  VARCHAR(32);
+
+    CREATE TABLE IF NOT EXISTS message_reads (
+      message_id INTEGER NOT NULL REFERENCES chat_messages(id) ON DELETE CASCADE,
+      user_id    INTEGER NOT NULL REFERENCES chat_users(id)    ON DELETE CASCADE,
+      read_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (message_id, user_id)
+    );
 
     CREATE TABLE IF NOT EXISTS vbc_trades (
       id              SERIAL PRIMARY KEY,

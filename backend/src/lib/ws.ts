@@ -107,3 +107,10 @@ export function notifyUser(userId: number, payload: object) {
   const c = clients.get(userId);
   if (c && c.ws.readyState === WebSocket.OPEN) c.ws.send(JSON.stringify(payload));
 }
+
+export function broadcastRoom(roomId: number, payload: object) {
+  const data = JSON.stringify(payload);
+  clients.forEach(c => {
+    if (c.rooms.has(roomId) && c.ws.readyState === WebSocket.OPEN) c.ws.send(data);
+  });
+}
