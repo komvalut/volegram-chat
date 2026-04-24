@@ -15,6 +15,7 @@ export const chatUsersTable = pgTable("chat_users", {
   satsBalance:      integer("sats_balance").notNull().default(0),
   isAdmin:          boolean("is_admin").notNull().default(false),
   isBlocked:        boolean("is_blocked").notNull().default(false),
+  privacyLevel:     varchar("privacy_level", { length: 20 }).notNull().default("private"),
   createdAt:        timestamp("created_at").notNull().defaultNow(),
 });
 

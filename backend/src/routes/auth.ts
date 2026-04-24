@@ -17,8 +17,11 @@ router.post("/login", async (req, res) => {
 
   const isNew = !user;
   if (!user) {
-    const local    = lightningAddress.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "").slice(0, 20);
-    const username = local + Math.floor(Math.random() * 900 + 100);
+    const rawLocal = lightningAddress.split("@")[0];
+    const cleaned  = rawLocal.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 20);
+    const base     = cleaned.length >= 2 ? cleaned : "user";
+    const suffix   = Math.floor(Math.random() * 9000 + 1000);
+    const username = base + suffix;
     const seed     = Math.random().toString(36).slice(2, 10);
 
     [user] = await db.insert(chatUsersTable).values({

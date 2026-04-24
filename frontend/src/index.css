@@ -1,42 +1,62 @@
 @import "tailwindcss";
 
 /* ══════════════════════════════════════════
-   VBC — BLACK & WHITE DESIGN SYSTEM
-   Pure Black: #000000
-   Pure White: #ffffff
+   VBC — DUAL THEME DESIGN SYSTEM
+   Theme BTC:  #F7931A Bitcoin Orange
+   Theme Mono: #FFFFFF Clean White
    ══════════════════════════════════════════ */
 
 @theme inline {
   --font-sans: 'Space Mono', ui-monospace, monospace;
   --font-mono: 'Space Mono', ui-monospace, monospace;
-  --color-background:        #000000;
-  --color-foreground:        #f0f0f0;
-  --color-border:            #1c1c1c;
-  --color-accent:            #ffffff;
-  --color-primary:           #ffffff;
-  --color-muted:             #0a0a0a;
-  --color-muted-foreground:  #5a5a5a;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 2px;
 }
 
-:root {
-  --accent:      #ffffff;
-  --accent-dim:  rgba(255,255,255,0.08);
-  --accent-glow: rgba(255,255,255,0.15);
-  --black:       #000000;
-  --black-1:     #080808;
-  --black-2:     #0f0f0f;
-  --black-3:     #181818;
-  --privacy:     #a855f7;
-  --safe:        #22c55e;
-  --danger:      #ef4444;
+/* ── BTC Theme (default) ─────────────────── */
+:root, [data-theme="btc"] {
+  --accent:        #F7931A;
+  --accent-dark:   #c97415;
+  --accent-dim:    rgba(247,147,26,0.12);
+  --accent-glow:   rgba(247,147,26,0.40);
+  --accent-text:   #000000;
+  --bg:            #000000;
+  --bg-1:          #080808;
+  --bg-2:          #0f0f0f;
+  --bg-3:          #181818;
+  --border:        #1c1c1c;
+  --border-strong: #2a2a2a;
+  --text:          #f0f0f0;
+  --text-muted:    #888888;
+  --text-dim:      #444444;
+  --bubble-me-bg:  linear-gradient(135deg, #1a0d00 0%, #0d0600 100%);
+  --bubble-me-border: #F7931A;
+  --bubble-them-bg: #0d0d0d;
+  --bubble-them-border: #222222;
+}
+
+/* ── Mono Theme ──────────────────────────── */
+[data-theme="mono"] {
+  --accent:        #ffffff;
+  --accent-dark:   #bbbbbb;
+  --accent-dim:    rgba(255,255,255,0.08);
+  --accent-glow:   rgba(255,255,255,0.20);
+  --accent-text:   #000000;
+  --bg:            #000000;
+  --bg-1:          #080808;
+  --bg-2:          #0f0f0f;
+  --bg-3:          #181818;
+  --border:        #1c1c1c;
+  --border-strong: #2a2a2a;
+  --text:          #f0f0f0;
+  --text-muted:    #888888;
+  --text-dim:      #444444;
+  --bubble-me-bg:  #111111;
+  --bubble-me-border: #ffffff;
+  --bubble-them-bg: #0d0d0d;
+  --bubble-them-border: #222222;
 }
 
 /* ── Base ──────────────────────────────── */
 *, *::before, *::after {
-  border-color: #1c1c1c;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
@@ -51,8 +71,8 @@ html.ios-pwa { background: #000; }
 
 body, #root {
   height: 100%;
-  background: var(--black);
-  color: #f0f0f0;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Space Mono', ui-monospace, monospace;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
@@ -62,88 +82,186 @@ body, #root {
 /* ── Scrollbars ─────────────────────────── */
 ::-webkit-scrollbar       { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #333; }
+::-webkit-scrollbar-thumb { background: var(--accent-dark); border-radius: 2px; }
 
 /* ── Selection ─────────────────────────── */
-::selection { background: #ffffff; color: #000; }
+::selection { background: var(--accent); color: var(--accent-text); }
 
-/* ── Focus visible ─────────────────────── */
+/* ── Focus ─────────────────────────────── */
 button:focus-visible, input:focus-visible, textarea:focus-visible {
-  outline: 1px solid #ffffff;
+  outline: 1px solid var(--accent);
   outline-offset: 2px;
 }
 
-/* ── Message Bubbles ────────────────────── */
+/* ══════════════════════════════════════════
+   MESSAGE BUBBLES — Premium styled
+   ══════════════════════════════════════════ */
 .msg-bubble-me {
-  background: #111111;
-  border: 1px solid #ffffff;
-  border-radius: 14px 14px 2px 14px;
-  color: #f0f0f0;
+  background: var(--bubble-me-bg);
+  border: 1px solid var(--bubble-me-border);
+  border-radius: 16px 16px 4px 16px;
+  color: var(--text);
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="btc"] .msg-bubble-me::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent-dim) 0%, transparent 60%);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .msg-bubble-them {
-  background: #0d0d0d;
-  border: 1px solid #2a2a2a;
-  color: #e0e0e0;
-  border-radius: 14px 14px 14px 2px;
+  background: var(--bubble-them-bg);
+  border: 1px solid var(--bubble-them-border);
+  border-radius: 16px 16px 16px 4px;
+  color: var(--text);
 }
 
-/* ── Lightning invoice bubble ────────────── */
+/* ══════════════════════════════════════════
+   LIGHTNING INVOICE BUBBLE
+   ══════════════════════════════════════════ */
 .lightning-bubble {
-  background: #111;
-  border: 1px solid #ffffff;
-  box-shadow: 0 0 20px -6px rgba(255,255,255,0.1);
+  background: var(--bg-2);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="btc"] .lightning-bubble {
+  box-shadow: 0 0 24px -6px var(--accent-glow);
+}
+.lightning-bubble::before {
+  content: "⚡";
+  position: absolute;
+  right: -8px;
+  bottom: -16px;
+  font-size: 80px;
+  opacity: 0.04;
+  pointer-events: none;
+  user-select: none;
 }
 
-/* ── Trade card ──────────────────────────── */
+/* ══════════════════════════════════════════
+   TRADE CARD
+   ══════════════════════════════════════════ */
 .trade-card {
-  background: #0d0d0d;
-  border: 1px solid #ffffff;
-  box-shadow: 0 0 30px -10px rgba(255,255,255,0.08);
+  background: var(--bg-2);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+}
+[data-theme="btc"] .trade-card {
+  box-shadow: 0 0 32px -10px var(--accent-glow);
 }
 
-/* ── Incognito / Privacy purple ─────────── */
-.incognito-bg {
-  background: linear-gradient(135deg, #1a0030 0%, #0a0020 100%);
-  border-color: var(--privacy) !important;
+/* ══════════════════════════════════════════
+   SIDEBAR — Glassy premium feel
+   ══════════════════════════════════════════ */
+.vbc-sidebar {
+  background: linear-gradient(180deg, #040404 0%, #020202 100%);
+  border-right: 1px solid var(--border);
 }
-.incognito-text { color: var(--privacy) !important; }
 
-/* ── Animations ─────────────────────────── */
-@keyframes btc-pulse {
+/* ══════════════════════════════════════════
+   ACCENT UTILITIES (theme-aware)
+   ══════════════════════════════════════════ */
+.accent        { color: var(--accent) !important; }
+.accent-bg     { background: var(--accent) !important; }
+.accent-border { border-color: var(--accent) !important; }
+.accent-dim-bg { background: var(--accent-dim) !important; }
+
+/* ══════════════════════════════════════════
+   PRIVACY BADGES
+   ══════════════════════════════════════════ */
+.badge-public    { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+.badge-private   { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); }
+.badge-anon      { background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); color: #a855f7; }
+
+/* ══════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════ */
+@keyframes vbc-pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+  50%       { opacity: 0.35; }
 }
 @keyframes slide-up {
-  from { transform: translateY(8px); opacity: 0; }
-  to   { transform: translateY(0);   opacity: 1; }
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
+  50%       { box-shadow: 0 0 24px var(--accent-glow), 0 0 48px var(--accent-dim); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-4px); }
 }
 
-.animate-btc-pulse  { animation: btc-pulse 2s ease-in-out infinite; }
-.animate-slide-up   { animation: slide-up 0.2s ease-out forwards; }
+.animate-vbc-pulse { animation: vbc-pulse 2s ease-in-out infinite; }
+.animate-slide-up  { animation: slide-up 0.25s ease-out forwards; }
+.animate-glow      { animation: glow-pulse 3s ease-in-out infinite; }
+.animate-float     { animation: float 3s ease-in-out infinite; }
 
-/* ── PWA / Mobile safe area ─────────────── */
+/* ══════════════════════════════════════════
+   INCOGNITO / PURPLE
+   ══════════════════════════════════════════ */
+.incognito-bg {
+  background: linear-gradient(135deg, #1a0030 0%, #0a0020 100%);
+  border-color: #a855f7 !important;
+}
+
+/* ══════════════════════════════════════════
+   PWA / Safe areas
+   ══════════════════════════════════════════ */
 .safe-top    { padding-top:    env(safe-area-inset-top, 0px); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
-.safe-left   { padding-left:   env(safe-area-inset-left,  0px); }
-.safe-right  { padding-right:  env(safe-area-inset-right, 0px); }
 
 html.ios-pwa body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
 }
 
-/* ── Install prompt banner ──────────────── */
+/* ══════════════════════════════════════════
+   INSTALL BANNER
+   ══════════════════════════════════════════ */
 #pwa-install-banner {
   position: fixed;
   bottom: env(safe-area-inset-bottom, 0px);
   left: 0; right: 0;
-  background: #0d0d0d;
-  border-top: 1px solid #ffffff;
+  background: var(--bg-2);
+  border-top: 1px solid var(--accent);
   padding: 12px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
   z-index: 9000;
   font-family: 'Space Mono', monospace;
+}
+
+/* ══════════════════════════════════════════
+   GLOW EFFECTS (BTC theme only)
+   ══════════════════════════════════════════ */
+[data-theme="btc"] .btc-glow-text {
+  text-shadow: 0 0 8px var(--accent-glow), 0 0 24px var(--accent-dim);
+}
+[data-theme="btc"] .btc-glow-box {
+  box-shadow: 0 0 0 1px var(--accent), 0 0 24px -4px var(--accent-glow);
+}
+
+/* ══════════════════════════════════════════
+   GRID BACKGROUND
+   ══════════════════════════════════════════ */
+[data-theme="btc"] .vbc-grid-bg {
+  background-image:
+    linear-gradient(var(--accent-dim) 1px, transparent 1px),
+    linear-gradient(90deg, var(--accent-dim) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+[data-theme="mono"] .vbc-grid-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
 }

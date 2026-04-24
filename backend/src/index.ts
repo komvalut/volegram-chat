@@ -18,8 +18,24 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app  = express();
 const PORT = parseInt(process.env.PORT ?? "4000");
 
+const ALLOWED_ORIGINS = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "http://localhost:4173",
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL ?? "http://localhost:5173",
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (
+      ALLOWED_ORIGINS.includes(origin) ||
+      origin.endsWith(".onrender.com") ||
+      origin.endsWith(".replit.app") ||
+      origin.endsWith(".replit.dev") ||
+      origin.endsWith(".layerz.com")
+    ) return cb(null, true);
+    return cb(null, true);
+  },
   credentials: true,
 }));
 app.use(express.json());
@@ -66,12 +82,15 @@ async function migrate() {
       is_blocked        BOOLEAN      NOT NULL DEFAULT FALSE,
       created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     );
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS bio        TEXT;
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS email      VARCHAR(200);
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS phone      VARCHAR(40);
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_admin   BOOLEAN NOT NULL DEFAULT FALSE;
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS avatar_url     TEXT;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS bio            TEXT;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS email          VARCHAR(200);
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS phone          VARCHAR(40);
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_admin       BOOLEAN      NOT NULL DEFAULT FALSE;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_blocked     BOOLEAN      NOT NULL DEFAULT FALSE;
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS privacy_level  VARCHAR(20)  NOT NULL DEFAULT 'private';
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS lightning_address VARCHAR(200);
+    UPDATE chat_users SET lightning_address = '' WHERE lightning_address IS NULL;
 
     CREATE TABLE IF NOT EXISTS chat_rooms (
       id         SERIAL PRIMARY KEY,
