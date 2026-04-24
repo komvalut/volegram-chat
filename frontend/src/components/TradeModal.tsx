@@ -96,11 +96,11 @@ export default function TradeModal({
           {/* Mode explanation */}
           {dir === "buy_crypto" ? (
             <p className="text-[10px] text-neutral-600 bg-[#0a0a0a] border border-[#1a1a1a] px-3 py-2">
-              ⚡ Ti platiš Lightning invoice → sats idu u escrow → prodavač šalje crypto → ti potvrdiš → escrow se oslobodi.
+              ⚡ You pay Lightning → sats go to escrow → seller sends crypto → you confirm receipt → escrow is released.
             </p>
           ) : (
             <p className="text-[10px] text-neutral-600 bg-[#0a0a0a] border border-[#1a1a1a] px-3 py-2">
-              💶 Ti pošalješ fiat (Revolut, SEPA…) → prodavač potvrdi → šalje ti sats/BTC na Lightning adresu.
+              💶 You send fiat (Revolut, SEPA…) → seller confirms → sends sats/BTC to your Lightning address.
             </p>
           )}
 
@@ -166,8 +166,8 @@ export default function TradeModal({
                   {isPrivacy && <p className="font-black mb-0.5">🏴‍☠️ Privacy coin — untraceable</p>}
                   <p>⚡ {s.toLocaleString()} sats → {assetAmount} {asset}</p>
                   <div className="flex gap-3 mt-1.5 pt-1.5 border-t border-white/5 text-[9px] text-neutral-600">
-                    <span>Provizija 1%: {fee.toLocaleString()} ⚡</span>
-                    <span className="ml-auto">Prodavač prima: {(s - fee).toLocaleString()} ⚡</span>
+                    <span>Fee 1%: {fee.toLocaleString()} ⚡</span>
+                    <span className="ml-auto">Seller gets: {(s - fee).toLocaleString()} ⚡</span>
                   </div>
                 </div>
               );
