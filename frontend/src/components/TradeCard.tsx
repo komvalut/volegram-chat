@@ -23,6 +23,8 @@ interface Trade {
   paymentProofUrl?: string;
   buyerId: number;
   sellerId: number;
+  feeSats?: number;
+  feeRate?: string;
   buyer:  { username: string; lightningAddress?: string };
   seller: { username: string; lightningAddress?: string };
 }
@@ -160,11 +162,11 @@ export default function TradeCard({
             <span>Seller: @{trade.seller.username}</span>
           </div>
           {/* Fee breakdown */}
-          {trade.feeSats > 0 && (
+          {(trade.feeSats ?? 0) > 0 && (
             <div className="mt-2 pt-2 border-t border-white/5 grid grid-cols-3 text-[8px] text-neutral-700">
               <span>Escrow: {trade.sats.toLocaleString()} ⚡</span>
-              <span className="text-center">Fee: {trade.feeSats.toLocaleString()} ⚡ ({parseFloat(trade.feeRate) * 100}%)</span>
-              <span className="text-right text-neutral-500">Seller gets: {(trade.sats - trade.feeSats).toLocaleString()} ⚡</span>
+              <span className="text-center">Fee: {(trade.feeSats ?? 0).toLocaleString()} ⚡ ({parseFloat(trade.feeRate ?? "0") * 100}%)</span>
+              <span className="text-right text-neutral-500">Seller gets: {(trade.sats - (trade.feeSats ?? 0)).toLocaleString()} ⚡</span>
             </div>
           )}
         </div>
