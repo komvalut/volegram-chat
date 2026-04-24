@@ -45,10 +45,10 @@ app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 async function migrate() {
   await db.execute(sql`
     DO $$ BEGIN
-      CREATE TYPE IF NOT EXISTS msg_type  AS ENUM ('text','image','lightning','voice');
+      CREATE TYPE msg_type AS ENUM ('text','image','lightning','voice');
     EXCEPTION WHEN duplicate_object THEN NULL; END $$;
     DO $$ BEGIN
-      CREATE TYPE IF NOT EXISTS room_type AS ENUM ('dm','group');
+      CREATE TYPE room_type AS ENUM ('dm','group');
     EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
     CREATE TABLE IF NOT EXISTS chat_users (
