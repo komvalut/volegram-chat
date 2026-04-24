@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#000"/>
+  <!-- Outer glow ring -->
+  <circle cx="256" cy="256" r="230" fill="none" stroke="#F7931A" stroke-width="8" opacity="0.3"/>
+  <circle cx="256" cy="256" r="210" fill="none" stroke="#F7931A" stroke-width="2" opacity="0.6"/>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="200" fill="#0d0600"/>
+  <!-- Lightning bolt -->
+  <polygon points="290,100 210,270 256,270 222,412 320,220 270,220 310,100" fill="#F7931A"/>
+  <!-- Bitcoin B overlay subtle -->
+  <text x="195" y="310" font-family="Arial Black" font-weight="900" font-size="160" fill="#000" opacity="0.4">₿</text>
+  <!-- Inner glow -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#F7931A" stroke-width="1" opacity="0.4"/>
+</svg>

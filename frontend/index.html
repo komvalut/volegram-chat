@@ -2,15 +2,115 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VOLEGRAM — Lightning P2P Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA / Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="VBC ⚡" />
+    <meta name="application-name" content="VBC" />
+    <meta name="theme-color" content="#F7931A" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F7931A" />
+    <meta name="msapplication-TileColor" content="#000000" />
+    <meta name="msapplication-navbutton-color" content="#F7931A" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- SEO -->
+    <meta name="description" content="VBC — Bitcoin Lightning P2P Chat. Zero KYC. Instant sats. Own your money." />
+    <meta name="keywords" content="bitcoin,lightning,chat,p2p,privacy,sats,escrow,arrr,monero,nokyc" />
+    <meta property="og:title" content="VBC ⚡ Volegram Bitcoin Chat" />
+    <meta property="og:description" content="P2P Lightning Chat — Zero KYC · Stack Sats · Be Free" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/icons/icon.svg" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="VBC ⚡ Bitcoin Chat" />
+    <meta name="twitter:description" content="Lightning P2P Chat — Own your money" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Icons -->
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="shortcut icon" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon.svg" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+    <title>VBC ⚡ — Volegram Bitcoin Chat</title>
+
+    <style>
+      html { background: #000; }
+      /* Loading splash */
+      #vbc-splash {
+        position: fixed; inset: 0; background: #000;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        z-index: 9999; font-family: 'Space Mono', monospace;
+        transition: opacity 0.4s ease;
+      }
+      #vbc-splash.hidden { opacity: 0; pointer-events: none; }
+      #vbc-splash .bolt {
+        font-size: 4rem;
+        animation: btc-pulse 1.2s ease-in-out infinite;
+      }
+      #vbc-splash p {
+        color: #F7931A; font-size: 11px; letter-spacing: 0.3em;
+        text-transform: uppercase; margin-top: 16px;
+        animation: btc-pulse 1.2s ease-in-out infinite;
+      }
+      @keyframes btc-pulse {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.25; }
+      }
+    </style>
   </head>
   <body>
+    <!-- Instant splash while React loads -->
+    <div id="vbc-splash">
+      <div class="bolt">⚡</div>
+      <p>Volegram Bitcoin Chat</p>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <script>
+      // Hide splash once React mounts
+      document.addEventListener("DOMContentLoaded", () => {
+        const observer = new MutationObserver(() => {
+          const root = document.getElementById("root");
+          if (root && root.children.length > 0) {
+            const splash = document.getElementById("vbc-splash");
+            if (splash) {
+              splash.classList.add("hidden");
+              setTimeout(() => splash.remove(), 500);
+            }
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.getElementById("root"), { childList: true });
+      });
+
+      // Register Service Worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js", { scope: "/" })
+            .then(reg => {
+              console.log("⚡ VBC Service Worker registered:", reg.scope);
+              // Check for updates every 60s
+              setInterval(() => reg.update(), 60000);
+            })
+            .catch(err => console.warn("SW failed:", err));
+        });
+      }
+
+      // iOS PWA safe-area class
+      if (window.navigator.standalone) {
+        document.documentElement.classList.add("ios-pwa");
+      }
+    </script>
   </body>
 </html>
