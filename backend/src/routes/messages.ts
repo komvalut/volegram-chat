@@ -2,9 +2,9 @@ import { Router } from "express";
 import { db } from "../db/index.js";
 import {
   chatMessagesTable, chatRoomsTable, chatMembersTable,
-  chatUsersTable, chatRewardsTable, messageReadsTable,
+  chatUsersTable, messageReadsTable,
 } from "../db/schema.js";
-import { eq, inArray, and, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { createInvoice } from "../lib/lightning.js";
 import { notifyUser, broadcastRoom } from "../lib/ws.js";
 import multer from "multer";
@@ -160,7 +160,7 @@ router.post("/rooms/:roomId/read", auth, async (req, res) => {
   const roomId = parseInt(req.params.roomId);
   const msgs   = await db.select({ id: chatMessagesTable.id })
     .from(chatMessagesTable)
-    .where(and(eq(chatMessagesTable.roomId, roomId)));
+    .where(eq(chatMessagesTable.roomId, roomId));
   for (const m of msgs) {
     await db.execute(sql`INSERT INTO message_reads (message_id, user_id) VALUES (${m.id}, ${userId}) ON CONFLICT DO NOTHING`);
   }

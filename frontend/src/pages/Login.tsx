@@ -173,6 +173,25 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
           </>
         )}
       </div>
+
+      {/* Invite & Install — bottom, doesn't interfere */}
+      <div className="relative z-10 w-full max-w-sm mt-6 border border-[#1a1a1a] bg-[#060606] px-4 py-3 flex items-center gap-3">
+        <span className="text-lg shrink-0" style={{ color: "var(--accent)" }}>⚡</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white">Invite friends · Install app</p>
+          <p className="text-[10px] text-neutral-600 truncate">No sign-up. No KYC. Just Bitcoin.</p>
+        </div>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(window.location.origin);
+            alert("Link copied — share with your Bitcoin friends!");
+          }}
+          className="shrink-0 text-[10px] font-black uppercase tracking-wider px-3 py-1.5 transition-colors hover:opacity-80"
+          style={{ background: "var(--accent)", color: "#000" }}
+        >
+          Copy Link
+        </button>
+      </div>
     </div>
   );
 }

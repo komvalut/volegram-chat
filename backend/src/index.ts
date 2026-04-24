@@ -89,8 +89,6 @@ async function migrate() {
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_admin       BOOLEAN      NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_blocked     BOOLEAN      NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS privacy_level  VARCHAR(20)  NOT NULL DEFAULT 'private';
-    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS lightning_address VARCHAR(200);
-    UPDATE chat_users SET lightning_address = '' WHERE lightning_address IS NULL;
 
     CREATE TABLE IF NOT EXISTS chat_rooms (
       id         SERIAL PRIMARY KEY,

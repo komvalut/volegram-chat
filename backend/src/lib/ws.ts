@@ -108,6 +108,10 @@ export function notifyUser(userId: number, payload: object) {
   if (c && c.ws.readyState === WebSocket.OPEN) c.ws.send(JSON.stringify(payload));
 }
 
+export function notifyRoom(roomId: number, payload: object) {
+  broadcastRoom(roomId, payload);
+}
+
 export function broadcastRoom(roomId: number, payload: object) {
   const data = JSON.stringify(payload);
   clients.forEach(c => {
