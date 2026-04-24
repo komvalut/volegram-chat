@@ -45,7 +45,7 @@ export default function Admin({ user }: { user: any }) {
         </button>
         <div className="flex items-center gap-2">
           <Shield size={16} className="text-black"/>
-          <span className="font-black uppercase tracking-widest text-sm text-black">VBC Admin</span>
+          <span className="font-extrabold uppercase tracking-wide text-sm text-black">VBC Admin</span>
         </div>
         <div className="ml-auto flex gap-4 text-xs text-neutral-600">
           <span>{users.length} users</span>
@@ -57,7 +57,7 @@ export default function Admin({ user }: { user: any }) {
       <div className="flex border-b border-neutral-200">
         {([["users","Users", <Users size={13}/>], ["reports","Reports", <Flag size={13}/>]] as any[]).map(([id, label, icon]) => (
           <button key={id} onClick={() => setTab(id)}
-            className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-widest transition-colors border-b-2
+            className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wide transition-colors border-b-2
               ${tab === id ? "border-black text-black" : "border-transparent text-neutral-600 hover:text-black"}`}>
             {icon}{label}
           </button>
@@ -76,13 +76,13 @@ export default function Admin({ user }: { user: any }) {
                   <div className="w-8 h-8 rounded-full border border-neutral-300 overflow-hidden flex-shrink-0">
                     {u.avatarUrl
                       ? <img src={u.avatarUrl} className="w-full h-full object-cover" alt=""/>
-                      : <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-xs text-black font-black">{u.username.slice(0,1).toUpperCase()}</div>
+                      : <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-xs text-black font-extrabold">{u.username.slice(0,1).toUpperCase()}</div>
                     }
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-black">@{u.username}</span>
-                      {u.isAdmin   && <span className="text-xs bg-black/10 text-black px-1.5 py-0.5">ADMIN</span>}
+                      {u.isAdmin   && <span className="text-xs bg-black/10 text-white px-1.5 py-0.5">ADMIN</span>}
                       {u.isBlocked && <span className="text-xs bg-red-900/30 text-red-400 px-1.5 py-0.5">BLOCKED</span>}
                     </div>
                     <p className="text-xs text-neutral-600 truncate">{u.lightningAddress}</p>

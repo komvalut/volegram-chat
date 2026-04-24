@@ -76,7 +76,7 @@ export default function Profile({ currentUser }: { currentUser: any }) {
               <div className="w-20 h-20 rounded-full border-2 border-[white]/40 overflow-hidden bg-neutral-100">
                 {(avatarPrev || profile.avatarUrl)
                   ? <img src={avatarPrev || profile.avatarUrl} className="w-full h-full object-cover" alt="avatar"/>
-                  : <div className="w-full h-full flex items-center justify-center text-3xl text-[white] font-black">
+                  : <div className="w-full h-full flex items-center justify-center text-3xl text-[white] font-extrabold">
                       {profile.username.slice(0,1).toUpperCase()}
                     </div>
                 }
@@ -90,7 +90,7 @@ export default function Profile({ currentUser }: { currentUser: any }) {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-black text-black">@{profile.username}</h1>
+              <h1 className="text-xl font-extrabold text-black">@{profile.username}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <Zap size={11} className="text-[white]"/>
                 <span className="text-xs text-neutral-500 font-mono truncate">{profile.lightningAddress}</span>
@@ -117,39 +117,39 @@ export default function Profile({ currentUser }: { currentUser: any }) {
         {/* Edit Form */}
         {isMe && editing && (
           <form onSubmit={saveProfile} className="border border-[white]/30 bg-[#050505] p-5 mb-4 space-y-3">
-            <h2 className="text-sm font-black uppercase tracking-widest text-[white] mb-3">Edit Profile</h2>
+            <h2 className="text-sm font-extrabold uppercase tracking-wide text-[white] mb-3">Edit Profile</h2>
             <div>
-              <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Username</label>
+              <label className="block text-xs text-neutral-500 uppercase tracking-wide mb-1">Username</label>
               <input value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value.replace(/[^a-zA-Z0-9_]/g,"").slice(0,30) }))}
                 className="w-full bg-neutral-900 border border-neutral-700 text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
             </div>
             <div>
-              <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Lightning Address ⚡</label>
+              <label className="block text-xs text-neutral-500 uppercase tracking-wide mb-1">Lightning Address ⚡</label>
               <input value={form.lightningAddress} onChange={e => setForm(f => ({ ...f, lightningAddress: e.target.value.trim() }))}
                 placeholder="you@walletofsatoshi.com"
                 className="w-full bg-neutral-900 border border-neutral-700 text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
               <p className="text-sm text-neutral-500 mt-1">Changing this will be your new login identity</p>
             </div>
             <div>
-              <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Bio</label>
+              <label className="block text-xs text-neutral-500 uppercase tracking-wide mb-1">Bio</label>
               <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} rows={3} maxLength={160}
                 className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-3 py-2.5 outline-none focus:border-[white] font-mono resize-none"/>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email (private)</label>
+                <label className="block text-xs text-neutral-500 uppercase tracking-wide mb-1">Email (private)</label>
                 <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} type="email"
                   className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
               </div>
               <div>
-                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Phone (private)</label>
+                <label className="block text-xs text-neutral-500 uppercase tracking-wide mb-1">Phone (private)</label>
                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} type="tel"
                   className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
               </div>
             </div>
             <div className="flex gap-2 pt-1">
               <button type="submit" disabled={loading}
-                className="bg-[white] text-white font-black text-xs uppercase tracking-widest px-5 py-2 hover:bg-neutral-800 disabled:opacity-40">
+                className="bg-[white] text-white font-extrabold text-xs uppercase tracking-wide px-5 py-2 hover:bg-neutral-800 disabled:opacity-40">
                 {loading ? "SAVING…" : "SAVE"}
               </button>
               <button type="button" onClick={() => setEditing(false)} className="text-xs text-neutral-600 hover:text-black px-3 py-2">
@@ -172,7 +172,7 @@ export default function Profile({ currentUser }: { currentUser: any }) {
         {/* Self-destruct */}
         {isMe && (
           <div className="mt-6 border border-red-900/30 bg-red-900/5 p-4">
-            <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">Danger Zone</p>
+            <p className="text-xs font-extrabold text-red-400 uppercase tracking-wide mb-1">Danger Zone</p>
             <p className="text-xs text-neutral-600 mb-3">
               Permanently delete your account, all messages and data.<br/>
               This cannot be undone.
@@ -183,7 +183,7 @@ export default function Profile({ currentUser }: { currentUser: any }) {
                 await api.deleteAccount();
                 window.location.href = "/login";
               }}
-              className="text-xs border border-red-800 text-red-400 px-4 py-2 hover:bg-red-900/30 font-bold uppercase tracking-widest transition-colors">
+              className="text-xs border border-red-800 text-red-400 px-4 py-2 hover:bg-red-900/30 font-bold uppercase tracking-wide transition-colors">
               DELETE ACCOUNT
             </button>
           </div>

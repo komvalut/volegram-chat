@@ -74,18 +74,18 @@ export default function TradeModal({
 
         <div className="flex items-center gap-2 mb-4">
           <ArrowLeftRight size={16} className="text-black"/>
-          <h2 className="font-black uppercase tracking-widest text-sm text-black">New P2P Trade</h2>
+          <h2 className="font-extrabold uppercase tracking-wide text-sm text-black">New P2P Trade</h2>
         </div>
 
         {/* Direction toggle */}
         <div className="grid grid-cols-2 gap-1 mb-4 border border-neutral-200 p-1">
           <button type="button" onClick={() => setDir("buy_crypto")}
-            className={`flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-wider transition-colors
+            className={`flex items-center justify-center gap-2 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors
               ${dir === "buy_crypto" ? "bg-black text-white" : "text-neutral-600 hover:text-black"}`}>
             <Zap size={11}/> Pay Lightning → Get Crypto
           </button>
           <button type="button" onClick={() => setDir("buy_sats")}
-            className={`flex items-center justify-center gap-2 py-2 text-xs font-black uppercase tracking-wider transition-colors
+            className={`flex items-center justify-center gap-2 py-2 text-xs font-extrabold uppercase tracking-wider transition-colors
               ${dir === "buy_sats" ? "bg-black text-white" : "text-neutral-600 hover:text-black"}`}>
             <Banknote size={11}/> Pay Fiat → Get BTC ⚡
           </button>
@@ -106,7 +106,7 @@ export default function TradeModal({
 
           {/* Counterparty */}
           <div>
-            <label className="block text-xs text-neutral-600 uppercase tracking-widest mb-1">
+            <label className="block text-xs text-neutral-600 uppercase tracking-wide mb-1">
               {dir === "buy_crypto" ? "Seller Username" : "BTC Seller Username"}
             </label>
             <input value={sellerUsername} onChange={e => setSeller(e.target.value)}
@@ -117,15 +117,15 @@ export default function TradeModal({
           {/* ── BUY CRYPTO: pay Lightning ── */}
           {dir === "buy_crypto" && (<>
             <div>
-              <label className="block text-xs text-neutral-600 uppercase tracking-widest mb-1">You Pay (sats → escrow)</label>
+              <label className="block text-xs text-neutral-600 uppercase tracking-wide mb-1">You Pay (sats → escrow)</label>
               <input value={sats} onChange={e => setSats(e.target.value)} type="number" min="1" placeholder="50000"
                 className="w-full bg-neutral-50 border border-neutral-200 text-black text-sm px-3 py-2 outline-none focus:border-black font-mono"/>
             </div>
 
             <div>
-              <label className="block text-xs text-neutral-600 uppercase tracking-widest mb-1.5">You Receive</label>
+              <label className="block text-xs text-neutral-600 uppercase tracking-wide mb-1.5">You Receive</label>
               <div className="mb-2">
-                <p className="text-xs text-purple-500 uppercase tracking-widest font-bold mb-1">🏴‍☠️ Privacy Coins</p>
+                <p className="text-xs text-purple-500 uppercase tracking-wide font-bold mb-1">🏴‍☠️ Privacy Coins</p>
                 <div className="grid grid-cols-4 gap-1">
                   {PRIVACY_COINS.map(c => (
                     <button key={c} type="button" onClick={() => setAsset(c)}
@@ -137,7 +137,7 @@ export default function TradeModal({
                 </div>
               </div>
               <div className="mb-2">
-                <p className="text-xs text-neutral-500 uppercase tracking-widest font-bold mb-1">Other</p>
+                <p className="text-xs text-neutral-500 uppercase tracking-wide font-bold mb-1">Other</p>
                 <div className="grid grid-cols-4 gap-1">
                   {OTHER_COINS.map(c => (
                     <button key={c} type="button" onClick={() => setAsset(c)}
@@ -163,7 +163,7 @@ export default function TradeModal({
               const fee = Math.ceil(s * 0.01);
               return (
                 <div className={`border px-3 py-2 text-xs ${isPrivacy ? "bg-purple-900/10 border-purple-900/40 text-purple-300" : "bg-black/5 border-black/10 text-neutral-400"}`}>
-                  {isPrivacy && <p className="font-black mb-0.5">🏴‍☠️ Privacy coin — untraceable</p>}
+                  {isPrivacy && <p className="font-extrabold mb-0.5">🏴‍☠️ Privacy coin — untraceable</p>}
                   <p>⚡ {s.toLocaleString()} sats → {assetAmount} {asset}</p>
                   <div className="flex gap-3 mt-1.5 pt-1.5 border-t border-black/5 text-xs text-neutral-600">
                     <span>Fee 1%: {fee.toLocaleString()} ⚡</span>
@@ -177,7 +177,7 @@ export default function TradeModal({
           {/* ── BUY SATS: pay fiat ── */}
           {dir === "buy_sats" && (<>
             <div>
-              <label className="block text-xs text-neutral-600 uppercase tracking-widest mb-1">You Want (sats)</label>
+              <label className="block text-xs text-neutral-600 uppercase tracking-wide mb-1">You Want (sats)</label>
               <div className="flex gap-2 items-center">
                 <input value={sats} onChange={e => setSats(e.target.value)} type="number" min="1" placeholder="100000"
                   className="flex-1 bg-neutral-50 border border-neutral-200 text-black text-sm px-3 py-2 outline-none focus:border-black font-mono"/>
@@ -186,7 +186,7 @@ export default function TradeModal({
             </div>
 
             <div>
-              <label className="block text-xs text-neutral-600 uppercase tracking-widest mb-1">You Pay (fiat)</label>
+              <label className="block text-xs text-neutral-600 uppercase tracking-wide mb-1">You Pay (fiat)</label>
               <div className="flex gap-2">
                 <input value={fiatAmount} onChange={e => setFiatA(e.target.value)} placeholder="5" type="number" min="0.01" step="0.01"
                   className="w-20 bg-neutral-50 border border-neutral-200 text-black text-sm px-2 py-2 outline-none focus:border-black font-mono"/>
@@ -200,7 +200,7 @@ export default function TradeModal({
             </div>
 
             <div>
-              <label className="block text-xs text-neutral-600 uppercase tracking-widest mb-1.5">Payment Method</label>
+              <label className="block text-xs text-neutral-600 uppercase tracking-wide mb-1.5">Payment Method</label>
               <div className="grid grid-cols-3 gap-1">
                 {FIAT_METHODS.map(m => (
                   <button key={m} type="button" onClick={() => setFiatM(m)}
@@ -214,7 +214,7 @@ export default function TradeModal({
 
             {sats && fiatAmount && (
               <div className="bg-blue-900/10 border border-blue-900/40 px-3 py-2 text-xs text-blue-300">
-                <p className="font-black mb-0.5">💶 Fiat → ⚡ BTC/Lightning</p>
+                <p className="font-extrabold mb-0.5">💶 Fiat → ⚡ BTC/Lightning</p>
                 {fiatAmount} {fiatCurrency} via {fiatMethod} → {parseInt(sats).toLocaleString()} sats
               </div>
             )}
@@ -223,7 +223,7 @@ export default function TradeModal({
           {err && <p className="text-xs text-red-500">{err}</p>}
 
           <button type="submit" disabled={loading}
-            className="w-full bg-black text-white font-black uppercase tracking-widest text-sm py-3 hover:bg-neutral-800 disabled:opacity-40 transition-colors">
+            className="w-full bg-black text-white font-extrabold uppercase tracking-wide text-sm py-3 hover:bg-neutral-800 disabled:opacity-40 transition-colors">
             {loading ? "CREATING TRADE…" : dir === "buy_crypto" ? "CREATE TRADE ⚡" : "CREATE FIAT TRADE 💶"}
           </button>
         </form>

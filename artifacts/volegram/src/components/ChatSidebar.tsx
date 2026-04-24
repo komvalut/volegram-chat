@@ -60,8 +60,8 @@ export default function ChatSidebar({
 
   const roomIcon = (room: any) => {
     if (room.isIncognito) return <EyeOff size={13} className="text-purple-400"/>;
-    if (room.type === "group") return <span className="text-sm font-black text-black">#</span>;
-    return <span className="text-sm font-black text-black">D</span>;
+    if (room.type === "group") return <span className="text-sm font-extrabold text-black">#</span>;
+    return <span className="text-sm font-extrabold text-black">D</span>;
   };
 
   return (
@@ -72,11 +72,11 @@ export default function ChatSidebar({
         <div className="flex items-center gap-3">
           <div className="flex flex-col items-center leading-none shrink-0">
             <span className="text-black text-2xl leading-none">⚡</span>
-            <span className="text-xs font-black tracking-[0.2em] text-black/40 uppercase mt-0.5">BTC</span>
+            <span className="text-xs font-extrabold  text-black/40 uppercase mt-0.5">BTC</span>
           </div>
           <div>
-            <p className="font-black text-sm tracking-[0.25em] uppercase text-black leading-none">VBC</p>
-            <p className="text-xs text-neutral-600 tracking-widest uppercase mt-0.5">Volegram Bitcoin Chat</p>
+            <p className="font-extrabold text-sm  uppercase text-black leading-none">VBC</p>
+            <p className="text-xs text-neutral-600 tracking-wide uppercase mt-0.5">Volegram Bitcoin Chat</p>
           </div>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function ChatSidebar({
         <div className="w-10 h-10 rounded-full border border-black/20 overflow-hidden bg-neutral-100 shrink-0">
           {user.avatarUrl
             ? <img src={user.avatarUrl} className="w-full h-full object-cover" alt=""/>
-            : <div className="w-full h-full flex items-center justify-center text-base font-black text-black">
+            : <div className="w-full h-full flex items-center justify-center text-base font-extrabold text-black">
                 {user.username.slice(0,1).toUpperCase()}
               </div>
           }
@@ -106,7 +106,7 @@ export default function ChatSidebar({
       <div className="flex border-b border-neutral-200">
         {[["chats", "Chats", <MessageCircle size={13}/>], ["swap", "Swap", <Zap size={13}/>]].map(([id, label, icon]: any) => (
           <button key={id} onClick={() => { setTab(id); if (id === "swap") onToggleSwap(); }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-widest border-b-2 transition-colors
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-wide border-b-2 transition-colors
               ${(tab === id || (id === "swap" && showSwap)) ? "border-black text-black" : "border-transparent text-neutral-600 hover:text-black"}`}>
             {icon}{label}
           </button>
@@ -138,7 +138,7 @@ export default function ChatSidebar({
               <div className="flex gap-1">
                 <input value={dmTarget} onChange={e => setDmT(e.target.value)} placeholder="@username" autoFocus
                   className="flex-1 bg-neutral-50 border border-neutral-300 text-black text-xs px-2 py-1.5 outline-none focus:border-black font-mono"/>
-                <button type="submit" className="bg-black text-white text-xs px-2 font-black">GO</button>
+                <button type="submit" className="bg-black text-white text-xs px-2 font-extrabold">GO</button>
                 <button type="button" onClick={closeNew} className="text-neutral-500 px-1 hover:text-black text-xs">✕</button>
               </div>
               {err && <p className="text-xs text-red-500">{err}</p>}
@@ -150,7 +150,7 @@ export default function ChatSidebar({
               <div className="flex gap-1">
                 <input value={icoName} onChange={e => setIcoN(e.target.value)} placeholder="Room name (opt)" autoFocus
                   className="flex-1 bg-neutral-50 border border-purple-900/40 text-black text-xs px-2 py-1.5 outline-none focus:border-purple-500 font-mono"/>
-                <button type="submit" className="bg-purple-700 text-white text-xs px-2 font-black">CREATE</button>
+                <button type="submit" className="bg-purple-700 text-white text-xs px-2 font-extrabold">CREATE</button>
                 <button type="button" onClick={closeNew} className="text-neutral-500 px-1 hover:text-black text-xs">✕</button>
               </div>
               {invite && (
@@ -172,7 +172,7 @@ export default function ChatSidebar({
               <div className="flex gap-1">
                 <input value={joinCode} onChange={e => setJoin(e.target.value)} placeholder="Invite code" autoFocus
                   className="flex-1 bg-neutral-50 border border-neutral-300 text-black text-xs px-2 py-1.5 outline-none focus:border-black font-mono"/>
-                <button type="submit" className="bg-black text-white text-xs px-2 font-black">JOIN</button>
+                <button type="submit" className="bg-black text-white text-xs px-2 font-extrabold">JOIN</button>
                 <button type="button" onClick={closeNew} className="text-neutral-500 px-1 hover:text-black text-xs">✕</button>
               </div>
               {err && <p className="text-xs text-red-500">{err}</p>}
@@ -224,7 +224,7 @@ export default function ChatSidebar({
       <div className="border-t border-neutral-200 px-4 py-3 space-y-2">
         {user.isAdmin && (
           <button onClick={() => nav("/admin")}
-            className="w-full flex items-center gap-2 text-xs text-black hover:text-neutral-400 font-bold uppercase tracking-widest transition-colors">
+            className="w-full flex items-center gap-2 text-xs text-black hover:text-neutral-400 font-bold uppercase tracking-wide transition-colors">
             <Shield size={13}/> Admin Panel
           </button>
         )}

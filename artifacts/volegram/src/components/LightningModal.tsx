@@ -35,7 +35,7 @@ export default function LightningModal({
 
         <div className="flex items-center gap-2 mb-5">
           <Zap size={18} className="text-black" />
-          <h2 className="font-black uppercase tracking-widest text-sm text-black">Send Lightning</h2>
+          <h2 className="font-extrabold uppercase tracking-wide text-sm text-black">Send Lightning</h2>
         </div>
 
         <div className="grid grid-cols-4 gap-2 mb-4">
@@ -67,7 +67,7 @@ export default function LightningModal({
         <button
           onClick={send}
           disabled={loading || !sats}
-          className="w-full bg-black text-white font-black uppercase tracking-widest text-sm py-3 hover:bg-neutral-800 disabled:opacity-40 transition-colors"
+          className="w-full bg-black text-white font-extrabold uppercase tracking-wide text-sm py-3 hover:bg-neutral-800 disabled:opacity-40 transition-colors"
         >
           {loading ? "CREATING…" : `CREATE INVOICE ⚡`}
         </button>

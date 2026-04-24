@@ -135,14 +135,14 @@ export default function TradeCard({
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">
           <Zap size={13} className="text-black"/>
-          <span className="text-xs font-black uppercase tracking-widest text-black">
+          <span className="text-xs font-extrabold uppercase tracking-wide text-black">
             VBC {isFiat ? "💶 Fiat" : "⚡ Lightning"} Trade #{trade.id}
           </span>
         </div>
 
         {/* Summary */}
         <div className="bg-black/40 px-3 py-2.5 mb-3 border border-black/5">
-          <div className="flex items-center gap-2 text-sm font-black">
+          <div className="flex items-center gap-2 text-sm font-extrabold">
             {isFiat ? (
               <>
                 <span className="text-blue-300">{trade.assetAmount}</span>
@@ -190,7 +190,7 @@ export default function TradeCard({
                 <p className="text-xs text-neutral-500 font-mono break-all">{trade.invoicePr.slice(0,50)}…</p>
               </div>
               <button onClick={copyInvoice}
-                className="w-full flex items-center justify-center gap-2 bg-black text-white text-xs font-black py-2 hover:bg-neutral-800">
+                className="w-full flex items-center justify-center gap-2 bg-black text-white text-xs font-extrabold py-2 hover:bg-neutral-800">
                 {copied ? <><CheckCircle size={11}/>COPIED!</> : <><Copy size={11}/>COPY INVOICE & PAY</>}
               </button>
               {polling && <p className="text-xs text-neutral-600 text-center animate-pulse">Checking payment…</p>}
@@ -202,9 +202,9 @@ export default function TradeCard({
               <p className="text-xs text-black font-bold">Enter your {trade.asset} address:</p>
               <input value={address} onChange={e => setAddress(e.target.value)}
                 placeholder={`Your ${trade.asset} wallet address`}
-                className="w-full bg-black/60 border border-neutral-200 text-black text-xs px-2 py-1.5 outline-none focus:border-black font-mono"/>
+                className="w-full bg-black/60 border border-neutral-200 text-white text-xs px-2 py-1.5 outline-none focus:border-black font-mono"/>
               <button onClick={shareAddress} disabled={!address.trim() || loading}
-                className="w-full bg-black text-white text-xs font-black py-2 disabled:opacity-40">
+                className="w-full bg-black text-white text-xs font-extrabold py-2 disabled:opacity-40">
                 {loading ? "SHARING…" : `SHARE ${trade.asset} ADDRESS`}
               </button>
             </div>
@@ -225,7 +225,7 @@ export default function TradeCard({
           {isBuyer && trade.status === "address_shared" && (
             <div className="space-y-1.5">
               <button onClick={confirm} disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-green-700 text-white text-xs font-black py-2 hover:bg-green-600 disabled:opacity-40">
+                className="w-full flex items-center justify-center gap-2 bg-green-700 text-white text-xs font-extrabold py-2 hover:bg-green-600 disabled:opacity-40">
                 <CheckCircle size={11}/>
                 {loading ? "CONFIRMING…" : `I RECEIVED ${trade.asset} — RELEASE ESCROW`}
               </button>
@@ -252,7 +252,7 @@ export default function TradeCard({
               <input ref={fileRef} type="file" accept="image/*" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) uploadProof(f); }}/>
               <button onClick={() => fileRef.current?.click()} disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-black text-white text-xs font-black py-2 hover:bg-neutral-800 disabled:opacity-40">
+                className="w-full flex items-center justify-center gap-2 bg-black text-white text-xs font-extrabold py-2 hover:bg-neutral-800 disabled:opacity-40">
                 <Upload size={11}/>
                 {loading ? "UPLOADING…" : "UPLOAD PAYMENT SCREENSHOT"}
               </button>
@@ -287,7 +287,7 @@ export default function TradeCard({
               )}
               <div className="grid grid-cols-2 gap-1.5">
                 <button onClick={confirm} disabled={loading}
-                  className="flex items-center justify-center gap-1 bg-green-700 text-white text-xs font-black py-2 hover:bg-green-600 disabled:opacity-40">
+                  className="flex items-center justify-center gap-1 bg-green-700 text-white text-xs font-extrabold py-2 hover:bg-green-600 disabled:opacity-40">
                   <CheckCircle size={10}/>
                   {loading ? "…" : "LOOKS LEGIT — RELEASE BTC"}
                 </button>
@@ -361,7 +361,7 @@ export default function TradeCard({
           </button>
           <img src={`${BASE}${trade.paymentProofUrl}`} alt="Payment proof"
             className="max-w-full max-h-full object-contain"/>
-          <p className="absolute bottom-4 text-xs text-neutral-600 uppercase tracking-widest">
+          <p className="absolute bottom-4 text-xs text-neutral-600 uppercase tracking-wide">
             Payment proof — verify amount and recipient
           </p>
         </div>

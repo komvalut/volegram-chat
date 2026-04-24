@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera } from "lucide-react";
+import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles } from "lucide-react";
 import { api, uploadFile } from "../lib/api";
 
 type Step = "address" | "profile";
@@ -19,7 +19,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
 
   const handleAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addr.trim()) { setErr("Enter your address"); return; }
+    if (!addr.trim()) { setErr("Enter your Lightning address"); return; }
     setLoading(true); setErr("");
     try {
       const { user: u, isNew } = await api.login(addr.trim().toLowerCase());
@@ -29,7 +29,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
       else onLogin(u);
     } catch (err: any) {
       const msg = err.message ?? "";
-      setErr(msg.includes("suspended") ? "⛔ Account suspended — contact admin" : "Login failed");
+      setErr(msg.includes("suspended") ? "Account suspended — contact admin" : "Login failed. Try again.");
     } finally { setLoading(false); }
   };
 
@@ -60,137 +60,159 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
   };
 
   return (
-    <div className="h-full bg-white flex flex-col items-center justify-center px-4 relative overflow-hidden">
-      {/* Subtle grid */}
-      <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.02)_0,rgba(255,255,255,0.02)_1px,transparent_1px,transparent_3px)]" />
+    <div className="h-full overflow-y-auto bg-[var(--bg)] flex flex-col items-center px-4 py-8 relative">
+      {/* Soft accent glow background */}
+      <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full"
+           style={{ background: "radial-gradient(circle, rgba(247,147,26,0.10) 0%, transparent 60%)" }} />
 
-      <div className="relative z-10 w-full max-w-sm">
-        {/* Logo — ⚡ with BTC below */}
+      <div className="relative z-10 w-full max-w-md mt-4">
+        {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex flex-col items-center mb-4">
-            <span className="text-black text-5xl leading-none">⚡</span>
-            <span className="text-xs font-black tracking-[0.3em] text-black/40 uppercase mt-1">BTC</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
+               style={{ background: "linear-gradient(135deg, #F7931A 0%, #FF6B00 100%)",
+                        boxShadow: "0 12px 32px rgba(247,147,26,0.35)" }}>
+            <span className="text-3xl">⚡</span>
           </div>
-          <h1 className="text-2xl font-black tracking-[0.2em] text-black uppercase mb-1">VBC</h1>
-          <p className="text-xs tracking-widest text-neutral-500 uppercase">Volegram Bitcoin Chat</p>
-          <p className="text-xs text-neutral-500 mt-1">Zero KYC · Lightning Native · P2P</p>
+          <h1 className="text-3xl font-extrabold text-[var(--text)] tracking-tight">
+            <span className="accent-text-gradient">Volegram</span>
+          </h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1 font-medium">
+            Bitcoin Lightning Chat · Zero KYC
+          </p>
         </div>
 
         {step === "address" && (
           <>
-            <div className="grid grid-cols-2 gap-1.5 mb-6">
-              {[
-                { icon: <MessageCircle size={13}/>, t: "Real-time Chat" },
-                { icon: <Zap size={13}/>, t: "Send Sats" },
-                { icon: <Shield size={13}/>, t: "No KYC" },
-                { icon: <Coins size={13}/>, t: "+1000 sats bonus" },
-              ].map(f => (
-                <div key={f.t} className="flex items-center gap-2 bg-black/3 border border-black/8 px-3 py-2.5 text-xs text-neutral-400">
-                  <span className="text-black">{f.icon}</span>{f.t}
-                </div>
-              ))}
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              <div className="feature-pill"><MessageCircle size={16}/> Real-time chat</div>
+              <div className="feature-pill"><Zap size={16}/> Instant sats</div>
+              <div className="feature-pill"><Shield size={16}/> No KYC ever</div>
+              <div className="feature-pill"><Coins size={16}/> +1000 sats free</div>
             </div>
 
-            <form onSubmit={handleAddress} className="space-y-3">
-              <div>
-                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1.5">Lightning Address</label>
-                <input
-                  value={addr} onChange={e => setAddr(e.target.value)}
-                  placeholder="you@walletofsatoshi.com"
-                  className="w-full bg-neutral-900 border border-neutral-700 text-white text-base px-3 py-3 outline-none focus:border-black font-mono placeholder:text-neutral-500 transition-colors"
-                />
-              </div>
-              {err && <p className="text-sm text-red-500">{err}</p>}
-              <button type="submit" disabled={loading || !addr}
-                className="w-full bg-black text-white font-black uppercase tracking-widest text-sm py-3.5 hover:bg-neutral-800 disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
-                {loading ? "CONNECTING…" : <><span>ENTER VBC</span><ArrowRight size={14}/></>}
-              </button>
-            </form>
-            <div className="mt-5 border border-neutral-200 bg-neutral-900 px-4 py-3">
-              <p className="text-sm text-neutral-500 leading-relaxed">
-                <span style={{ color: "var(--accent)" }}>⚡ Note:</span> A <strong className="text-white">valid Lightning address</strong> is required for sending sats and Lightning payments to work. We accept any input — if your address doesn't work, that's on you.
-              </p>
-              <p className="text-xs text-neutral-500 mt-1.5">
-                Examples: <span className="font-mono">user@walletofsatoshi.com</span> · <span className="font-mono">you@muun.com</span> · <span className="font-mono">satoshi@blink.sv</span>
-              </p>
+            <div className="surface-card-elevated p-6">
+              <form onSubmit={handleAddress} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                    Your Lightning Address
+                  </label>
+                  <input
+                    value={addr}
+                    onChange={e => setAddr(e.target.value)}
+                    placeholder="you@walletofsatoshi.com"
+                    className="input-modern font-mono text-sm"
+                    autoFocus
+                  />
+                  <p className="text-xs text-[var(--text-dim)] mt-2">
+                    Use any Lightning address — no email or phone needed.
+                  </p>
+                </div>
+
+                {err && (
+                  <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                    {err}
+                  </div>
+                )}
+
+                <button type="submit" disabled={loading || !addr.trim()} className="btn-accent w-full">
+                  {loading ? "Connecting…" : (<><Sparkles size={16}/> Enter Volegram <ArrowRight size={16}/></>)}
+                </button>
+              </form>
             </div>
+
+            {/* Examples */}
+            <p className="text-center text-xs text-[var(--text-dim)] mt-5">
+              Examples: <span className="font-mono text-[var(--text-muted)]">user@walletofsatoshi.com</span> ·{" "}
+              <span className="font-mono text-[var(--text-muted)]">you@blink.sv</span>
+            </p>
           </>
         )}
 
         {step === "profile" && (
-          <>
-            <p className="text-sm text-neutral-500 mb-5 text-center">Welcome! Set up your profile to continue.</p>
-            <form onSubmit={handleProfile} className="space-y-3">
-              {/* Avatar */}
+          <div className="surface-card-elevated p-6 animate-slide-up">
+            <p className="text-sm text-[var(--text-muted)] mb-5 text-center">
+              Welcome! Set up your profile <span className="text-[var(--text-dim)]">— or skip and start chatting.</span>
+            </p>
+            <form onSubmit={handleProfile} className="space-y-4">
               <div className="flex justify-center mb-2">
                 <label className="cursor-pointer relative group">
-                  <div className="w-20 h-20 rounded-full border-2 border-black/20 overflow-hidden bg-neutral-100 flex items-center justify-center">
+                  <div className="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center"
+                       style={{ background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%)" }}>
                     {avatarPrev
                       ? <img src={avatarPrev} className="w-full h-full object-cover" alt="avatar"/>
-                      : <span className="text-3xl text-black font-black">{username.slice(0,1).toUpperCase() || "?"}</span>
+                      : <span className="text-4xl text-black font-extrabold">{username.slice(0,1).toUpperCase() || "?"}</span>
                     }
                   </div>
                   <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera size={18} className="text-black"/>
+                    <Camera size={20} className="text-white"/>
                   </div>
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatar}/>
                 </label>
               </div>
 
               <div>
-                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Username</label>
+                <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Username</label>
                 <input value={username} onChange={e => setUname(e.target.value.replace(/[^a-zA-Z0-9_]/g,"").slice(0,30))}
-                  placeholder="satoshi_nakamoto"
-                  className="w-full bg-neutral-900 border border-neutral-700 text-white text-base px-3 py-2.5 outline-none focus:border-black font-mono"/>
+                  placeholder="satoshi_nakamoto" className="input-modern font-mono text-sm"/>
               </div>
               <div>
-                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Bio <span className="text-neutral-500">(optional)</span></label>
+                <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                  Bio <span className="text-[var(--text-dim)] font-normal normal-case">(optional)</span>
+                </label>
                 <textarea value={bio} onChange={e => setBio(e.target.value)} rows={2} maxLength={160}
-                  placeholder="Bitcoin maximalist, hodler since 2013…"
-                  className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-3 py-2.5 outline-none focus:border-black font-mono resize-none"/>
+                  placeholder="Bitcoin maximalist since 2013…" className="input-modern resize-none text-sm"/>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email <span className="text-neutral-500">(opt)</span></label>
-                  <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="private@mail.com"
-                    className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-2 py-2 outline-none focus:border-black font-mono"/>
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                    Email <span className="text-[var(--text-dim)] font-normal normal-case">(opt)</span>
+                  </label>
+                  <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="optional"
+                    className="input-modern text-sm"/>
                 </div>
                 <div>
-                  <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Phone <span className="text-neutral-500">(opt)</span></label>
-                  <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="+387…"
-                    className="w-full bg-neutral-900 border border-neutral-700 text-white text-sm px-2 py-2 outline-none focus:border-black font-mono"/>
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                    Phone <span className="text-[var(--text-dim)] font-normal normal-case">(opt)</span>
+                  </label>
+                  <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="optional"
+                    className="input-modern text-sm"/>
                 </div>
               </div>
-              {err && <p className="text-sm text-red-500">{err}</p>}
-              <button type="submit" disabled={loading}
-                className="w-full bg-black text-white font-black uppercase tracking-widest text-sm py-3.5 hover:bg-neutral-800 disabled:opacity-40 transition-colors">
-                {loading ? "SAVING…" : "ENTER VBC ⚡"}
+
+              {err && (
+                <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{err}</div>
+              )}
+
+              <button type="submit" disabled={loading} className="btn-accent w-full">
+                {loading ? "Saving…" : (<><Sparkles size={16}/> Enter Volegram</>)}
               </button>
-              <button type="button" onClick={() => onLogin(user)} className="w-full text-xs text-neutral-600 hover:text-neutral-400 py-2">
+              <button type="button" onClick={() => onLogin(user)} className="w-full text-sm text-[var(--text-muted)] hover:text-[var(--text)] py-2 font-medium transition-colors">
                 Skip for now →
               </button>
             </form>
-          </>
+          </div>
         )}
-      </div>
 
-      {/* Invite & Install — bottom, doesn't interfere */}
-      <div className="relative z-10 w-full max-w-sm mt-6 border border-neutral-200 bg-[#060606] px-4 py-3 flex items-center gap-3">
-        <span className="text-lg shrink-0" style={{ color: "var(--accent)" }}>⚡</span>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-black uppercase tracking-widest text-white">Invite friends · Install app</p>
-          <p className="text-xs text-neutral-600 truncate">No sign-up. No KYC. Just Bitcoin.</p>
+        {/* Invite footer */}
+        <div className="surface-card mt-6 px-4 py-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+               style={{ background: "var(--accent-dim)" }}>
+            <Zap size={18} className="accent" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[var(--text)]">Invite friends</p>
+            <p className="text-xs text-[var(--text-muted)] truncate">Share Volegram. No sign-up. Just Bitcoin.</p>
+          </div>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.origin);
+              alert("Link copied — share it!");
+            }}
+            className="shrink-0 text-xs font-bold uppercase tracking-wide px-3 py-2 rounded-lg accent-gradient"
+          >
+            Copy
+          </button>
         </div>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(window.location.origin);
-            alert("Link copied — share with your Bitcoin friends!");
-          }}
-          className="shrink-0 text-xs font-black uppercase tracking-wider px-3 py-1.5 transition-colors hover:opacity-80"
-          style={{ background: "var(--accent)", color: "#000" }}
-        >
-          Copy Link
-        </button>
       </div>
     </div>
   );

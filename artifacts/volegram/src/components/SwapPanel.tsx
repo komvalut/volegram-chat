@@ -54,7 +54,7 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
       <div className="px-4 py-3 border-b border-neutral-200 flex items-center gap-3">
         <Zap size={14} className="text-black"/>
         <div className="flex-1">
-          <p className="text-xs font-black uppercase tracking-widest text-black">MICROSWAP</p>
+          <p className="text-xs font-extrabold uppercase tracking-wide text-black">MICROSWAP</p>
           <p className="text-xs text-neutral-500">P2P market — buy without leaving chat</p>
         </div>
         <button onClick={load} className="text-neutral-500 hover:text-black transition-colors">
@@ -118,7 +118,7 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
                 <p className="text-xs font-bold text-black truncate">{l.title}</p>
                 <p className="text-xs text-neutral-600 truncate mt-0.5">{l.description?.slice(0, 60)}{l.description?.length > 60 ? "…" : ""}</p>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-black text-xs font-black">⚡{(l.priceSats ?? l.price_sats ?? 0).toLocaleString()}</span>
+                  <span className="text-black text-xs font-extrabold">⚡{(l.priceSats ?? l.price_sats ?? 0).toLocaleString()}</span>
                   <span className="text-xs text-neutral-500">sats</span>
                   {l.category && (
                     <span className="text-xs bg-black/5 text-neutral-600 px-1.5 py-0.5">{l.category}</span>
@@ -131,7 +131,7 @@ export default function SwapPanel({ onBuy, onClose }: Props) {
               <button
                 onClick={() => handleBuy(l.id)}
                 disabled={buying === l.id}
-                className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-black py-1.5 transition-colors
+                className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-extrabold py-1.5 transition-colors
                   ${bought === l.id
                     ? "bg-green-700 text-white"
                     : "bg-black text-white hover:bg-neutral-800 disabled:opacity-40"}`}

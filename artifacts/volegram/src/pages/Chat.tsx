@@ -145,10 +145,10 @@ export default function Chat({
               <div className="flex-1 flex flex-col items-center justify-center text-center px-6 bg-white">
                 <div className="flex flex-col items-center mb-4">
                   <span className="text-6xl leading-none text-black">⚡</span>
-                  <span className="text-xs font-black tracking-[0.3em] text-black/40 uppercase mt-1">BTC</span>
+                  <span className="text-xs font-extrabold  text-black/40 uppercase mt-1">BTC</span>
                 </div>
-                <h2 className="text-3xl font-black uppercase tracking-[0.2em] text-black mb-2">VBC</h2>
-                <p className="text-sm tracking-widest text-neutral-500 uppercase mb-8">Volegram Bitcoin Chat</p>
+                <h2 className="text-3xl font-extrabold uppercase  text-black mb-2">VBC</h2>
+                <p className="text-sm tracking-wide text-neutral-500 uppercase mb-8">Volegram Bitcoin Chat</p>
                 <div className="grid grid-cols-2 gap-3 text-sm text-neutral-700 max-w-xs">
                   <div className="border border-neutral-300 px-4 py-4 hover:border-black transition-colors">⚡ Send sats</div>
                   <div className="border border-neutral-300 px-4 py-4 hover:border-black transition-colors">🖼️ Share photos</div>
@@ -157,7 +157,7 @@ export default function Chat({
                 </div>
 
                 <div className="mt-8 max-w-xs w-full border border-neutral-300 bg-white px-5 py-4 text-center">
-                  <p className="text-sm font-black uppercase tracking-[0.2em] mb-1 text-black">
+                  <p className="text-sm font-extrabold uppercase  mb-1 text-black">
                     ⚡ Invite &amp; Install
                   </p>
                   <p className="text-xs text-neutral-600 mb-3 leading-relaxed">
@@ -168,7 +168,7 @@ export default function Chat({
                       navigator.clipboard.writeText(window.location.origin);
                       alert("Link copied! Share it with your Bitcoin friends.");
                     }}
-                    className="w-full text-sm font-black uppercase tracking-widest py-2.5 mb-2 transition-colors bg-black text-white hover:bg-neutral-800"
+                    className="w-full text-sm font-extrabold uppercase tracking-wide py-2.5 mb-2 transition-colors bg-black text-white hover:bg-neutral-800"
                   >
                     Copy Invite Link
                   </button>

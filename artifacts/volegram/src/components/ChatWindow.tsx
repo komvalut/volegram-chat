@@ -109,12 +109,12 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-5 py-3.5 border-b border-neutral-200 bg-white flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-sm font-black shrink-0
-          ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-black/20 bg-black/5 text-black"}`}>
+        <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-sm font-extrabold shrink-0
+          ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-black/20 bg-black/5 text-white"}`}>
           {room.isIncognito ? "🔒" : room.type === "group" ? "#" : "D"}
         </div>
         <div className="flex-1">
-          <p className="text-base font-black text-black">{room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}</p>
+          <p className="text-base font-extrabold text-black">{room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}</p>
           <p className={`text-xs ${room.isIncognito ? "text-purple-600" : "text-neutral-500"}`}>
             {room.isIncognito ? "🔒 Incognito — messages not saved" : `${room.type} · encrypted`}
           </p>
@@ -155,7 +155,7 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
 
         {typing && (
           <div className="flex items-center gap-2 text-sm text-neutral-500 ml-11">
-            <span className="animate-pulse tracking-widest">● ● ●</span>
+            <span className="animate-pulse tracking-wide">● ● ●</span>
           </div>
         )}
         <div ref={bottomRef}/>

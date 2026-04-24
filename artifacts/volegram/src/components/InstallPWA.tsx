@@ -55,11 +55,11 @@ export default function InstallPWA() {
   return (
     <div id="pwa-install-banner" className="animate-slide-up">
       <div className="flex items-center gap-2 shrink-0">
-        <div className="w-9 h-9 bg-black flex items-center justify-center text-white text-lg font-black shrink-0">
+        <div className="w-9 h-9 bg-black flex items-center justify-center text-white text-lg font-extrabold shrink-0">
           ⚡
         </div>
         <div>
-          <p className="text-sm font-black text-black uppercase tracking-widest leading-none">
+          <p className="text-sm font-extrabold text-black uppercase tracking-wide leading-none">
             Install VBC
           </p>
           <p className="text-xs text-neutral-500 mt-0.5">
@@ -75,7 +75,7 @@ export default function InstallPWA() {
         </div>
       ) : (
         <button onClick={install}
-          className="ml-auto shrink-0 flex items-center gap-1.5 bg-black text-white text-xs font-black px-3 py-2 uppercase tracking-wider hover:bg-neutral-800 transition-colors">
+          className="ml-auto shrink-0 flex items-center gap-1.5 bg-black text-white text-xs font-extrabold px-3 py-2 uppercase tracking-wider hover:bg-neutral-800 transition-colors">
           <Download size={11}/> Install
         </button>
       )}

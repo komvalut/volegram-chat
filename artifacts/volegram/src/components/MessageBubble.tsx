@@ -19,7 +19,7 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
   return (
     <div className={`flex gap-3 mb-4 ${msg.isMe ? "flex-row-reverse" : "flex-row"}`}>
       {/* Avatar */}
-      <div className="w-9 h-9 rounded-full bg-black/10 border border-black/20 flex items-center justify-center text-sm font-black text-black shrink-0 mt-auto">
+      <div className="w-9 h-9 rounded-full bg-black/10 border border-black/20 flex items-center justify-center text-sm font-extrabold text-white shrink-0 mt-auto">
         {msg.sender.username.slice(0, 1).toUpperCase()}
       </div>
 
@@ -55,9 +55,9 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
           <div className="lightning-bubble px-4 py-3 min-w-[200px]">
             <div className="flex items-center gap-2 mb-2">
               <Zap size={16} className="text-black" />
-              <span className="text-sm font-black text-black uppercase tracking-wider">Lightning Invoice</span>
+              <span className="text-sm font-extrabold text-black uppercase tracking-wider">Lightning Invoice</span>
             </div>
-            <div className="text-2xl font-black text-black mb-1">⚡ {msg.sats?.toLocaleString()} sats</div>
+            <div className="text-2xl font-extrabold text-black mb-1">⚡ {msg.sats?.toLocaleString()} sats</div>
             {msg.content && <p className="text-sm text-neutral-400 mb-2">{msg.content}</p>}
             {msg.invoicePaid ? (
               <div className="flex items-center gap-1 text-sm text-green-400 font-bold">
@@ -66,7 +66,7 @@ export default function MessageBubble({ msg }: { msg: Msg }) {
             ) : (
               <button
                 onClick={() => navigator.clipboard.writeText(msg.invoicePr ?? "")}
-                className="w-full mt-1 text-sm bg-black text-white font-black py-2 hover:bg-neutral-800 transition-colors"
+                className="w-full mt-1 text-sm bg-black text-white font-extrabold py-2 hover:bg-neutral-800 transition-colors"
               >
                 COPY INVOICE
               </button>
