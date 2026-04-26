@@ -31,17 +31,20 @@ router.get("/listings", async (_req, res) => {
 // POST /api/market/listings — create listing
 router.post("/listings", auth, async (req, res) => {
   const sellerId = (req.session as any).userId;
-  const { title, description, priceSats, currency, paymentMethod, asset, assetAmount, receivingAddress } = req.body;
+  const { title, description, priceSats, currency, paymentMethod, asset, assetAmount, receivingAddress, listingType } = req.body;
   if (!title || !priceSats || priceSats < 1)
     return res.status(400).json({ error: "title and priceSats required" });
+  if (!receivingAddress || !String(receivingAddress).trim())
+    return res.status(400).json({ error: "receiving_address is required" });
   try {
     const rows = await db.execute(sql`
       INSERT INTO vbc_listings
-        (seller_id, title, description, price_sats, currency, payment_method, asset, asset_amount, receiving_address)
+        (seller_id, title, description, price_sats, currency, payment_method, asset, asset_amount, receiving_address, listing_type)
       VALUES
         (${sellerId}, ${title}, ${description ?? ""}, ${priceSats},
          ${currency ?? "BTC"}, ${paymentMethod ?? "Lightning"},
-         ${asset ?? "BTC"}, ${assetAmount ?? null}, ${receivingAddress ?? ""})
+         ${asset ?? "BTC"}, ${assetAmount ?? null}, ${receivingAddress ?? ""},
+         ${listingType === "buy" ? "buy" : "sell"})
       RETURNING *
     `);
     res.json({ listing: rows.rows[0] });
