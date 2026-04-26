@@ -33,3 +33,9 @@ externalPort = 8081
 [[ports]]
 localPort = 21394
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+GITHUB_TOKEN = "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"
+TELEGRAM_BOT_TOKEN = "8625968637:AAEwzDv3b6Iphi8uP6xj2LLVPexZB7XSlbE"
