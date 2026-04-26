@@ -49,8 +49,12 @@ export default function Admin({ user }: { user: any }) {
 
   // OTP Countries state
   const [otpCountries, setOtpCountries] = useState<any[]>([]);
+  const [otpOrders, setOtpOrders]       = useState<any[]>([]);
   const [otpCForm, setOtpCForm]         = useState<any | null>(null);
   const [otpCSaving, setOtpCSaving]     = useState(false);
+  const [otpDeliverModal, setOtpDeliverModal] = useState<any | null>(null);
+  const [otpDeliverCode, setOtpDeliverCode]   = useState("");
+  const [otpDeliverMsg, setOtpDeliverMsg]     = useState("");
 
   // settings
   const [commissionPct, setCommissionPct] = useState("2");
@@ -98,6 +102,8 @@ export default function Admin({ user }: { user: any }) {
     if (tab === "otp") {
       fetch("/api/otp-mgmt/countries", { credentials: "include" })
         .then(r => r.json()).then(d => setOtpCountries(d.countries ?? [])).catch(() => {});
+      fetch("/api/otp-mgmt/admin/orders", { credentials: "include" })
+        .then(r => r.json()).then(d => setOtpOrders(d.orders ?? [])).catch(() => {});
     }
   }, [tab]);
 
@@ -1090,6 +1096,34 @@ export default function Admin({ user }: { user: any }) {
               </div>
             )}
 
+            {/* OTP Orders section */}
+            {otpOrders.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-extrabold text-sm text-black mb-2">Pending OTP Orders ({otpOrders.filter((o:any)=>o.status==="pending").length})</h3>
+                <div className="space-y-2">
+                  {otpOrders.map((o:any) => (
+                    <div key={o.id} className="surface-card p-3 flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <span className="font-extrabold text-black text-sm">#{o.id} — {o.country_name} ({o.phone_prefix})</span>
+                          <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full ${o.status==="delivered" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>{o.status}</span>
+                        </div>
+                        <p className="text-xs text-neutral-500">@{o.buyer_username} · ⚡ {Number(o.price_sats).toLocaleString()} sats</p>
+                        {o.phone_number && <p className="text-xs font-mono text-neutral-600">SMS: {o.phone_number}</p>}
+                        {o.otp_code && <p className="text-xs font-mono bg-green-50 text-green-900 px-2 py-1 rounded-lg inline-block mt-1">{o.otp_code}</p>}
+                      </div>
+                      {o.status === "pending" && (
+                        <button onClick={() => { setOtpDeliverModal(o); setOtpDeliverCode(""); setOtpDeliverMsg(""); }}
+                          className="shrink-0 flex items-center gap-1 text-xs font-bold px-3 py-2 rounded-xl bg-black text-white hover:bg-neutral-800">
+                          <Send size={11}/> Deliver
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {otpCountries.length === 0 && !otpCForm && (
               <div className="text-center py-8 text-neutral-400 text-sm">No countries added yet. Add the first one.</div>
             )}
@@ -1129,6 +1163,40 @@ export default function Admin({ user }: { user: any }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* OTP Deliver Modal */}
+        {otpDeliverModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={() => setOtpDeliverModal(null)}>
+            <div onClick={e => e.stopPropagation()} className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+              <h3 className="font-extrabold text-black mb-1">Deliver OTP Code</h3>
+              <p className="text-sm text-neutral-500 mb-4">Order #{otpDeliverModal.id} — {otpDeliverModal.country_name} for @{otpDeliverModal.buyer_username}</p>
+              <input value={otpDeliverCode} onChange={e => setOtpDeliverCode(e.target.value)}
+                placeholder="Enter OTP / SMS code"
+                className="input-modern w-full font-mono mb-3 text-lg tracking-widest text-center"/>
+              {otpDeliverMsg && <p className="text-sm text-green-700 mb-3">{otpDeliverMsg}</p>}
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  if (!otpDeliverCode.trim()) return;
+                  try {
+                    const r = await fetch(`/api/otp-mgmt/admin/orders/${otpDeliverModal.id}/deliver`, {
+                      method: "POST", credentials: "include",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ code: otpDeliverCode.trim() }),
+                    });
+                    const d = await r.json();
+                    if (!r.ok) throw new Error(d.error);
+                    setOtpDeliverMsg("✓ Delivered!");
+                    setOtpOrders(os => os.map(o => o.id === otpDeliverModal.id ? { ...o, status: "delivered", otp_code: otpDeliverCode.trim() } : o));
+                    setTimeout(() => setOtpDeliverModal(null), 1500);
+                  } catch(e: any) { setOtpDeliverMsg(e.message); }
+                }} className="flex-1 py-2.5 rounded-xl bg-black text-white text-sm font-bold hover:bg-neutral-800">
+                  Send Code
+                </button>
+                <button onClick={() => setOtpDeliverModal(null)} className="px-4 py-2.5 rounded-xl bg-neutral-100 text-neutral-700 text-sm font-bold">Cancel</button>
+              </div>
+            </div>
           </div>
         )}
 
