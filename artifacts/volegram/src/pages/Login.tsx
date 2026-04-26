@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles, KeyRound, Phone, ChevronDown, Search } from "lucide-react";
+import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles, KeyRound, Phone, ChevronDown, Search, Copy } from "lucide-react";
 import { api, uploadFile } from "../lib/api";
 import HowItWorks from "../components/HowItWorks";
 import { COUNTRIES_SORTED, type Country } from "../lib/countries";
@@ -22,14 +22,13 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
   const [err, setErr]         = useState("");
   const [loading, setLoading] = useState(false);
 
-  // OTP state
   const [otpSubMode, setOtpSubMode] = useState<OtpSubMode>("identifier");
   const [otpId, setOtpId]     = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpDevCode, setOtpDevCode] = useState<string | null>(null);
+  const [otpNote, setOtpNote] = useState<string>("");
 
-  // Phone / country picker
   const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES_SORTED[0]);
   const [phoneNum, setPhoneNum] = useState("");
   const [showCountryPicker, setShowCountryPicker] = useState(false);
@@ -60,8 +59,9 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
       const r = await api.otpRequest(identifier);
       setOtpSent(true);
       setOtpDevCode(r.devCode ?? null);
+      setOtpNote(r.note ?? "");
     } catch (e: any) {
-      setErr(e.message?.includes("not found") ? "Korisnik nije pronađen. Prvo se registruj putem Lightning adrese." : (e.message || "Failed to send code"));
+      setErr(e.message || "Failed to send code");
     } finally { setLoading(false); }
   };
 
@@ -74,7 +74,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
       const r = await api.otpVerify(identifier, otpCode.trim());
       onLogin(r.user);
     } catch (e: any) {
-      setErr(e.message || "Invalid code");
+      setErr(e.message || "Invalid code — request a new one");
     } finally { setLoading(false); }
   };
 
@@ -90,7 +90,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
       else onLogin(u);
     } catch (err: any) {
       const msg = err.message ?? "";
-      setErr(msg.includes("suspended") ? "Account suspended — contact admin" : "Login failed. Try again.");
+      setErr(msg.includes("suspended") ? "Account suspended — contact admin" : "Login failed. Check your Lightning address and try again.");
     } finally { setLoading(false); }
   };
 
@@ -116,13 +116,12 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
       onLogin(updated);
     } catch (err: any) {
       const msg = err.message ?? "";
-      setErr(msg.includes("taken") ? "Username already taken" : "Update failed");
+      setErr(msg.includes("taken") ? "Username already taken — choose another" : "Update failed. Try again.");
     } finally { setLoading(false); }
   };
 
   return (
     <div className="h-full overflow-y-auto bg-[var(--bg)] flex flex-col items-center px-4 py-8 relative">
-      {/* Soft accent glow background */}
       <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full"
            style={{ background: "radial-gradient(circle, rgba(247,147,26,0.10) 0%, transparent 60%)" }} />
 
@@ -164,7 +163,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                   className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
                     mode === "otp" ? "bg-white shadow-sm text-black" : "text-neutral-500"
                   }`}>
-                  <KeyRound size={12} className="inline -mt-0.5 mr-1"/> Code
+                  <KeyRound size={12} className="inline -mt-0.5 mr-1"/> Email Code
                 </button>
               </div>
 
@@ -182,7 +181,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                       autoFocus
                     />
                     <p className="text-xs text-[var(--text-dim)] mt-2">
-                      Use any Lightning address — no email or phone needed. Auto-creates an account.
+                      Use any Lightning address — no email or phone needed. Account created automatically.
                     </p>
                   </div>
 
@@ -200,26 +199,25 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
 
               {mode === "otp" && !otpSent && (
                 <form onSubmit={handleRequestOtp} className="space-y-4">
-                  {/* Sub-mode toggle: identifier vs phone */}
                   <div className="flex gap-1 p-1 bg-neutral-50 rounded-lg border border-neutral-100">
                     <button type="button" onClick={() => { setOtpSubMode("identifier"); setErr(""); }}
                       className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
                         otpSubMode === "identifier" ? "bg-white shadow-sm text-black" : "text-neutral-400"
                       }`}>
-                      Email / Korisnik
+                      Email / Username
                     </button>
                     <button type="button" onClick={() => { setOtpSubMode("phone"); setErr(""); }}
                       className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase tracking-wide flex items-center justify-center gap-1 transition-all ${
                         otpSubMode === "phone" ? "bg-white shadow-sm text-black" : "text-neutral-400"
                       }`}>
-                      <Phone size={10}/> Telefon
+                      <Phone size={10}/> Phone
                     </button>
                   </div>
 
                   {otpSubMode === "identifier" ? (
                     <div>
                       <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                        Email · Korisničko ime · Lightning adresa
+                        Email · Username · Lightning address
                       </label>
                       <input
                         value={otpId}
@@ -229,16 +227,15 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                         autoFocus
                       />
                       <p className="text-xs text-[var(--text-dim)] mt-2">
-                        Samo za postojeće naloge.
+                        For existing accounts only. First-time? Use the Lightning tab above.
                       </p>
                     </div>
                   ) : (
                     <div>
                       <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                        Broj telefona
+                        Phone number
                       </label>
                       <div className="flex gap-2">
-                        {/* Country picker button */}
                         <div className="relative" ref={pickerRef}>
                           <button type="button"
                             onClick={() => setShowCountryPicker(v => !v)}
@@ -254,7 +251,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                                 <div className="flex items-center gap-2 bg-neutral-50 rounded-xl px-3 py-2">
                                   <Search size={13} className="text-neutral-400"/>
                                   <input autoFocus value={countrySearch} onChange={e => setCountrySearch(e.target.value)}
-                                    placeholder="Pretraži…" className="flex-1 text-xs bg-transparent outline-none"/>
+                                    placeholder="Search…" className="flex-1 text-xs bg-transparent outline-none"/>
                                 </div>
                               </div>
                               <div className="max-h-48 overflow-y-auto">
@@ -289,7 +286,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                         />
                       </div>
                       <p className="text-xs text-[var(--text-dim)] mt-2">
-                        Unesi broj koji si registrovao/la na Volegram.
+                        Enter the phone number registered on your Volegram account.
                       </p>
                     </div>
                   )}
@@ -299,7 +296,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                   <button type="submit"
                     disabled={loading || (otpSubMode === "identifier" ? !otpId.trim() : !phoneNum.trim())}
                     className="btn-accent w-full">
-                    {loading ? "Sending…" : (<><KeyRound size={16}/> Pošalji kod</>)}
+                    {loading ? "Sending code…" : (<><KeyRound size={16}/> Send Code</>)}
                   </button>
                 </form>
               )}
@@ -307,11 +304,28 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
               {mode === "otp" && otpSent && (
                 <form onSubmit={handleVerifyOtp} className="space-y-4">
                   {otpDevCode && (
-                    <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-3 text-xs text-amber-900">
-                      <div className="font-bold mb-1">Dev mode (no email service)</div>
-                      Your code: <span className="font-mono text-base font-extrabold tracking-widest">{otpDevCode}</span>
+                    <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-4 space-y-3">
+                      <div className="text-xs font-bold text-amber-900 uppercase tracking-wide">Your Login Code</div>
+                      <div className="flex items-center justify-between gap-3 bg-black rounded-xl px-4 py-3">
+                        <span className="font-mono text-2xl font-extrabold tracking-[0.3em] text-[#F7931A]">
+                          {otpDevCode}
+                        </span>
+                        <button type="button"
+                          onClick={() => setOtpCode(otpDevCode)}
+                          className="text-xs bg-[#F7931A] text-black font-extrabold px-3 py-1.5 rounded-lg hover:bg-orange-400 transition-colors whitespace-nowrap">
+                          Use →
+                        </button>
+                      </div>
+                      {otpNote && <p className="text-[10px] text-amber-700">{otpNote}</p>}
                     </div>
                   )}
+
+                  {!otpDevCode && (
+                    <div className="rounded-xl bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-800">
+                      📧 Code sent to your email — check your inbox (and spam folder).
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
                       6-Digit Code
@@ -328,7 +342,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                   <button type="submit" disabled={loading || otpCode.length < 6} className="btn-accent w-full">
                     {loading ? "Verifying…" : (<><Sparkles size={16}/> Sign In</>)}
                   </button>
-                  <button type="button" onClick={() => { setOtpSent(false); setOtpCode(""); setOtpDevCode(null); setErr(""); }}
+                  <button type="button" onClick={() => { setOtpSent(false); setOtpCode(""); setOtpDevCode(null); setOtpNote(""); setErr(""); }}
                     className="w-full text-xs text-[var(--text-muted)] hover:text-[var(--text)] py-1 font-medium">
                     ← Use a different identifier
                   </button>
@@ -336,13 +350,11 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
               )}
             </div>
 
-            {/* Examples */}
             <p className="text-center text-xs text-[var(--text-dim)] mt-5">
               Examples: <span className="font-mono text-[var(--text-muted)]">user@walletofsatoshi.com</span> ·{" "}
               <span className="font-mono text-[var(--text-muted)]">you@blink.sv</span>
             </p>
 
-            {/* How it works */}
             <div className="mt-5">
               <HowItWorks />
             </div>
@@ -351,9 +363,12 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
 
         {step === "profile" && (
           <div className="surface-card-elevated p-6 animate-slide-up">
-            <p className="text-sm text-[var(--text-muted)] mb-5 text-center">
-              Welcome! Set up your profile <span className="text-[var(--text-dim)]">— or skip and start chatting.</span>
-            </p>
+            <div className="text-center mb-5">
+              <p className="text-lg font-extrabold text-[var(--text)]">Set your username</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1">
+                Your username is how others find you and message you. You can also add a photo, bio, and contact info.
+              </p>
+            </div>
             <form onSubmit={handleProfile} className="space-y-4">
               <div className="flex justify-center mb-2">
                 <label className="cursor-pointer relative group">
@@ -404,17 +419,16 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                 <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{err}</div>
               )}
 
-              <button type="submit" disabled={loading} className="btn-accent w-full">
+              <button type="submit" disabled={loading || username.trim().length < 3} className="btn-accent w-full">
                 {loading ? "Saving…" : (<><Sparkles size={16}/> Enter Volegram</>)}
               </button>
-              <button type="button" onClick={() => onLogin(user)} className="w-full text-sm text-[var(--text-muted)] hover:text-[var(--text)] py-2 font-medium transition-colors">
-                Skip for now →
-              </button>
+              {username.trim().length < 3 && (
+                <p className="text-center text-xs text-[var(--text-dim)]">Username must be at least 3 characters</p>
+              )}
             </form>
           </div>
         )}
 
-        {/* Invite footer */}
         <div className="surface-card mt-6 px-4 py-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                style={{ background: "var(--accent-dim)" }}>
@@ -434,24 +448,6 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
             Copy
           </button>
         </div>
-
-        {/* Discreet admin shortcut — bottom of page, invisible to regular users */}
-        {step === "address" && mode === "lightning" && (
-          <div className="mt-8 mb-2 text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setMode("lightning");
-                const el = document.querySelector<HTMLInputElement>("input[type=text], input:not([type])");
-                if (el) { el.focus(); el.select(); }
-              }}
-              className="text-[10px] text-neutral-200 hover:text-neutral-400 transition-colors select-none px-4 py-2"
-              title="Admin login"
-            >
-              ·&nbsp;·&nbsp;·
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
