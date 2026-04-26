@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Zap, Mic, Send, Image, Flame, X, ArrowLeftRight, Smile, Users } from "lucide-react";
+import { Zap, Mic, Send, Image, Flame, X, ArrowLeftRight, Smile, Users, ArrowLeft } from "lucide-react";
 import { api, uploadFile } from "../lib/api";
 import { vws } from "../lib/ws";
 import MessageBubble from "./MessageBubble";
@@ -22,8 +22,8 @@ const EMOJI_GROUPS = [
 ];
 
 export default function ChatWindow({
-  room, user, onCreateGroup,
-}: { room: any; user: any; onCreateGroup?: () => void }) {
+  room, user, onCreateGroup, onBack,
+}: { room: any; user: any; onCreateGroup?: () => void; onBack?: () => void }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [trades, setTrades]     = useState<Record<number, any>>({});
   const [text, setText]         = useState("");
@@ -136,14 +136,20 @@ export default function ChatWindow({
   return (
     <div className="flex flex-col h-full" onClick={() => setShowEmoji(false)}>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-200 bg-white flex items-center gap-3 shrink-0">
-        <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-sm font-extrabold shrink-0
+      <div className="px-2 py-2 border-b border-neutral-200 bg-white flex items-center gap-2 shrink-0">
+        {onBack && (
+          <button onClick={onBack}
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-100 active:scale-95 transition-transform shrink-0">
+            <ArrowLeft size={18} className="text-neutral-700"/>
+          </button>
+        )}
+        <div className={`w-9 h-9 rounded-full border flex items-center justify-center text-sm font-extrabold shrink-0
           ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-black/20 bg-black/5 text-black"}`}>
           {room.isIncognito ? "🔒" : room.type === "group" ? "#" : (room.name ?? "D").slice(0,1).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-extrabold text-black truncate">{room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}</p>
-          <p className={`text-[11px] ${room.isIncognito ? "text-purple-500" : "text-neutral-400"}`}>
+          <p className="text-[14px] font-extrabold text-black truncate">{room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}</p>
+          <p className={`text-[10px] ${room.isIncognito ? "text-purple-500" : "text-neutral-400"}`}>
             {room.isIncognito ? "🔒 Incognito — not saved" : `${room.type} · encrypted`}
           </p>
         </div>
