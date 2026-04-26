@@ -777,7 +777,7 @@ export default function Admin({ user }: { user: any }) {
                         await api.ads.admin.setStatus(ad.id, "active");
                         setAdsAll(a => a.map(x => x.id === ad.id ? { ...x, status: "active" } : x));
                       }} className="text-[11px] font-bold px-2 py-1 rounded-lg bg-green-100 text-green-800 hover:bg-green-200">
-                        Aktiviraj
+                        Activate
                       </button>
                     )}
                     {ad.status !== "rejected" && (
@@ -977,21 +977,21 @@ export default function Admin({ user }: { user: any }) {
                       className="input-modern text-sm w-full"/>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Ističe (prazno=nikad)</label>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Expires (empty = never)</label>
                     <input type="datetime-local" value={refForm.expires_at} onChange={e => setRefForm((f:any)=>({...f,expires_at:e.target.value}))}
                       className="input-modern text-sm w-full"/>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Opis (interno)</label>
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Description (internal)</label>
                   <input value={refForm.description} onChange={e => setRefForm((f:any)=>({...f,description:e.target.value}))}
-                    placeholder="Opis koda za internu upotrebu" className="input-modern text-sm w-full"/>
+                    placeholder="Internal description for this code" className="input-modern text-sm w-full"/>
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input type="checkbox" checked={refForm.active} onChange={e => setRefForm((f:any)=>({...f,active:e.target.checked}))}
                       className="w-4 h-4 rounded"/>
-                    Aktivan
+                    Active
                   </label>
                 </div>
                 <div className="flex gap-2">
@@ -1006,7 +1006,7 @@ export default function Admin({ user }: { user: any }) {
                       if (!r.ok) throw new Error(d.error);
                       setRefForm(null);
                       fetch("/api/referral/admin/list", { credentials: "include" }).then(r=>r.json()).then(d=>setRefCodes(d.codes??[]));
-                      setRefMsg("✓ Sačuvano!");
+                      setRefMsg("✓ Saved!");
                       setTimeout(()=>setRefMsg(""), 3000);
                     } catch(e:any) { setRefMsg("✗ " + e.message); }
                     setRefSaving(false);
@@ -1032,14 +1032,14 @@ export default function Admin({ user }: { user: any }) {
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-mono font-extrabold text-black text-sm">{rc.code}</span>
                       <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${rc.active ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-500"}`}>
-                        {rc.active ? "Aktivan" : "Off"}
+                        {rc.active ? "Active" : "Off"}
                       </span>
                       <span className="text-xs text-[#F7931A] font-bold">+{(rc.bonus_sats||0).toLocaleString()} sats</span>
                     </div>
                     <div className="text-[11px] text-neutral-500 space-y-0.5">
-                      <p>Korišćen: <strong>{rc.use_count ?? 0}</strong>{rc.max_uses ? ` / ${rc.max_uses}` : " (∞)"}</p>
+                      <p>Used: <strong>{rc.use_count ?? 0}</strong>{rc.max_uses ? ` / ${rc.max_uses}` : " (∞)"}</p>
                       {rc.description && <p>{rc.description}</p>}
-                      {rc.expires_at && <p>Ističe: {new Date(rc.expires_at).toLocaleDateString("sr-RS")}</p>}
+                      {rc.expires_at && <p>Expires: {new Date(rc.expires_at).toLocaleDateString()}</p>}
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
@@ -1078,27 +1078,27 @@ export default function Admin({ user }: { user: any }) {
             {otpCForm && (
               <div className="surface-card p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-extrabold text-black">{otpCForm.id ? "Uredi unos" : "Novi unos"}</span>
+                  <span className="text-sm font-extrabold text-black">{otpCForm.id ? "Edit entry" : "New entry"}</span>
                   <button onClick={() => setOtpCForm(null)}><X size={16} className="text-neutral-400"/></button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Zemlja (SR, DE...)</label>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Country code (SR, DE...)</label>
                     <input value={otpCForm.country_code} onChange={e => setOtpCForm((f:any)=>({...f,country_code:e.target.value.toUpperCase()}))}
                       placeholder="RS" maxLength={5} className="input-modern text-sm w-full"/>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Naziv</label>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Name</label>
                     <input value={otpCForm.country_name} onChange={e => setOtpCForm((f:any)=>({...f,country_name:e.target.value}))}
-                      placeholder="Srbija" className="input-modern text-sm w-full"/>
+                      placeholder="Serbia" className="input-modern text-sm w-full"/>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Prefiks</label>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Prefix</label>
                     <input value={otpCForm.phone_prefix} onChange={e => setOtpCForm((f:any)=>({...f,phone_prefix:e.target.value}))}
                       placeholder="+381" className="input-modern text-sm w-full font-mono"/>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Cena OTP (sats)</label>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">OTP Price (sats)</label>
                     <input type="number" value={otpCForm.price_sats} onChange={e => setOtpCForm((f:any)=>({...f,price_sats:parseInt(e.target.value)||0}))}
                       className="input-modern text-sm w-full"/>
                   </div>
@@ -1108,12 +1108,12 @@ export default function Admin({ user }: { user: any }) {
                       placeholder="+381601234567" className="input-modern text-sm w-full font-mono"/>
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Napomene (interno)</label>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Notes (internal)</label>
                     <input value={otpCForm.notes} onChange={e => setOtpCForm((f:any)=>({...f,notes:e.target.value}))}
-                      placeholder="Operator, ograničenja, itd." className="input-modern text-sm w-full"/>
+                      placeholder="Operator, restrictions, etc." className="input-modern text-sm w-full"/>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Redosled (manji = pre)</label>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Sort order (lower = first)</label>
                     <input type="number" value={otpCForm.sort_order} onChange={e => setOtpCForm((f:any)=>({...f,sort_order:parseInt(e.target.value)||0}))}
                       className="input-modern text-sm w-full"/>
                   </div>
@@ -1121,7 +1121,7 @@ export default function Admin({ user }: { user: any }) {
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
                       <input type="checkbox" checked={otpCForm.active} onChange={e => setOtpCForm((f:any)=>({...f,active:e.target.checked}))}
                         className="w-4 h-4 rounded"/>
-                      Aktivna zemlja
+                      Active country
                     </label>
                   </div>
                 </div>
@@ -1296,11 +1296,11 @@ export default function Admin({ user }: { user: any }) {
                       <span className="font-extrabold text-black text-sm">{oc.country_name}</span>
                       <span className="font-mono text-xs text-neutral-500">{oc.phone_prefix}</span>
                       <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${oc.active ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-500"}`}>
-                        {oc.active ? "Aktivan" : "Off"}
+                        {oc.active ? "Active" : "Off"}
                       </span>
                     </div>
                     <div className="text-[11px] text-neutral-500 flex flex-wrap gap-x-3">
-                      <span>Cena: <strong>{(oc.price_sats||0).toLocaleString()} sats</strong></span>
+                      <span>Price: <strong>{(oc.price_sats||0).toLocaleString()} sats</strong></span>
                       {oc.phone_number && <span>SMS: <span className="font-mono">{oc.phone_number}</span></span>}
                       {oc.notes && <span>{oc.notes}</span>}
                     </div>
