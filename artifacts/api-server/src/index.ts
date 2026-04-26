@@ -226,9 +226,19 @@ async function migrate() {
       created_at         TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     );
     -- Add new columns to vbc_listings if they don't exist
-    ALTER TABLE vbc_listings ADD COLUMN IF NOT EXISTS asset         VARCHAR(30)    NOT NULL DEFAULT 'BTC';
-    ALTER TABLE vbc_listings ADD COLUMN IF NOT EXISTS asset_amount  NUMERIC(20,8);
-    ALTER TABLE vbc_listings ADD COLUMN IF NOT EXISTS receiving_address TEXT        NOT NULL DEFAULT '';
+    ALTER TABLE vbc_listings ADD COLUMN IF NOT EXISTS asset            VARCHAR(30)   NOT NULL DEFAULT 'BTC';
+    ALTER TABLE vbc_listings ADD COLUMN IF NOT EXISTS asset_amount     NUMERIC(20,8);
+    ALTER TABLE vbc_listings ADD COLUMN IF NOT EXISTS receiving_address TEXT         NOT NULL DEFAULT '';
+    ALTER TABLE vbc_listings ADD COLUMN IF NOT EXISTS listing_type     VARCHAR(10)   NOT NULL DEFAULT 'sell';
+
+    -- ─────────── User Blocks ───────────
+    CREATE TABLE IF NOT EXISTS vbc_blocks (
+      id         SERIAL PRIMARY KEY,
+      blocker_id INTEGER NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      blocked_id INTEGER NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(blocker_id, blocked_id)
+    );
 
     CREATE TABLE IF NOT EXISTS vbc_splits (
       id                SERIAL PRIMARY KEY,
