@@ -86,6 +86,13 @@ export const vbcTradesTable = pgTable("vbc_trades", {
   updatedAt:       timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const vbcBlocksTable = pgTable("vbc_blocks", {
+  id:        serial("id").primaryKey(),
+  blockerId: integer("blocker_id").notNull().references(() => chatUsersTable.id),
+  blockedId: integer("blocked_id").notNull().references(() => chatUsersTable.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const chatRewardsTable = pgTable("chat_rewards", {
   id:        serial("id").primaryKey(),
   userId:    integer("user_id").notNull().references(() => chatUsersTable.id),
