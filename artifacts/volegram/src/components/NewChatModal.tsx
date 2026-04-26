@@ -111,8 +111,11 @@ export default function NewChatModal({ onClose, onRoomCreated }: Props) {
               disabled={loading}
               className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-neutral-50 active:bg-neutral-100 transition-colors border-b border-neutral-50 last:border-b-0"
             >
-              <div className="w-10 h-10 rounded-2xl bg-black shrink-0 flex items-center justify-center">
-                <span className="text-white font-extrabold text-sm">{u.username[0].toUpperCase()}</span>
+              <div className="w-10 h-10 rounded-2xl bg-black shrink-0 flex items-center justify-center overflow-hidden">
+                {u.avatar_url
+                  ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover"/>
+                  : <span className="text-white font-extrabold text-sm">{u.username[0].toUpperCase()}</span>
+                }
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className="font-extrabold text-black text-sm">@{u.username}</p>
