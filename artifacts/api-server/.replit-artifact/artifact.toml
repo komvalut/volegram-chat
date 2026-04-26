@@ -7,7 +7,7 @@ id = "3B4_FFSkEVBkAeYMFRJ2e"
 [[services]]
 localPort = 8080
 name = "API Server"
-paths = ["/api", "/uploads", "/ws"]
+paths = ["/api", "/uploads", "/ws", "/"]
 
 [services.env]
 PORT = "8080"
@@ -16,6 +16,7 @@ PORT = "8080"
 run = "pnpm --filter @workspace/api-server run dev"
 
 [services.production]
+build = ["pnpm", "--filter", "@workspace/volegram", "run", "build"]
 
 [services.production.run]
 args = ["pnpm", "--filter", "@workspace/api-server", "run", "start"]
