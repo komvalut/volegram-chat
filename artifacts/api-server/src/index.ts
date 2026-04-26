@@ -1,5 +1,6 @@
 import express from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import cors from "cors";
 import { createServer } from "http";
 import { setupWS } from "./lib/ws.js";
@@ -53,13 +54,20 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+const PgSession = connectPgSimple(session);
 app.use(session({
+  store: new PgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: "vbc_sessions",
+    createTableIfMissing: true,
+    pruneSessionInterval: 60 * 15,
+  }),
   secret: process.env.SESSION_SECRET ?? "vbc-dev-secret",
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure:   process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure:   false,
+    sameSite: "lax",
     maxAge:   30 * 24 * 60 * 60 * 1000,
   },
 }));
