@@ -1,23 +1,29 @@
 import { useEffect, useState } from "react";
-import { ShoppingCart, Tag, ArrowLeftRight, Shield, Ticket, Smartphone, KeyRound } from "lucide-react";
+import {
+  Home, MessageCircle, TrendingUp, Wallet, User,
+  Bell, ArrowLeft, Shield, LogOut, Ticket, Send,
+  ShoppingCart, Tag, ArrowLeftRight, Smartphone,
+  ChevronRight, Copy, Check, Zap,
+} from "lucide-react";
 import { api } from "../lib/api";
 import { vws } from "../lib/ws";
-import ChatSidebar    from "../components/ChatSidebar";
-import ChatWindow     from "../components/ChatWindow";
-import SwapPanel      from "../components/SwapPanel";
-import TradeModal     from "../components/TradeModal";
-import VouchersPanel  from "../components/VouchersPanel";
+import ChatWindow    from "../components/ChatWindow";
+import SwapPanel     from "../components/SwapPanel";
+import TradeModal    from "../components/TradeModal";
+import VouchersPanel from "../components/VouchersPanel";
+
+type Tab = "home" | "chats" | "market" | "wallet" | "profile";
 
 export default function Chat({
   user, setUser, onLogout,
 }: { user: any; setUser: (u: any) => void; onLogout: () => void }) {
+  const [tab, setTab]               = useState<Tab>("home");
   const [rooms, setRooms]           = useState<any[]>([]);
   const [activeRoom, setActive]     = useState<any>(null);
-  const [showSwap, setShowSwap]     = useState(false);
   const [tradeOpen, setTradeOpen]   = useState<null | "buy_crypto" | "buy_sats">(null);
-  const [contactErr, setContactErr] = useState("");
   const [showVouchers, setShowVouchers] = useState(false);
-  const [comingSoon, setComingSoon] = useState<string | null>(null);
+  const [comingSoon, setComingSoon]     = useState<string | null>(null);
+  const [copied, setCopied]             = useState(false);
 
   useEffect(() => {
     vws.connect(user.id);
@@ -28,6 +34,7 @@ export default function Chat({
   const addRoom = (room: any) => {
     setRooms(prev => prev.find(r => r.id === room.id) ? prev : [...prev, room]);
     setActive(room);
+    setTab("chats");
   };
 
   const handleSwapBuy = async (listingId: number) => {
@@ -38,210 +45,384 @@ export default function Chat({
     if (!r.ok) throw new Error("buy failed");
     const { room } = await r.json();
     addRoom(room);
-    setShowSwap(false);
   };
 
-  // Buy = open trade modal in "I want to buy crypto with sats" mode (also opens marketplace)
-  const handleBuy = () => {
-    if (!activeRoom) {
-      setShowSwap(true);
-      return;
-    }
-    setTradeOpen("buy_crypto");
+  const copyInvite = () => {
+    navigator.clipboard.writeText(window.location.origin);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  // Sell = open trade modal in "I want fiat for my sats" mode (helper for sellers)
-  const handleSell = () => {
-    if (!activeRoom) {
-      setShowSwap(true);
-      return;
-    }
-    setTradeOpen("buy_sats");
-  };
+  const unread = rooms.filter(r => (r.unread_count ?? 0) > 0).length;
 
-  // Swap = open MICROSWAP marketplace
-  const handleSwap = () => {
-    setShowSwap(true);
-  };
-
-  // Contact admin = find first admin and open DM
-  const handleContactAdmin = async () => {
-    setContactErr("");
-    try {
-      // Use the public users endpoint via admin lookup — fall back to a known username
-      const r = await fetch("/api/profile/admin", { credentials: "include" });
-      let adminUsername: string | null = null;
-      if (r.ok) {
-        const d = await r.json();
-        adminUsername = d?.username ?? null;
-      }
-      if (!adminUsername) {
-        setContactErr("No admin available right now. Try again later.");
-        setTimeout(() => setContactErr(""), 4000);
-        return;
-      }
-      const { room } = await api.openDM(adminUsername);
-      addRoom(room);
-    } catch {
-      setContactErr("Could not reach admin. Try again later.");
-      setTimeout(() => setContactErr(""), 4000);
-    }
-  };
-
-  const handleTradeSent = (trade: any) => {
-    // The trade message will be injected by ChatWindow's own state when it
-    // receives the websocket message. Just close the modal here.
-    setTradeOpen(null);
-    // If trade returned a roomId we'll already be on that room.
-    if (trade?.roomId && trade.roomId !== activeRoom?.id) {
-      // ensure room is in list
-      api.rooms().then(setRooms).catch(() => {});
-    }
-  };
-
-  const ActionCards = (
-    <div className="px-4 pt-3 pb-3 bg-white border-b border-neutral-200">
-      {/* Featured: orange Volegram Vouchers */}
-      <button
-        onClick={() => setShowVouchers(true)}
-        className="w-full mb-2 px-5 py-3.5 rounded-2xl text-white font-extrabold text-base flex items-center justify-center gap-3 shadow-md hover:shadow-lg active:scale-[0.98] transition-all"
-        style={{ background: "linear-gradient(135deg, #F7931A 0%, #FF6B00 100%)" }}
-        data-testid="action-vouchers"
-      >
-        <Ticket size={20}/> Volegram Vouchers
-        <span className="text-[10px] uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full font-bold">VV</span>
+  // ── SHARED HEADER ────────────────────────────────────────────────
+  const Hdr = ({ title, back }: { title: string; back?: () => void }) => (
+    <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-neutral-100 shrink-0">
+      <div className="w-9">
+        {back ? (
+          <button onClick={back} className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-neutral-100">
+            <ArrowLeft size={20} className="text-black"/>
+          </button>
+        ) : (
+          <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center">
+            <Zap size={13} fill="#F7931A" className="text-[#F7931A]"/>
+          </div>
+        )}
+      </div>
+      <span className="font-extrabold text-black text-[15px]">{title}</span>
+      <button className="w-9 h-9 flex items-center justify-center rounded-xl active:bg-neutral-100">
+        <Bell size={17} className="text-neutral-400"/>
       </button>
+    </div>
+  );
 
-      {/* Standard action grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-        <button onClick={handleBuy} className="action-card justify-center" data-testid="action-buy">
-          <ShoppingCart size={16}/> Buy
-        </button>
-        <button onClick={handleSell} className="action-card justify-center" data-testid="action-sell">
-          <Tag size={16}/> Sell
-        </button>
-        <button onClick={handleSwap} className="action-card justify-center" data-testid="action-swap">
-          <ArrowLeftRight size={16}/> Swap
-        </button>
-        <button onClick={() => setComingSoon("eSIM data plans — partner integration coming soon. Buy data eSIMs in 200+ countries with sats.")}
-          className="action-card justify-center" data-testid="action-esim">
-          <Smartphone size={16}/> eSIM
-        </button>
-        <button onClick={() => setComingSoon("OTP login codes — already enabled on the login screen. Sign out and click 'Use code instead' to try it.")}
-          className="action-card justify-center" data-testid="action-otp">
-          <KeyRound size={16}/> OTP
-        </button>
-        <button onClick={handleContactAdmin} className="action-card justify-center" data-testid="action-contact-admin">
-          <Shield size={16}/> Admin
+  // ── HOME ─────────────────────────────────────────────────────────
+  const HomeTab = () => (
+    <div className="flex-1 overflow-y-auto bg-[#f8f8f8]">
+      <Hdr title="Volegram Chat"/>
+
+      {/* Balance card */}
+      <div className="mx-4 mt-4 mb-3 rounded-2xl bg-black text-white p-5">
+        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Your Balance</p>
+        <div className="flex items-baseline gap-2">
+          <span className="text-xl text-[#F7931A]">⚡</span>
+          <span className="text-[38px] font-extrabold leading-none tracking-tight">{(user.sats_balance ?? 0).toLocaleString()}</span>
+          <span className="text-sm font-semibold text-white/40 mb-0.5">sats</span>
+        </div>
+        <p className="text-[11px] text-white/25 mt-2 truncate">@{user.username} · {user.lightning_address}</p>
+      </div>
+
+      {/* Volegram Vouchers — featured orange button */}
+      <div className="px-4 mb-3">
+        <button onClick={() => setShowVouchers(true)}
+          className="w-full rounded-2xl p-4 flex items-center justify-between text-white active:scale-[0.98] transition-transform"
+          style={{ background: "linear-gradient(135deg,#F7931A 0%,#FF6B00 100%)" }}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-black/20 flex items-center justify-center shrink-0">
+              <Ticket size={18} className="text-white"/>
+            </div>
+            <div className="text-left">
+              <p className="font-extrabold text-[15px]">Volegram Vouchers</p>
+              <p className="text-[11px] text-white/70">Buy · Send · Redeem · Any currency</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[9px] uppercase tracking-wider bg-black/25 px-2 py-0.5 rounded-full font-bold">VV</span>
+            <ChevronRight size={15}/>
+          </div>
         </button>
       </div>
-      {contactErr && (
-        <p className="mt-2 text-xs text-red-600 font-bold">{contactErr}</p>
+
+      {/* 4 quick actions */}
+      <div className="px-4 mb-3">
+        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">Quick Actions</p>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { icon: <ShoppingCart size={18}/>, label: "Buy",  fn: () => setTab("market") },
+            { icon: <Tag size={18}/>,          label: "Sell", fn: () => setTab("market") },
+            { icon: <ArrowLeftRight size={18}/>,label:"Swap", fn: () => setTab("market") },
+            { icon: <Send size={18}/>,         label: "Send", fn: () => setTab("chats")  },
+          ].map(b => (
+            <button key={b.label} onClick={b.fn}
+              className="flex flex-col items-center gap-1.5 bg-white rounded-2xl py-3.5 border border-neutral-100 active:scale-95 transition-transform">
+              <span className="text-black">{b.icon}</span>
+              <span className="text-[11px] font-extrabold text-black">{b.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* eSIM + Chats shortcuts */}
+      <div className="px-4 mb-3 grid grid-cols-2 gap-2">
+        <button onClick={() => setComingSoon("eSIM data plans — buy eSIMs in 200+ countries with sats. Partner integration coming soon.")}
+          className="flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+          <Smartphone size={17} className="text-neutral-300 shrink-0"/>
+          <div className="text-left">
+            <p className="font-extrabold text-sm text-black">eSIM</p>
+            <p className="text-[10px] text-neutral-400">Coming soon</p>
+          </div>
+        </button>
+        <button onClick={() => setTab("chats")}
+          className="flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+          <div className="relative shrink-0">
+            <MessageCircle size={17} className="text-black"/>
+            {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#F7931A] rounded-full"/>}
+          </div>
+          <div className="text-left">
+            <p className="font-extrabold text-sm text-black">Chats</p>
+            <p className="text-[10px] text-neutral-400">{rooms.length} open</p>
+          </div>
+        </button>
+      </div>
+
+      {/* Invite card */}
+      <div className="px-4 mb-8">
+        <div className="bg-white rounded-2xl p-4 border border-neutral-100 flex items-center justify-between">
+          <div>
+            <p className="font-extrabold text-sm text-black">Invite Friends</p>
+            <p className="text-[10px] text-neutral-400">No KYC · Zero sign-up</p>
+          </div>
+          <button onClick={copyInvite}
+            className="flex items-center gap-1.5 bg-black text-white text-[11px] font-bold px-3 py-2 rounded-xl active:scale-95 transition-transform">
+            {copied ? <><Check size={12}/> Copied!</> : <><Copy size={12}/> Copy link</>}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── CHATS ─────────────────────────────────────────────────────────
+  const ChatsTab = () => (
+    <div className="flex-1 flex flex-col min-h-0">
+      {activeRoom ? (
+        <>
+          <Hdr title={activeRoom.name ?? activeRoom.other_username ?? "Chat"} back={() => setActive(null)}/>
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ChatWindow room={activeRoom} user={user}/>
+          </div>
+        </>
+      ) : (
+        <>
+          <Hdr title="Chats"/>
+          <div className="flex-1 overflow-y-auto bg-[#f8f8f8]">
+            {rooms.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
+                  <MessageCircle size={26} className="text-neutral-300"/>
+                </div>
+                <p className="font-extrabold text-neutral-700 mb-1">No chats yet</p>
+                <p className="text-sm text-neutral-400 mb-6">Start a trade to open a chat</p>
+                <button onClick={() => setTab("market")}
+                  className="bg-black text-white font-extrabold px-6 py-3 rounded-2xl text-sm active:scale-95 transition-transform">
+                  Browse Market
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white mt-3 mx-4 rounded-2xl overflow-hidden border border-neutral-100 divide-y divide-neutral-50">
+                {rooms.map(room => (
+                  <button key={room.id} onClick={() => setActive(room)}
+                    className="w-full flex items-center gap-3 px-4 py-4 hover:bg-neutral-50 active:bg-neutral-100 transition-colors text-left">
+                    <div className="w-11 h-11 rounded-2xl bg-black shrink-0 flex items-center justify-center">
+                      <span className="text-white font-extrabold text-base">
+                        {(room.name ?? room.other_username ?? "?")[0].toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-extrabold text-black text-sm truncate">{room.name ?? room.other_username ?? "Chat"}</p>
+                        {(room.unread_count ?? 0) > 0 && (
+                          <span className="shrink-0 bg-[#F7931A] text-white text-[10px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center">
+                            {room.unread_count}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-neutral-400 truncate mt-0.5">{room.last_message ?? "Tap to open"}</p>
+                    </div>
+                    <ChevronRight size={14} className="text-neutral-300 shrink-0"/>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      {tradeOpen && activeRoom && (
+        <TradeModal roomId={activeRoom.id} defaultDir={tradeOpen}
+          onClose={() => setTradeOpen(null)}
+          onSent={t => { setTradeOpen(null); if (t?.roomId !== activeRoom?.id) api.rooms().then(setRooms).catch(() => {}); }}/>
       )}
     </div>
   );
 
-  return (
-    <div className="h-full flex bg-white overflow-hidden text-black">
-      {/* Sidebar */}
-      <ChatSidebar
-        user={user}
-        rooms={rooms}
-        activeRoomId={activeRoom?.id ?? null}
-        onSelectRoom={r => { setActive(r); setShowSwap(false); }}
-        onNewDM={addRoom}
-        onLogout={onLogout}
-        onSwapBuy={handleSwapBuy}
-        showSwap={showSwap}
-        onToggleSwap={() => setShowSwap(p => !p)}
-      />
+  // ── MARKET ───────────────────────────────────────────────────────
+  const MarketTab = () => (
+    <div className="flex-1 flex flex-col min-h-0">
+      <Hdr title="Market"/>
+      <div className="flex-1 overflow-hidden">
+        <SwapPanel onBuy={handleSwapBuy} onClose={() => setTab("home")}/>
+      </div>
+    </div>
+  );
 
-      {/* Chat area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {ActionCards}
+  // ── WALLET ───────────────────────────────────────────────────────
+  const WalletTab = () => (
+    <div className="flex-1 overflow-y-auto bg-[#f8f8f8]">
+      <Hdr title="Wallet"/>
 
-        <div className="flex-1 flex min-w-0 overflow-hidden">
-          <div className="flex flex-col flex-1 min-w-0">
-            {activeRoom && !showSwap ? (
-              <ChatWindow room={activeRoom} user={user}/>
-            ) : !showSwap ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center px-6 bg-white">
-                <div className="flex flex-col items-center mb-4">
-                  <span className="text-6xl leading-none text-black">⚡</span>
-                  <span className="text-xs font-extrabold  text-black/40 uppercase mt-1">BTC</span>
-                </div>
-                <h2 className="text-3xl font-extrabold uppercase  text-black mb-2">VBC</h2>
-                <p className="text-sm tracking-wide text-neutral-500 uppercase mb-8">Volegram Bitcoin Chat</p>
-                <div className="grid grid-cols-2 gap-3 text-sm text-neutral-700 max-w-xs">
-                  <div className="border border-neutral-300 px-4 py-4 hover:border-black transition-colors">⚡ Send sats</div>
-                  <div className="border border-neutral-300 px-4 py-4 hover:border-black transition-colors">🖼️ Share photos</div>
-                  <div className="border border-neutral-300 px-4 py-4 hover:border-black transition-colors">🔥 Burn messages</div>
-                  <div className="border border-neutral-300 px-4 py-4 hover:border-black transition-colors">🔒 Zero KYC</div>
-                </div>
-
-                <div className="mt-8 max-w-xs w-full border border-neutral-300 bg-white px-5 py-4 text-center">
-                  <p className="text-sm font-extrabold uppercase  mb-1 text-black">
-                    ⚡ Invite &amp; Install
-                  </p>
-                  <p className="text-xs text-neutral-600 mb-3 leading-relaxed">
-                    Know someone who values privacy &amp; Bitcoin? Send them the link — no sign-up, no KYC.
-                  </p>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(window.location.origin);
-                      alert("Link copied! Share it with your Bitcoin friends.");
-                    }}
-                    className="w-full text-sm font-extrabold uppercase tracking-wide py-2.5 mb-2 transition-colors bg-black text-white hover:bg-neutral-800"
-                  >
-                    Copy Invite Link
-                  </button>
-                </div>
-
-                <p className="text-xs text-neutral-500 mt-4">
-                  Tap <span className="text-black font-bold">SWAP</span> above to browse MICROSWAP listings
-                </p>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-sm text-neutral-500 bg-white">
-                Select a chat or buy a listing →
-              </div>
-            )}
-          </div>
-
-          {showSwap && (
-            <div className="w-80 shrink-0 border-l border-neutral-200 flex flex-col">
-              <SwapPanel
-                onBuy={handleSwapBuy}
-                onClose={() => setShowSwap(false)}
-              />
-            </div>
-          )}
+      <div className="mx-4 mt-4 mb-3 rounded-2xl bg-black text-white p-5">
+        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Total Balance</p>
+        <div className="flex items-baseline gap-2">
+          <span className="text-xl text-[#F7931A]">⚡</span>
+          <span className="text-[38px] font-extrabold leading-none tracking-tight">{(user.sats_balance ?? 0).toLocaleString()}</span>
+          <span className="text-sm font-semibold text-white/40">sats</span>
         </div>
       </div>
 
-      {/* Trade modal triggered by Buy/Sell action cards */}
-      {tradeOpen && activeRoom && (
-        <TradeModal
-          roomId={activeRoom.id}
-          defaultDir={tradeOpen}
-          onClose={() => setTradeOpen(null)}
-          onSent={handleTradeSent}
-        />
-      )}
+      <div className="px-4 mb-3">
+        <button onClick={() => setShowVouchers(true)}
+          className="w-full bg-white rounded-2xl p-4 border border-neutral-100 flex items-center gap-4 active:scale-[0.98] transition-transform">
+          <div className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center"
+               style={{ background: "linear-gradient(135deg,#F7931A 0%,#FF6B00 100%)" }}>
+            <Ticket size={18} className="text-white"/>
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-extrabold text-black">Volegram Vouchers</p>
+            <p className="text-[11px] text-neutral-400">Buy, send and redeem VV</p>
+          </div>
+          <ChevronRight size={15} className="text-neutral-300"/>
+        </button>
+      </div>
 
-      {/* Volegram Vouchers panel */}
-      {showVouchers && (
-        <VouchersPanel user={user} onClose={() => setShowVouchers(false)} />
-      )}
+      <div className="px-4 mb-10">
+        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2">Cash Out</p>
+        <div className="bg-white rounded-2xl border border-neutral-100 overflow-hidden divide-y divide-neutral-50">
+          <button onClick={() => setTab("market")}
+            className="w-full flex items-center gap-4 px-4 py-4 active:bg-neutral-50 transition-colors text-left">
+            <div className="w-10 h-10 rounded-xl bg-neutral-100 shrink-0 flex items-center justify-center">
+              <TrendingUp size={17} className="text-black"/>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-extrabold text-black text-sm">Sell via Market</p>
+              <p className="text-[11px] text-neutral-400">P2P escrow · Instant crypto</p>
+            </div>
+            <ChevronRight size={14} className="text-neutral-300"/>
+          </button>
+          <button onClick={() => setComingSoon("Bank withdrawal — enter your IBAN and receive EUR, RSD or BAM. Admin processes same day. Coming very soon!")}
+            className="w-full flex items-center gap-4 px-4 py-4 active:bg-neutral-50 transition-colors text-left">
+            <div className="w-10 h-10 rounded-xl bg-neutral-100 shrink-0 flex items-center justify-center">
+              <Wallet size={17} className="text-neutral-400"/>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-extrabold text-black text-sm">Bank Transfer Out</p>
+              <p className="text-[11px] text-neutral-400">IBAN · EUR / RSD / BAM</p>
+            </div>
+            <span className="text-[9px] font-bold text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5 shrink-0">Soon</span>
+          </button>
+          <button onClick={() => setComingSoon("Card refund — receive your sats back on a debit or credit card. Stripe integration coming soon.")}
+            className="w-full flex items-center gap-4 px-4 py-4 active:bg-neutral-50 transition-colors text-left">
+            <div className="w-10 h-10 rounded-xl bg-neutral-100 shrink-0 flex items-center justify-center">
+              <ArrowLeftRight size={17} className="text-neutral-400"/>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-extrabold text-black text-sm">Refund to Card</p>
+              <p className="text-[11px] text-neutral-400">Debit / Credit card</p>
+            </div>
+            <span className="text-[9px] font-bold text-neutral-400 border border-neutral-200 rounded-full px-2 py-0.5 shrink-0">Soon</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
-      {/* Coming soon toast for eSIM / OTP */}
+  // ── PROFILE ──────────────────────────────────────────────────────
+  const ProfileTab = () => (
+    <div className="flex-1 overflow-y-auto bg-[#f8f8f8]">
+      <Hdr title="Profile"/>
+      <div className="flex flex-col items-center pt-6 pb-5 bg-white mb-3">
+        {user.avatar_url ? (
+          <img src={user.avatar_url} alt="avatar" className="w-20 h-20 rounded-full object-cover mb-3 border-2 border-neutral-100"/>
+        ) : (
+          <div className="w-20 h-20 rounded-full bg-black flex items-center justify-center mb-3">
+            <span className="text-white text-2xl font-extrabold">{(user.username ?? "?")[0].toUpperCase()}</span>
+          </div>
+        )}
+        <p className="font-extrabold text-xl text-black">@{user.username}</p>
+        <p className="text-xs text-neutral-400 mt-0.5">{user.lightning_address}</p>
+        {user.bio && <p className="text-sm text-neutral-500 mt-2 text-center px-8 leading-relaxed">{user.bio}</p>}
+      </div>
+
+      <div className="mx-4 mb-3 bg-white rounded-2xl border border-neutral-100 overflow-hidden divide-y divide-neutral-50">
+        <div className="flex items-center justify-between px-4 py-3.5">
+          <span className="text-sm text-neutral-500">Balance</span>
+          <span className="text-sm font-extrabold text-black">⚡ {(user.sats_balance ?? 0).toLocaleString()} sats</span>
+        </div>
+        <div className="flex items-center justify-between px-4 py-3.5">
+          <span className="text-sm text-neutral-500">Lightning</span>
+          <span className="text-xs font-mono text-neutral-500 max-w-[180px] truncate">{user.lightning_address}</span>
+        </div>
+        {user.email && (
+          <div className="flex items-center justify-between px-4 py-3.5">
+            <span className="text-sm text-neutral-500">Email</span>
+            <span className="text-xs text-neutral-500">{user.email}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="mx-4 mb-10 space-y-2">
+        {(user.is_admin || user.isAdmin) && (
+          <a href="/admin" className="flex items-center gap-3 bg-black text-white rounded-2xl px-4 py-3.5 active:scale-[0.98] transition-transform">
+            <Shield size={16}/>
+            <span className="font-extrabold text-sm flex-1">Admin Panel</span>
+            <ChevronRight size={14}/>
+          </a>
+        )}
+        <button onClick={copyInvite}
+          className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 border border-neutral-100 active:scale-[0.98] transition-transform">
+          {copied ? <Check size={16} className="text-green-500"/> : <Copy size={16} className="text-neutral-400"/>}
+          <span className="font-extrabold text-sm text-black flex-1">{copied ? "Copied!" : "Copy Invite Link"}</span>
+          <ChevronRight size={14} className="text-neutral-300"/>
+        </button>
+        <button onClick={onLogout}
+          className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 border border-red-100 active:scale-[0.98] transition-transform">
+          <LogOut size={16} className="text-red-400"/>
+          <span className="font-extrabold text-sm text-red-500 flex-1">Sign Out</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  const content: Record<Tab, React.ReactNode> = {
+    home: <HomeTab/>, chats: <ChatsTab/>, market: <MarketTab/>,
+    wallet: <WalletTab/>, profile: <ProfileTab/>,
+  };
+
+  const TABS: { id: Tab; label: string; Icon: any }[] = [
+    { id: "home",    label: "Home",    Icon: Home           },
+    { id: "chats",   label: "Chats",   Icon: MessageCircle  },
+    { id: "market",  label: "Market",  Icon: TrendingUp     },
+    { id: "wallet",  label: "Wallet",  Icon: Wallet         },
+    { id: "profile", label: "Profile", Icon: User           },
+  ];
+
+  return (
+    <div className="h-full flex flex-col bg-white overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">{content[tab]}</div>
+
+      {/* Bottom nav */}
+      <nav className="shrink-0 flex bg-white border-t border-neutral-100"
+           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        {TABS.map(({ id, label, Icon }) => {
+          const active = tab === id;
+          return (
+            <button key={id}
+              onClick={() => { setTab(id); if (id !== "chats") setActive(null); }}
+              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 active:scale-90 transition-transform"
+              style={{ color: active ? "#F7931A" : "#9ca3af" }}>
+              <span className="relative">
+                <Icon size={21} strokeWidth={active ? 2.5 : 1.8}/>
+                {id === "chats" && unread > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#F7931A] rounded-full"/>
+                )}
+              </span>
+              <span className="text-[10px] font-bold">{label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {showVouchers && <VouchersPanel user={user} onClose={() => setShowVouchers(false)}/>}
+
       {comingSoon && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setComingSoon(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-3">
-            <div className="text-2xl">🚀</div>
-            <h3 className="text-lg font-extrabold">Coming soon</h3>
-            <p className="text-sm text-neutral-700">{comingSoon}</p>
-            <button onClick={() => setComingSoon(null)} className="btn-primary w-full">Got it</button>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+             onClick={() => setComingSoon(null)}>
+          <div onClick={e => e.stopPropagation()} className="bg-white w-full max-w-sm rounded-3xl p-6 space-y-3">
+            <div className="text-3xl">🚀</div>
+            <h3 className="text-xl font-extrabold text-black">Coming soon</h3>
+            <p className="text-sm text-neutral-500 leading-relaxed">{comingSoon}</p>
+            <button onClick={() => setComingSoon(null)}
+              className="w-full bg-black text-white font-extrabold py-3.5 rounded-2xl text-sm active:scale-[0.98] transition-transform">
+              Got it
+            </button>
           </div>
         </div>
       )}
