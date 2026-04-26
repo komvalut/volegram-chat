@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "../db/index.js";
 import {
   chatMessagesTable, chatRoomsTable, chatMembersTable,
-  chatUsersTable, messageReadsTable,
+  chatUsersTable, messageReadsTable, vbcBlocksTable,
 } from "../db/schema.js";
 import { eq, inArray, sql } from "drizzle-orm";
 import { createInvoice } from "../lib/lightning.js";
@@ -87,13 +87,23 @@ router.get("/users/search", auth, async (req, res) => {
   const userId = (req.session as any).userId;
   const q = (req.query.q as string ?? "").trim().replace(/^@/, "");
   if (q.length < 2) return res.json([]);
+
+  // Get IDs of users that block or are blocked by current user
+  const blocksR = await db.execute(sql`
+    SELECT blocked_id AS other_id FROM vbc_blocks WHERE blocker_id = ${userId}
+    UNION
+    SELECT blocker_id AS other_id FROM vbc_blocks WHERE blocked_id = ${userId}
+  `);
+  const blockedIds: number[] = blocksR.rows.map((r: any) => r.other_id);
+
   const rows = await db.execute(sql`
-    SELECT id, username, lightning_address FROM chat_users
+    SELECT id, username, avatar_url, avatar_seed, lightning_address FROM chat_users
     WHERE id != ${userId}
       AND is_blocked = false
-      AND LOWER(username) LIKE ${`%${q.toLowerCase()}%`}
+      AND LOWER(username) LIKE ${"%" + q.toLowerCase() + "%"}
+      ${blockedIds.length ? sql`AND id NOT IN (${sql.raw(blockedIds.join(","))})` : sql``}
     ORDER BY username
-    LIMIT 8
+    LIMIT 10
   `);
   res.json(rows.rows);
 });
