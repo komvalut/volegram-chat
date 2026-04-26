@@ -542,6 +542,26 @@ async function migrate() {
       ('coc',        'Clash of Clans',   '80 Dragulj.',  80,  2500, -1, '⚔️', 'Clash of Clans dragulji')
     ON CONFLICT DO NOTHING;
 
+    -- User-to-user voucher marketplace
+    CREATE TABLE IF NOT EXISTS user_voucher_listings (
+      id            SERIAL PRIMARY KEY,
+      seller_id     INTEGER     NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      service       VARCHAR(60)  NOT NULL,
+      service_name  VARCHAR(100) NOT NULL,
+      denomination  VARCHAR(100) NOT NULL,
+      fiat_amount   NUMERIC(12,2),
+      fiat_currency VARCHAR(10) NOT NULL DEFAULT 'RSD',
+      price_sats    INTEGER      NOT NULL,
+      icon          VARCHAR(20)  NOT NULL DEFAULT '🎫',
+      voucher_code  TEXT         NOT NULL,
+      status        VARCHAR(20)  NOT NULL DEFAULT 'active',
+      buyer_id      INTEGER REFERENCES chat_users(id),
+      sold_at       TIMESTAMPTZ,
+      created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_voucher_listings_seller ON user_voucher_listings(seller_id);
+    CREATE INDEX IF NOT EXISTS idx_user_voucher_listings_status ON user_voucher_listings(status);
+
     -- ─────────── OTP Orders ───────────
     CREATE TABLE IF NOT EXISTS otp_orders (
       id           SERIAL PRIMARY KEY,
