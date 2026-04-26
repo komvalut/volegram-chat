@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Zap, Mic, Send, Image, Flame, X, ArrowLeftRight } from "lucide-react";
+import { Zap, Mic, Send, Image, Flame, X, ArrowLeftRight, Smile, Users } from "lucide-react";
 import { api, uploadFile } from "../lib/api";
 import { vws } from "../lib/ws";
 import MessageBubble from "./MessageBubble";
@@ -14,7 +14,16 @@ const BURN_OPTIONS = [
   { label: "7d",  value: 604800 },
 ];
 
-export default function ChatWindow({ room, user }: { room: any; user: any }) {
+const EMOJI_GROUPS = [
+  { label: "😀", emojis: ["😀","😂","😊","🥰","😎","🤔","😢","😡","🤣","😍","🥳","😴","😮","😱","🤩","🙄","😇","🤗","😬","🫠"] },
+  { label: "👍", emojis: ["👍","👎","👏","🙏","💪","🤝","✌️","👋","🫡","🤜","🫶","💅","🤞","🖐️","☝️"] },
+  { label: "❤️", emojis: ["❤️","🔥","✅","❌","🎉","💰","⚡","₿","🚀","💯","🎯","🌟","💎","💸","🏆","🎁","🤑","🛡️","⚠️","💬"] },
+  { label: "🐶", emojis: ["🐶","🐱","🐸","🦁","🦊","🐺","🦋","🌈","🌙","⭐","🌞","🍕","🍺","☕","🎮","📱","💻","📷","🎵","🏀"] },
+];
+
+export default function ChatWindow({
+  room, user, onCreateGroup,
+}: { room: any; user: any; onCreateGroup?: () => void }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [trades, setTrades]     = useState<Record<number, any>>({});
   const [text, setText]         = useState("");
@@ -24,9 +33,12 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
   const [burnSecs, setBurnSecs] = useState(0);
   const [typing, setTyping]     = useState(false);
   const [recording, setRecording] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [emojiTab, setEmojiTab]   = useState(0);
   const bottomRef   = useRef<HTMLDivElement>(null);
   const mediaRef    = useRef<MediaRecorder | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setMessages([]);
@@ -63,6 +75,7 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
     if (!text.trim()) return;
     vws.sendMessage(room.id, text.trim(), "text", burnSecs > 0 ? { burnSecs } : undefined);
     setText("");
+    setShowEmoji(false);
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -92,7 +105,22 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
     mr.start(); mediaRef.current = mr; setRecording(true);
   };
 
-  // When a trade is created, inject a special "trade message" into the chat
+  const insertEmoji = (emoji: string) => {
+    const el = textareaRef.current;
+    if (el) {
+      const start = el.selectionStart ?? text.length;
+      const end   = el.selectionEnd ?? text.length;
+      const newText = text.slice(0, start) + emoji + text.slice(end);
+      setText(newText);
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    } else {
+      setText(t => t + emoji);
+    }
+  };
+
   const handleTradeSent = (trade: any) => {
     setTrades(prev => ({ ...prev, [trade.id]: trade }));
     setMessages(prev => [...prev, {
@@ -106,30 +134,40 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
   const activeBurn = BURN_OPTIONS.find(o => o.value === burnSecs);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" onClick={() => setShowEmoji(false)}>
       {/* Header */}
-      <div className="px-5 py-3.5 border-b border-neutral-200 bg-white flex items-center gap-3">
+      <div className="px-4 py-3 border-b border-neutral-200 bg-white flex items-center gap-3 shrink-0">
         <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-sm font-extrabold shrink-0
-          ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-black/20 bg-black/5 text-white"}`}>
-          {room.isIncognito ? "🔒" : room.type === "group" ? "#" : "D"}
+          ${room.isIncognito ? "border-purple-800 bg-purple-900/20 text-purple-400" : "border-black/20 bg-black/5 text-black"}`}>
+          {room.isIncognito ? "🔒" : room.type === "group" ? "#" : (room.name ?? "D").slice(0,1).toUpperCase()}
         </div>
-        <div className="flex-1">
-          <p className="text-base font-extrabold text-black">{room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}</p>
-          <p className={`text-xs ${room.isIncognito ? "text-purple-600" : "text-neutral-500"}`}>
-            {room.isIncognito ? "🔒 Incognito — messages not saved" : `${room.type} · encrypted`}
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-extrabold text-black truncate">{room.name ?? (room.type === "dm" ? "Direct Message" : "Group")}</p>
+          <p className={`text-[11px] ${room.isIncognito ? "text-purple-500" : "text-neutral-400"}`}>
+            {room.isIncognito ? "🔒 Incognito — not saved" : `${room.type} · encrypted`}
           </p>
         </div>
         {burnSecs > 0 && (
-          <div className="flex items-center gap-1 text-xs text-orange-400 border border-orange-900/40 px-2 py-1">
-            <Flame size={12}/> {activeBurn?.label} burn
+          <div className="flex items-center gap-1 text-[11px] text-orange-400 border border-orange-900/40 px-2 py-1 rounded-lg">
+            <Flame size={11}/> {activeBurn?.label}
           </div>
+        )}
+        {onCreateGroup && room.type !== "group" && (
+          <button onClick={onCreateGroup} title="Create group"
+            className="p-2 text-neutral-400 hover:text-black transition-colors rounded-lg hover:bg-neutral-100">
+            <Users size={16}/>
+          </button>
         )}
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+      {/* Messages — larger area */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1 bg-neutral-50">
         {messages.length === 0 && (
-          <div className="text-center py-10 text-sm text-neutral-600">No messages yet ⚡</div>
+          <div className="text-center py-16 text-sm text-neutral-400 select-none">
+            <div className="text-3xl mb-2">⚡</div>
+            <div className="font-semibold">No messages yet</div>
+            <div className="text-xs mt-1 text-neutral-300">Say hello!</div>
+          </div>
         )}
 
         {messages.map(m => {
@@ -154,67 +192,118 @@ export default function ChatWindow({ room, user }: { room: any; user: any }) {
         })}
 
         {typing && (
-          <div className="flex items-center gap-2 text-sm text-neutral-500 ml-11">
-            <span className="animate-pulse tracking-wide">● ● ●</span>
+          <div className="flex items-center gap-2 text-sm text-neutral-400 ml-2">
+            <span className="animate-pulse tracking-widest text-lg">· · ·</span>
           </div>
         )}
         <div ref={bottomRef}/>
       </div>
 
+      {/* Emoji picker panel */}
+      {showEmoji && (
+        <div className="border-t border-neutral-200 bg-white shrink-0" onClick={e => e.stopPropagation()}>
+          {/* Category tabs */}
+          <div className="flex border-b border-neutral-100 px-2 pt-1">
+            {EMOJI_GROUPS.map((g, i) => (
+              <button key={i} onClick={() => setEmojiTab(i)}
+                className={`flex-1 text-base py-1.5 rounded-t-lg transition-colors ${
+                  emojiTab === i ? "bg-neutral-100" : "hover:bg-neutral-50"
+                }`}>
+                {g.label}
+              </button>
+            ))}
+          </div>
+          {/* Emoji grid */}
+          <div className="p-2 grid grid-cols-10 gap-0.5 max-h-28 overflow-y-auto">
+            {EMOJI_GROUPS[emojiTab].emojis.map(emoji => (
+              <button key={emoji} onClick={() => insertEmoji(emoji)}
+                className="text-xl p-1 rounded hover:bg-neutral-100 transition-colors leading-none">
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Burn timer */}
       {showBurn && (
-        <div className="px-4 py-2 border-t border-neutral-200 bg-white flex items-center gap-2">
+        <div className="px-4 py-2 border-t border-neutral-200 bg-white flex items-center gap-2 shrink-0">
           <Flame size={12} className="text-orange-400"/>
           <span className="text-xs text-neutral-500 uppercase tracking-wider mr-1">Burn:</span>
           {BURN_OPTIONS.map(o => (
             <button key={o.value} onClick={() => { setBurnSecs(o.value); setShowBurn(false); }}
-              className={`text-xs px-2 py-1 border font-bold transition-colors
-                ${burnSecs === o.value ? "border-orange-600 text-orange-400 bg-orange-900/20" : "border-neutral-200 text-neutral-600 hover:border-orange-700"}`}>
+              className={`text-xs px-2 py-1 rounded-lg border font-bold transition-colors
+                ${burnSecs === o.value ? "border-orange-500 text-orange-500 bg-orange-50" : "border-neutral-200 text-neutral-600 hover:border-orange-400"}`}>
               {o.label}
             </button>
           ))}
-          <button onClick={() => setShowBurn(false)} className="ml-auto text-neutral-500 hover:text-black"><X size={12}/></button>
+          <button onClick={() => setShowBurn(false)} className="ml-auto text-neutral-400 hover:text-black"><X size={12}/></button>
         </div>
       )}
 
       {/* Input bar */}
-      <div className="px-4 py-3 border-t border-neutral-200 bg-white">
+      <div className="px-3 py-3 border-t border-neutral-200 bg-white shrink-0" onClick={e => e.stopPropagation()}>
         <div className="flex items-end gap-2">
-          <div className="flex gap-0.5 pb-1">
-            <label className="cursor-pointer p-1.5 text-neutral-600 hover:text-black transition-colors" title="Send image">
-              <Image size={15}/>
+          {/* Left toolbar */}
+          <div className="flex gap-0.5 pb-1 shrink-0">
+            <button
+              onClick={e => { e.stopPropagation(); setShowEmoji(p => !p); setShowBurn(false); }}
+              className={`p-2 rounded-xl transition-colors ${showEmoji ? "bg-[#F7931A] text-white" : "text-neutral-500 hover:text-black hover:bg-neutral-100"}`}
+              title="Emoji">
+              <Smile size={18}/>
+            </button>
+            <label className="cursor-pointer p-2 rounded-xl text-neutral-500 hover:text-black hover:bg-neutral-100 transition-colors" title="Send image">
+              <Image size={18}/>
               <input type="file" accept="image/*" className="hidden" onChange={sendPhoto}/>
             </label>
-            <button onClick={() => setShowLN(true)} className="p-1.5 text-neutral-600 hover:text-black transition-colors" title="Send Lightning invoice">
-              <Zap size={15}/>
+            <button onClick={() => { setShowLN(true); setShowEmoji(false); }}
+              className="p-2 rounded-xl text-neutral-500 hover:text-[#F7931A] hover:bg-orange-50 transition-colors"
+              title="Send Lightning invoice">
+              <Zap size={18}/>
             </button>
-            <button onClick={() => setShowTr(true)} className="p-1.5 text-neutral-600 hover:text-green-400 transition-colors" title="Start P2P trade">
-              <ArrowLeftRight size={15}/>
+            <button onClick={() => { setShowTr(true); setShowEmoji(false); }}
+              className="p-2 rounded-xl text-neutral-500 hover:text-green-600 hover:bg-green-50 transition-colors"
+              title="Start P2P trade">
+              <ArrowLeftRight size={18}/>
             </button>
             <button onClick={toggleRecording}
-              className={`p-1.5 transition-colors ${recording ? "text-red-500 animate-pulse" : "text-neutral-600 hover:text-black"}`}
+              className={`p-2 rounded-xl transition-colors ${recording ? "text-red-500 animate-pulse bg-red-50" : "text-neutral-500 hover:text-black hover:bg-neutral-100"}`}
               title="Voice message">
-              <Mic size={15}/>
+              <Mic size={18}/>
             </button>
-            <button onClick={() => setShowBurn(p => !p)}
-              className={`p-1.5 transition-colors ${burnSecs > 0 ? "text-orange-400" : "text-neutral-600 hover:text-orange-400"}`}
+            <button onClick={() => { setShowBurn(p => !p); setShowEmoji(false); }}
+              className={`p-2 rounded-xl transition-colors ${burnSecs > 0 ? "text-orange-500 bg-orange-50" : "text-neutral-500 hover:text-orange-400 hover:bg-orange-50"}`}
               title="Burn timer">
-              <Flame size={15}/>
+              <Flame size={18}/>
             </button>
           </div>
 
-          <textarea value={text} onChange={e => setText(e.target.value)} onKeyDown={onKeyDown}
+          {/* Text input */}
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={e => { setText(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
+            onKeyDown={onKeyDown}
             placeholder={burnSecs > 0 ? `Message (burns in ${activeBurn?.label})…` : "Message…"}
             rows={1}
-            className={`flex-1 bg-neutral-50 border text-black text-sm px-3 py-2.5 outline-none resize-none font-mono placeholder:text-neutral-500 leading-relaxed transition-colors
-              ${burnSecs > 0 ? "border-orange-900/60 focus:border-orange-600" : "border-neutral-300 focus:border-black"}`}
-            style={{ maxHeight: "120px" }}
+            className={`flex-1 border rounded-2xl text-black text-sm px-3.5 py-2.5 outline-none resize-none leading-relaxed transition-colors bg-neutral-50
+              ${burnSecs > 0 ? "border-orange-400 focus:border-orange-500" : "border-neutral-300 focus:border-black"}`}
+            style={{ minHeight: "42px", maxHeight: "120px" }}
           />
 
-          <button onClick={sendText} disabled={!text.trim()}
-            className={`p-2.5 disabled:opacity-40 transition-colors
-              ${burnSecs > 0 ? "bg-orange-600 text-white hover:bg-orange-500" : "bg-black text-white hover:bg-neutral-800"}`}>
-            <Send size={15}/>
+          {/* Send button */}
+          <button
+            onClick={sendText}
+            disabled={!text.trim()}
+            className={`p-2.5 rounded-xl disabled:opacity-30 transition-all shrink-0 ${
+              text.trim()
+                ? burnSecs > 0
+                  ? "bg-orange-500 text-white hover:bg-orange-400 shadow-md"
+                  : "bg-black text-white hover:bg-neutral-800 shadow-md"
+                : "bg-neutral-200 text-neutral-400"
+            }`}
+            title="Send">
+            <Send size={18}/>
           </button>
         </div>
       </div>
