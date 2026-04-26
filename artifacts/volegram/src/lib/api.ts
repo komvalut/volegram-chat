@@ -26,6 +26,26 @@ export const api = {
   messages:         (roomId: number) => req("GET", `/api/rooms/${roomId}/messages`),
   sendInvoice:      (roomId: number, sats: number, note: string) =>
     req("POST", `/api/rooms/${roomId}/invoice`, { sats, note }),
+
+  // OTP login
+  otpRequest:       (identifier: string) => req("POST", "/api/auth/otp/request", { identifier }),
+  otpVerify:        (identifier: string, code: string) => req("POST", "/api/auth/otp/verify", { identifier, code }),
+
+  // Vouchers
+  voucherCurrencies: () => req("GET", "/api/vouchers/currencies"),
+  voucherCreate:     (data: { amount: number; currency: string; paymentMethod: string; recipientUsername?: string; message?: string }) =>
+    req("POST", "/api/vouchers", data),
+  voucherList:       () => req("GET", "/api/vouchers"),
+  voucherSend:       (id: number, recipientUsername: string, message?: string) =>
+    req("POST", `/api/vouchers/${id}/send`, { recipientUsername, message }),
+  voucherRedeem:     (code: string) => req("POST", "/api/vouchers/redeem", { code }),
+
+  // Rates
+  rates:             () => req("GET", "/api/rates"),
+
+  // Public settings
+  publicSettings:    () => req("GET", "/api/settings/public"),
+
   admin: {
     users:          () => req("GET",  "/api/admin/users"),
     block:          (id: number) => req("POST", `/api/admin/block/${id}`),
@@ -33,6 +53,19 @@ export const api = {
     reports:        () => req("GET",  "/api/admin/reports"),
     resolveReport:  (id: number) => req("POST", `/api/admin/reports/${id}/resolve`),
     deleteMessage:  (id: number) => req("POST", `/api/admin/delete-message/${id}`),
+    // New admin endpoints
+    settingsList:   () => req("GET",  "/api/settings"),
+    setSetting:     (key: string, value: string) => req("POST", "/api/settings", { key, value }),
+    usersAdmin:     () => req("GET",  "/api/settings/users"),
+    promoteUser:    (id: number) => req("POST", `/api/settings/users/${id}/promote`),
+    demoteUser:     (id: number) => req("POST", `/api/settings/users/${id}/demote`),
+    blockUser:      (id: number) => req("POST", `/api/settings/users/${id}/block`),
+    unblockUser:    (id: number) => req("POST", `/api/settings/users/${id}/unblock`),
+    adjustBalance:  (id: number, delta: number) => req("POST", `/api/settings/users/${id}/balance`, { delta }),
+    deleteUser:     (id: number) => req("DELETE", `/api/settings/users/${id}`),
+    voucherListAll: () => req("GET", "/api/vouchers/admin/all"),
+    voucherConfirm: (id: number) => req("POST", `/api/vouchers/${id}/confirm-payment`),
+    voucherVoid:    (id: number) => req("DELETE", `/api/vouchers/${id}`),
   },
 };
 

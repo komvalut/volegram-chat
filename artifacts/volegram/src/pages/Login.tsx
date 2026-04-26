@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles } from "lucide-react";
+import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles, KeyRound } from "lucide-react";
 import { api, uploadFile } from "../lib/api";
+import HowItWorks from "../components/HowItWorks";
 
 type Step = "address" | "profile";
+type Mode = "lightning" | "otp";
 
 export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
   const [step, setStep]       = useState<Step>("address");
+  const [mode, setMode]       = useState<Mode>("lightning");
   const [addr, setAddr]       = useState("");
   const [username, setUname]  = useState("");
   const [bio, setBio]         = useState("");
@@ -16,6 +19,37 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
   const [user, setUser]       = useState<any>(null);
   const [err, setErr]         = useState("");
   const [loading, setLoading] = useState(false);
+
+  // OTP state
+  const [otpId, setOtpId]     = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpDevCode, setOtpDevCode] = useState<string | null>(null);
+
+  const handleRequestOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpId.trim()) { setErr("Enter your email, lightning address, or username"); return; }
+    setLoading(true); setErr("");
+    try {
+      const r = await api.otpRequest(otpId.trim());
+      setOtpSent(true);
+      setOtpDevCode(r.devCode ?? null);
+    } catch (e: any) {
+      setErr(e.message?.includes("not found") ? "User not found. Sign up via Lightning Address first." : (e.message || "Failed to send code"));
+    } finally { setLoading(false); }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode.trim()) { setErr("Enter the 6-digit code"); return; }
+    setLoading(true); setErr("");
+    try {
+      const r = await api.otpVerify(otpId.trim(), otpCode.trim());
+      onLogin(r.user);
+    } catch (e: any) {
+      setErr(e.message || "Invalid code");
+    } finally { setLoading(false); }
+  };
 
   const handleAddress = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,33 +125,108 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
             </div>
 
             <div className="surface-card-elevated p-6">
-              <form onSubmit={handleAddress} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                    Your Lightning Address
-                  </label>
-                  <input
-                    value={addr}
-                    onChange={e => setAddr(e.target.value)}
-                    placeholder="you@walletofsatoshi.com"
-                    className="input-modern font-mono text-sm"
-                    autoFocus
-                  />
-                  <p className="text-xs text-[var(--text-dim)] mt-2">
-                    Use any Lightning address — no email or phone needed.
-                  </p>
-                </div>
-
-                {err && (
-                  <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
-                    {err}
-                  </div>
-                )}
-
-                <button type="submit" disabled={loading || !addr.trim()} className="btn-accent w-full">
-                  {loading ? "Connecting…" : (<><Sparkles size={16}/> Enter Volegram <ArrowRight size={16}/></>)}
+              {/* Mode toggle */}
+              <div className="flex gap-1 p-1 bg-neutral-100 rounded-xl mb-4">
+                <button type="button" onClick={() => { setMode("lightning"); setErr(""); }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
+                    mode === "lightning" ? "bg-white shadow-sm text-black" : "text-neutral-500"
+                  }`}>
+                  ⚡ Lightning
                 </button>
-              </form>
+                <button type="button" onClick={() => { setMode("otp"); setErr(""); }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
+                    mode === "otp" ? "bg-white shadow-sm text-black" : "text-neutral-500"
+                  }`}>
+                  <KeyRound size={12} className="inline -mt-0.5 mr-1"/> Code
+                </button>
+              </div>
+
+              {mode === "lightning" && (
+                <form onSubmit={handleAddress} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                      Your Lightning Address
+                    </label>
+                    <input
+                      value={addr}
+                      onChange={e => setAddr(e.target.value)}
+                      placeholder="you@walletofsatoshi.com"
+                      className="input-modern font-mono text-sm"
+                      autoFocus
+                    />
+                    <p className="text-xs text-[var(--text-dim)] mt-2">
+                      Use any Lightning address — no email or phone needed. Auto-creates an account.
+                    </p>
+                  </div>
+
+                  {err && (
+                    <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                      {err}
+                    </div>
+                  )}
+
+                  <button type="submit" disabled={loading || !addr.trim()} className="btn-accent w-full">
+                    {loading ? "Connecting…" : (<><Sparkles size={16}/> Enter Volegram <ArrowRight size={16}/></>)}
+                  </button>
+                </form>
+              )}
+
+              {mode === "otp" && !otpSent && (
+                <form onSubmit={handleRequestOtp} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                      Email · Username · Lightning Address
+                    </label>
+                    <input
+                      value={otpId}
+                      onChange={e => setOtpId(e.target.value)}
+                      placeholder="email@example.com or @username"
+                      className="input-modern text-sm"
+                      autoFocus
+                    />
+                    <p className="text-xs text-[var(--text-dim)] mt-2">
+                      We'll send a 6-digit one-time code to log you in. Existing accounts only.
+                    </p>
+                  </div>
+
+                  {err && <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{err}</div>}
+
+                  <button type="submit" disabled={loading || !otpId.trim()} className="btn-accent w-full">
+                    {loading ? "Sending…" : (<><KeyRound size={16}/> Send Code</>)}
+                  </button>
+                </form>
+              )}
+
+              {mode === "otp" && otpSent && (
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  {otpDevCode && (
+                    <div className="rounded-xl bg-amber-50 border border-amber-200 px-3 py-3 text-xs text-amber-900">
+                      <div className="font-bold mb-1">Dev mode (no email service)</div>
+                      Your code: <span className="font-mono text-base font-extrabold tracking-widest">{otpDevCode}</span>
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                      6-Digit Code
+                    </label>
+                    <input
+                      value={otpCode}
+                      onChange={e => setOtpCode(e.target.value.replace(/\D/g,"").slice(0,6))}
+                      placeholder="123456"
+                      className="input-modern font-mono text-2xl text-center tracking-widest font-extrabold"
+                      autoFocus
+                    />
+                  </div>
+                  {err && <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{err}</div>}
+                  <button type="submit" disabled={loading || otpCode.length < 6} className="btn-accent w-full">
+                    {loading ? "Verifying…" : (<><Sparkles size={16}/> Sign In</>)}
+                  </button>
+                  <button type="button" onClick={() => { setOtpSent(false); setOtpCode(""); setOtpDevCode(null); setErr(""); }}
+                    className="w-full text-xs text-[var(--text-muted)] hover:text-[var(--text)] py-1 font-medium">
+                    ← Use a different identifier
+                  </button>
+                </form>
+              )}
             </div>
 
             {/* Examples */}
@@ -125,6 +234,11 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
               Examples: <span className="font-mono text-[var(--text-muted)]">user@walletofsatoshi.com</span> ·{" "}
               <span className="font-mono text-[var(--text-muted)]">you@blink.sv</span>
             </p>
+
+            {/* How it works */}
+            <div className="mt-5">
+              <HowItWorks />
+            </div>
           </>
         )}
 

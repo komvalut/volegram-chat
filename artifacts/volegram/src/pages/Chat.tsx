@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { ShoppingCart, Tag, ArrowLeftRight, Shield } from "lucide-react";
+import { ShoppingCart, Tag, ArrowLeftRight, Shield, Ticket, Smartphone, KeyRound } from "lucide-react";
 import { api } from "../lib/api";
 import { vws } from "../lib/ws";
-import ChatSidebar from "../components/ChatSidebar";
-import ChatWindow  from "../components/ChatWindow";
-import SwapPanel   from "../components/SwapPanel";
-import TradeModal  from "../components/TradeModal";
+import ChatSidebar    from "../components/ChatSidebar";
+import ChatWindow     from "../components/ChatWindow";
+import SwapPanel      from "../components/SwapPanel";
+import TradeModal     from "../components/TradeModal";
+import VouchersPanel  from "../components/VouchersPanel";
 
 export default function Chat({
   user, setUser, onLogout,
@@ -15,6 +16,8 @@ export default function Chat({
   const [showSwap, setShowSwap]     = useState(false);
   const [tradeOpen, setTradeOpen]   = useState<null | "buy_crypto" | "buy_sats">(null);
   const [contactErr, setContactErr] = useState("");
+  const [showVouchers, setShowVouchers] = useState(false);
+  const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   useEffect(() => {
     vws.connect(user.id);
@@ -97,8 +100,20 @@ export default function Chat({
   };
 
   const ActionCards = (
-    <div className="px-4 pt-3 pb-2 bg-white border-b border-neutral-200">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div className="px-4 pt-3 pb-3 bg-white border-b border-neutral-200">
+      {/* Featured: orange Volegram Vouchers */}
+      <button
+        onClick={() => setShowVouchers(true)}
+        className="w-full mb-2 px-5 py-3.5 rounded-2xl text-white font-extrabold text-base flex items-center justify-center gap-3 shadow-md hover:shadow-lg active:scale-[0.98] transition-all"
+        style={{ background: "linear-gradient(135deg, #F7931A 0%, #FF6B00 100%)" }}
+        data-testid="action-vouchers"
+      >
+        <Ticket size={20}/> Volegram Vouchers
+        <span className="text-[10px] uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full font-bold">VV</span>
+      </button>
+
+      {/* Standard action grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         <button onClick={handleBuy} className="action-card justify-center" data-testid="action-buy">
           <ShoppingCart size={16}/> Buy
         </button>
@@ -108,8 +123,16 @@ export default function Chat({
         <button onClick={handleSwap} className="action-card justify-center" data-testid="action-swap">
           <ArrowLeftRight size={16}/> Swap
         </button>
+        <button onClick={() => setComingSoon("eSIM data plans — partner integration coming soon. Buy data eSIMs in 200+ countries with sats.")}
+          className="action-card justify-center" data-testid="action-esim">
+          <Smartphone size={16}/> eSIM
+        </button>
+        <button onClick={() => setComingSoon("OTP login codes — already enabled on the login screen. Sign out and click 'Use code instead' to try it.")}
+          className="action-card justify-center" data-testid="action-otp">
+          <KeyRound size={16}/> OTP
+        </button>
         <button onClick={handleContactAdmin} className="action-card justify-center" data-testid="action-contact-admin">
-          <Shield size={16}/> Contact Admin
+          <Shield size={16}/> Admin
         </button>
       </div>
       {contactErr && (
@@ -204,6 +227,23 @@ export default function Chat({
           onClose={() => setTradeOpen(null)}
           onSent={handleTradeSent}
         />
+      )}
+
+      {/* Volegram Vouchers panel */}
+      {showVouchers && (
+        <VouchersPanel user={user} onClose={() => setShowVouchers(false)} />
+      )}
+
+      {/* Coming soon toast for eSIM / OTP */}
+      {comingSoon && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setComingSoon(null)}>
+          <div onClick={e => e.stopPropagation()} className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-3">
+            <div className="text-2xl">🚀</div>
+            <h3 className="text-lg font-extrabold">Coming soon</h3>
+            <p className="text-sm text-neutral-700">{comingSoon}</p>
+            <button onClick={() => setComingSoon(null)} className="btn-primary w-full">Got it</button>
+          </div>
+        </div>
       )}
     </div>
   );

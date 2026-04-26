@@ -11,6 +11,10 @@ import adminRoutes   from "./routes/admin.js";
 import profileRoutes from "./routes/profile.js";
 import swapRoutes    from "./routes/swap.js";
 import tradeRoutes   from "./routes/trades.js";
+import voucherRoutes  from "./routes/vouchers.js";
+import ratesRoutes    from "./routes/rates.js";
+import otpRoutes      from "./routes/otp.js";
+import settingsRoutes from "./routes/settings.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -52,10 +56,14 @@ app.use(session({
 
 app.use("/uploads",      express.static(path.join(__dirname, "..", "uploads")));
 app.use("/api/auth",     authRoutes);
+app.use("/api/auth/otp", otpRoutes);
 app.use("/api/admin",    adminRoutes);
 app.use("/api/profile",  profileRoutes);
 app.use("/api/swap",     swapRoutes);
 app.use("/api/trades",   tradeRoutes);
+app.use("/api/vouchers", voucherRoutes);
+app.use("/api/rates",    ratesRoutes);
+app.use("/api/settings", settingsRoutes);
 app.use("/api",          messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 
@@ -188,6 +196,47 @@ async function migrate() {
       sats       INTEGER     NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    -- ─────────── Volegram Vouchers ───────────
+    CREATE TABLE IF NOT EXISTS vbc_vouchers (
+      id              SERIAL PRIMARY KEY,
+      code            VARCHAR(60)  UNIQUE NOT NULL,
+      amount          NUMERIC(20,2) NOT NULL,
+      currency        VARCHAR(10)  NOT NULL DEFAULT 'SATS',
+      payment_method  VARCHAR(20)  NOT NULL DEFAULT 'lightning',
+      status          VARCHAR(20)  NOT NULL DEFAULT 'pending',
+      creator_id      INTEGER      NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      owner_id        INTEGER      NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      commission_rate NUMERIC(5,4) NOT NULL DEFAULT 0.02,
+      message         TEXT,
+      created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+      redeemed_at     TIMESTAMPTZ
+    );
+    CREATE TABLE IF NOT EXISTS vbc_voucher_transfers (
+      id            SERIAL PRIMARY KEY,
+      voucher_id    INTEGER     NOT NULL REFERENCES vbc_vouchers(id) ON DELETE CASCADE,
+      from_user_id  INTEGER     NOT NULL REFERENCES chat_users(id),
+      to_user_id    INTEGER     NOT NULL REFERENCES chat_users(id),
+      message       TEXT,
+      sent_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS vbc_settings (
+      key         VARCHAR(60) PRIMARY KEY,
+      value       TEXT,
+      updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS vbc_otp_codes (
+      id          SERIAL PRIMARY KEY,
+      user_id     INTEGER     NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      code        VARCHAR(10) NOT NULL,
+      used        BOOLEAN     NOT NULL DEFAULT FALSE,
+      expires_at  TIMESTAMPTZ NOT NULL,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    -- Default commission = 2%
+    INSERT INTO vbc_settings (key, value) VALUES ('commission_rate', '0.02')
+      ON CONFLICT (key) DO NOTHING;
   `);
 
   // Purge expired messages every minute

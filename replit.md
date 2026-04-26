@@ -9,7 +9,10 @@ A self-contained port of `komvalut/volegram-chat` running on Replit as two artif
   - Auto-runs `CREATE TABLE IF NOT EXISTS` migrations on startup against the Replit Postgres database (`DATABASE_URL`)
   - Sessions via `express-session` (`SESSION_SECRET`)
   - Lightning invoice creation via Speed (SBP) — gracefully no-ops when `SBP_API_KEY` is not set
-  - Routes: `auth`, `messages`, `admin`, `profile` (incl. `/api/profile/admin`), `swap`, `trades`
+  - Routes: `auth`, `auth/otp`, `messages`, `admin`, `profile` (incl. `/api/profile/admin`), `swap`, `trades`,
+    `vouchers` (Volegram Vouchers VV), `rates` (live BTC/fiat from CoinGecko + blockchain.info fallback),
+    `settings` (admin commission rate, IBAN, user mgmt)
+  - Tables added for VV: `vbc_vouchers`, `vbc_voucher_transfers`, `vbc_settings`, `vbc_otp_codes`
   - Dev script: `tsx watch src/index.ts`
 
 - **`artifacts/volegram`** — React 18 + Vite 5 + Tailwind v4 frontend (root `/`)
