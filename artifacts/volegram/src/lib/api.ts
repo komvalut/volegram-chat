@@ -102,9 +102,14 @@ export const api = {
   },
 
   p2p: {
-    list:      () => req("GET", "/api/p2pvouchers"),
-    buy:       (id: number) => req("POST", `/api/p2pvouchers/buy/${id}`),
-    myOrders:  () => req("GET", "/api/p2pvouchers/orders"),
+    list:        () => req("GET", "/api/p2pvouchers"),
+    buy:         (id: number) => req("POST", `/api/p2pvouchers/buy/${id}`),
+    myOrders:    () => req("GET", "/api/p2pvouchers/orders"),
+    userMarket:  () => req("GET", "/api/p2pvouchers/user-market"),
+    myListings:  () => req("GET", "/api/p2pvouchers/my-listings"),
+    sell:        (d: any) => req("POST", "/api/p2pvouchers/sell", d),
+    cancelListing: (id: number) => req("DELETE", `/api/p2pvouchers/my-listings/${id}`),
+    buyFromUser: (id: number) => req("POST", `/api/p2pvouchers/user-market/${id}/buy`),
 
     admin: {
       listAll:     () => req("GET",  "/api/p2pvouchers/admin/all"),
