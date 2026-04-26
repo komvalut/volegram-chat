@@ -155,15 +155,21 @@ router.delete("/:id", auth, async (req, res) => {
 
 // POST /api/credits/topup-request — bank transfer top-up request
 router.post("/topup-request", auth, async (req, res) => {
-  const userId = (req.session as any).userId;
-  const { amount_fiat, currency, note } = req.body;
-  if (!amount_fiat || !currency) return res.status(400).json({ error: "amount_fiat and currency required" });
-  const r = await db.execute(sql`
-    INSERT INTO topup_requests (user_id, amount_fiat, currency, note, status, created_at)
-    VALUES (${userId}, ${amount_fiat}, ${currency}, ${note ?? null}, 'pending', NOW())
-    RETURNING *
-  `);
-  res.json({ ok: true, request: r.rows[0] });
+  try {
+    const userId = (req.session as any).userId;
+    const { amount_fiat, currency, note } = req.body;
+    const amt = parseFloat(amount_fiat);
+    if (!amt || amt <= 0 || !currency)
+      return res.status(400).json({ error: "amount_fiat and currency are required" });
+    const r = await db.execute(sql`
+      INSERT INTO topup_requests (user_id, amount_fiat, currency, note, status, created_at)
+      VALUES (${userId}, ${amt}, ${currency}, ${note ?? null}, 'pending', NOW())
+      RETURNING *
+    `);
+    res.json({ ok: true, request: r.rows[0] });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message ?? "Database error" });
+  }
 });
 
 // GET /api/credits/topup-requests — admin: all pending requests
