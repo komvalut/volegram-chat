@@ -55,6 +55,11 @@ export default function Admin({ user }: { user: any }) {
   const [otpDeliverModal, setOtpDeliverModal] = useState<any | null>(null);
   const [otpDeliverCode, setOtpDeliverCode]   = useState("");
   const [otpDeliverMsg, setOtpDeliverMsg]     = useState("");
+  // SMS/eSIM API Providers
+  const [providers, setProviders]         = useState<any[]>([]);
+  const [providerForms, setProviderForms] = useState<Record<string, any>>({});
+  const [providerMsgs, setProviderMsgs]  = useState<Record<string, string>>({});
+  const [refundingOrder, setRefundingOrder] = useState<number | null>(null);
 
   // settings
   const [commissionPct, setCommissionPct]           = useState("2");
@@ -110,6 +115,15 @@ export default function Admin({ user }: { user: any }) {
         .then(r => r.json()).then(d => setOtpCountries(d.countries ?? [])).catch(() => {});
       fetch("/api/otp-mgmt/admin/orders", { credentials: "include" })
         .then(r => r.json()).then(d => setOtpOrders(d.orders ?? [])).catch(() => {});
+      fetch("/api/otp-mgmt/providers", { credentials: "include" })
+        .then(r => r.json()).then(d => {
+          setProviders(d.providers ?? []);
+          const forms: Record<string, any> = {};
+          (d.providers ?? []).forEach((p: any) => {
+            forms[p.provider] = { api_key: "", enabled: p.enabled };
+          });
+          setProviderForms(forms);
+        }).catch(() => {});
     }
   }, [tab]);
 
@@ -1133,28 +1147,135 @@ export default function Admin({ user }: { user: any }) {
               </div>
             )}
 
+            {/* ── SMS API Providers ── */}
+            <section className="surface-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="font-extrabold text-sm text-black">SMS API Providers</h3>
+                  <p className="text-[10px] text-neutral-500 mt-0.5">Connect SMSPool, SMSHero, Airalo or any provider via API. Admin-only.</p>
+                </div>
+              </div>
+
+              {/* Add new provider row */}
+              {(["smspool","smshero","airalo","custom"] as const).map(pname => {
+                const existing = providers.find(p => p.provider === pname);
+                const form = providerForms[pname] ?? { api_key: "", enabled: existing?.enabled ?? false };
+                const msg = providerMsgs[pname] ?? "";
+                return (
+                  <div key={pname} className="border border-neutral-100 rounded-2xl p-3 mb-2 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm text-black uppercase">{pname}</span>
+                      {existing && (
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${existing.enabled ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-500"}`}>
+                          {existing.enabled ? "Active" : "Disabled"}
+                        </span>
+                      )}
+                      {existing?.has_key && <span className="text-[9px] text-neutral-400">API key set</span>}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        value={form.api_key ?? ""}
+                        onChange={e => setProviderForms(f => ({ ...f, [pname]: { ...f[pname], api_key: e.target.value } }))}
+                        placeholder={existing?.has_key ? "Leave blank to keep current key" : "API key / token"}
+                        className="flex-1 input-modern text-xs font-mono"
+                      />
+                      <label className="flex items-center gap-1.5 text-xs font-bold cursor-pointer shrink-0">
+                        <input type="checkbox" checked={form.enabled ?? false}
+                          onChange={e => setProviderForms(f => ({ ...f, [pname]: { ...f[pname], enabled: e.target.checked } }))}
+                          className="w-3 h-3 rounded"/>
+                        On
+                      </label>
+                      <button onClick={async () => {
+                        setProviderMsgs(m => ({ ...m, [pname]: "" }));
+                        try {
+                          const r = await fetch("/api/otp-mgmt/providers", {
+                            method: "POST", credentials: "include",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ provider: pname, api_key: form.api_key || undefined, enabled: form.enabled }),
+                          });
+                          const d = await r.json();
+                          if (!r.ok) throw new Error(d.error);
+                          setProviderMsgs(m => ({ ...m, [pname]: "✓ Saved" }));
+                          fetch("/api/otp-mgmt/providers", { credentials: "include" }).then(r => r.json()).then(d => setProviders(d.providers ?? []));
+                        } catch (e: any) { setProviderMsgs(m => ({ ...m, [pname]: "✗ " + e.message })); }
+                      }} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-black text-white shrink-0">
+                        Save
+                      </button>
+                      {existing && (
+                        <button onClick={async () => {
+                          setProviderMsgs(m => ({ ...m, [pname]: "Testing…" }));
+                          try {
+                            const r = await fetch(`/api/otp-mgmt/providers/${pname}/test`, {
+                              method: "POST", credentials: "include",
+                              headers: { "Content-Type": "application/json" },
+                            });
+                            const d = await r.json();
+                            setProviderMsgs(m => ({ ...m, [pname]: d.ok ? `✓ Connected · Balance: ${JSON.stringify(d.balance)}` : "✗ Failed" }));
+                          } catch { setProviderMsgs(m => ({ ...m, [pname]: "✗ Error" })); }
+                        }} className="text-xs font-bold px-3 py-1.5 rounded-xl border border-neutral-200 text-neutral-700 shrink-0">
+                          Test
+                        </button>
+                      )}
+                    </div>
+                    {msg && <p className={`text-[10px] font-semibold ${msg.startsWith("✓") ? "text-green-700" : "text-red-600"}`}>{msg}</p>}
+                  </div>
+                );
+              })}
+            </section>
+
             {/* OTP Orders section */}
             {otpOrders.length > 0 && (
               <div className="mb-4">
-                <h3 className="font-extrabold text-sm text-black mb-2">Pending OTP Orders ({otpOrders.filter((o:any)=>o.status==="pending").length})</h3>
+                <h3 className="font-extrabold text-sm text-black mb-2">
+                  OTP Orders — {otpOrders.filter((o:any)=>o.status==="pending").length} pending · {otpOrders.filter((o:any)=>o.status==="delivered").length} delivered
+                </h3>
                 <div className="space-y-2">
                   {otpOrders.map((o:any) => (
-                    <div key={o.id} className="surface-card p-3 flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          <span className="font-extrabold text-black text-sm">#{o.id} — {o.country_name} ({o.phone_prefix})</span>
-                          <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full ${o.status==="delivered" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>{o.status}</span>
+                    <div key={o.id} className="surface-card p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            <span className="font-extrabold text-black text-sm">#{o.id} — {o.country_name} ({o.phone_prefix})</span>
+                            {o.service_name && o.service_name !== "Any" && (
+                              <span className="text-[10px] bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded-full font-bold">{o.service_name}</span>
+                            )}
+                            <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
+                              o.status==="delivered" ? "bg-green-100 text-green-800" :
+                              o.status==="refunded" ? "bg-blue-100 text-blue-700" :
+                              "bg-amber-100 text-amber-800"
+                            }`}>{o.status}</span>
+                          </div>
+                          <p className="text-xs text-neutral-500">@{o.buyer_username} · ⚡ {Number(o.price_sats).toLocaleString()} sats</p>
+                          {o.phone_number && <p className="text-xs font-mono text-neutral-600">SMS: {o.phone_number}</p>}
+                          {o.otp_code && <p className="text-xs font-mono bg-green-50 text-green-900 px-2 py-1 rounded-lg inline-block mt-1">{o.otp_code}</p>}
                         </div>
-                        <p className="text-xs text-neutral-500">@{o.buyer_username} · ⚡ {Number(o.price_sats).toLocaleString()} sats</p>
-                        {o.phone_number && <p className="text-xs font-mono text-neutral-600">SMS: {o.phone_number}</p>}
-                        {o.otp_code && <p className="text-xs font-mono bg-green-50 text-green-900 px-2 py-1 rounded-lg inline-block mt-1">{o.otp_code}</p>}
+                        <div className="flex gap-1 shrink-0">
+                          {o.status === "pending" && (
+                            <button onClick={() => { setOtpDeliverModal(o); setOtpDeliverCode(""); setOtpDeliverMsg(""); }}
+                              className="flex items-center gap-1 text-xs font-bold px-3 py-2 rounded-xl bg-black text-white hover:bg-neutral-800">
+                              <Send size={11}/> Deliver
+                            </button>
+                          )}
+                          {o.status !== "refunded" && (
+                            <button onClick={async () => {
+                              if (!confirm(`Refund order #${o.id} — ${Number(o.price_sats).toLocaleString()} sats to @${o.buyer_username}?`)) return;
+                              setRefundingOrder(o.id);
+                              try {
+                                await fetch(`/api/otp-mgmt/admin/orders/${o.id}/refund`, {
+                                  method: "POST", credentials: "include",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ reason: "Admin manual refund" }),
+                                });
+                                setOtpOrders(os => os.map(x => x.id === o.id ? { ...x, status: "refunded" } : x));
+                              } finally { setRefundingOrder(null); }
+                            }} disabled={refundingOrder === o.id}
+                              className="flex items-center gap-1 text-xs font-bold px-3 py-2 rounded-xl border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-40">
+                              {refundingOrder === o.id ? <Loader2 size={11} className="animate-spin"/> : null}
+                              Refund
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      {o.status === "pending" && (
-                        <button onClick={() => { setOtpDeliverModal(o); setOtpDeliverCode(""); setOtpDeliverMsg(""); }}
-                          className="shrink-0 flex items-center gap-1 text-xs font-bold px-3 py-2 rounded-xl bg-black text-white hover:bg-neutral-800">
-                          <Send size={11}/> Deliver
-                        </button>
-                      )}
                     </div>
                   ))}
                 </div>
