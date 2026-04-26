@@ -46,3 +46,14 @@ Both workflows are auto-managed by the artifact system:
 - `artifacts/volegram: web` → `pnpm --filter @workspace/volegram run dev`
 
 The preview pane proxies `/` → volegram and `/api`, `/uploads`, `/ws` → api-server.
+
+## GitHub mirror
+
+This snapshot is mirrored to `https://github.com/komvalut/volegram-chat` on
+branch `replit-deploy-2026-04` (the remote `main` has unrelated history from
+the upstream repo, so a separate branch is used to avoid force-pushing).
+
+Push uses `GITHUB_TOKEN` over HTTPS as `x-access-token`; the token is stripped
+from `.git/config` after each push. The `.replit` file's `[userenv.shared]`
+secrets are blanked in the mirrored snapshot so secret-scanning does not
+block the push.
