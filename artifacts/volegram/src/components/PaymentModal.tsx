@@ -138,7 +138,7 @@ export default function PaymentModal({ listing, user, onClose, onOpenChat }: Pro
                 <>
                   <div>
                     <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-2">
-                      Pošalji na adresu prodavca
+                      Send to seller's address
                     </p>
 
                     {qrDataUrl && (
@@ -159,7 +159,7 @@ export default function PaymentModal({ listing, user, onClose, onOpenChat }: Pro
                         }
                       </button>
                     </div>
-                    {copiedAddr && <p className="text-[10px] text-green-600 font-bold mt-1 text-center">✓ Kopirano!</p>}
+                    {copiedAddr && <p className="text-[10px] text-green-600 font-bold mt-1 text-center">✓ Copied!</p>}
                   </div>
 
                   <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
