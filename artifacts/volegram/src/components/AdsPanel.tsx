@@ -101,7 +101,7 @@ export default function AdsPanel({ user, onClose }: { user: any; onClose: () => 
               <Megaphone size={18} className="text-[#F7931A]"/>
             </div>
             <div>
-              <h2 className="font-extrabold text-black text-[15px]">VBC Oglasi</h2>
+              <h2 className="font-extrabold text-black text-[15px]">VBC Ads</h2>
               <p className="text-[10px] text-neutral-400">Plati satsima · Admin aktivira</p>
             </div>
           </div>
