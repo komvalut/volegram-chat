@@ -57,7 +57,10 @@ export default function Admin({ user }: { user: any }) {
   const [otpDeliverMsg, setOtpDeliverMsg]     = useState("");
 
   // settings
-  const [commissionPct, setCommissionPct] = useState("2");
+  const [commissionPct, setCommissionPct]           = useState("2");
+  const [creditsCommissionPct, setCreditsCommPct]   = useState("10");
+  const [predictionCommissionPct, setPredCommPct]   = useState("5");
+  const [swapCommissionPct, setSwapCommPct]         = useState("1");
   const [iban, setIban]     = useState("");
   const [holder, setHolder] = useState("");
   const [bankName, setBankName] = useState("");
@@ -74,6 +77,9 @@ export default function Admin({ user }: { user: any }) {
     refresh();
     api.publicSettings().then(d => {
       setCommissionPct((d.commissionRate * 100).toFixed(2));
+      if (d.creditsCommission != null) setCreditsCommPct((d.creditsCommission * 100).toFixed(2));
+      if (d.predictionCommission != null) setPredCommPct((d.predictionCommission * 100).toFixed(2));
+      if (d.swapCommission != null) setSwapCommPct((d.swapCommission * 100).toFixed(2));
       setIban(d.bank?.iban ?? "");
       setHolder(d.bank?.holder ?? "");
       setBankName(d.bank?.name ?? "");
@@ -144,7 +150,10 @@ export default function Admin({ user }: { user: any }) {
   const saveSettings = async () => {
     setSavedMsg("");
     const rate = (parseFloat(commissionPct) || 0) / 100;
-    await api.admin.setSetting("commission_rate", rate.toString());
+    await api.admin.setSetting("commission_rate",      rate.toString());
+    await api.admin.setSetting("credits_commission",   ((parseFloat(creditsCommissionPct) || 0) / 100).toString());
+    await api.admin.setSetting("prediction_commission",((parseFloat(predictionCommissionPct) || 0) / 100).toString());
+    await api.admin.setSetting("swap_commission",      ((parseFloat(swapCommissionPct) || 0) / 100).toString());
     await api.admin.setSetting("bank_iban",   iban);
     await api.admin.setSetting("bank_holder", holder);
     await api.admin.setSetting("bank_name",   bankName);
@@ -804,12 +813,40 @@ export default function Admin({ user }: { user: any }) {
             </section>
 
             <section className="surface-card p-5">
-              <h3 className="font-extrabold text-base mb-1">Commission Rate</h3>
-              <p className="text-xs text-neutral-500 mb-4">Charged on voucher redemption. Change anytime.</p>
-              <div className="flex items-center gap-3">
-                <input type="number" step="0.01" min="0" max="100" value={commissionPct} onChange={e => setCommissionPct(e.target.value)}
-                  className="input-modern font-mono text-2xl font-extrabold w-32 text-center"/>
-                <span className="text-2xl font-extrabold">%</span>
+              <h3 className="font-extrabold text-base mb-3">Commission Rates</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Voucher Redemption</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" step="0.01" min="0" max="100" value={commissionPct} onChange={e => setCommissionPct(e.target.value)}
+                      className="input-modern font-mono text-xl font-extrabold w-24 text-center"/>
+                    <span className="font-extrabold text-lg">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">P2P Credits (of interest)</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" step="0.01" min="0" max="100" value={creditsCommissionPct} onChange={e => setCreditsCommPct(e.target.value)}
+                      className="input-modern font-mono text-xl font-extrabold w-24 text-center"/>
+                    <span className="font-extrabold text-lg">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">P2P Predictions (of pool)</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" step="0.01" min="0" max="100" value={predictionCommissionPct} onChange={e => setPredCommPct(e.target.value)}
+                      className="input-modern font-mono text-xl font-extrabold w-24 text-center"/>
+                    <span className="font-extrabold text-lg">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">P2P Swap (of amount)</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" step="0.01" min="0" max="100" value={swapCommissionPct} onChange={e => setSwapCommPct(e.target.value)}
+                      className="input-modern font-mono text-xl font-extrabold w-24 text-center"/>
+                    <span className="font-extrabold text-lg">%</span>
+                  </div>
+                </div>
               </div>
             </section>
 
