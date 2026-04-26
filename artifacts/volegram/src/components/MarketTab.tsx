@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, X, RefreshCw, ShoppingCart, Tag, ChevronDown } from "lucide-react";
+import { Plus, X, RefreshCw, Tag, TrendingUp, TrendingDown } from "lucide-react";
 import SwapPanel from "./SwapPanel";
 import PaymentModal from "./PaymentModal";
 
@@ -19,12 +19,13 @@ const ASSET_ICONS: Record<string, string> = {
 const PAYMENT_METHODS: Record<string, string> = {
   ETH: "ETH Wallet", BTC: "On-chain BTC", USDT: "USDT (TRC20/ERC20)",
   EUR: "IBAN / bank transfer", USD: "IBAN / bank transfer",
-  RSD: "Gotovina / banka", BAM: "Gotovina / banka",
+  RSD: "Cash / bank", BAM: "Cash / bank",
   SOL: "SOL Wallet", BNB: "BSC Wallet", ADA: "Cardano Wallet",
   XMR: "Monero Wallet", TRX: "TRON Wallet", MATIC: "Polygon Wallet", DOT: "Polkadot Wallet",
 };
 
 const DEFAULT_FORM = {
+  listingType: "sell" as "sell" | "buy",
   title: "", description: "",
   asset: "ETH", assetAmount: "",
   priceSats: "", receivingAddress: "",
@@ -56,17 +57,19 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
 
   const createListing = async () => {
     setFormErr("");
-    if (!form.title.trim()) return setFormErr("Naslov je obavezan");
+    if (!form.title.trim()) return setFormErr("Title is required");
     const sats = parseInt(form.priceSats);
-    if (!sats || sats < 1) return setFormErr("Unesi cenu u satošima");
-    if (!form.receivingAddress.trim()) return setFormErr("Unesi adresu primanja (gde kupac šalje)");
+    if (!sats || sats < 1) return setFormErr("Enter a price in sats (minimum 1)");
+    if (!form.receivingAddress.trim()) return setFormErr("Enter your receiving address so buyers can send funds");
     setSubmitting(true);
     try {
+      const autoTitle = form.title.trim() ||
+        `${form.listingType === "sell" ? "Selling" : "Buying"} ${form.assetAmount || ""} ${form.asset}`;
       const r = await fetch("/api/market/listings", {
         method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: form.title.trim(),
+          title: autoTitle,
           description: form.description.trim(),
           priceSats: sats,
           currency: form.asset,
@@ -74,13 +77,17 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
           asset: form.asset,
           assetAmount: form.assetAmount ? parseFloat(form.assetAmount) : null,
           receivingAddress: form.receivingAddress.trim(),
+          listingType: form.listingType,
         }),
       });
-      if (!r.ok) throw new Error("failed");
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Failed to post listing");
       setCreating(false);
       setForm(DEFAULT_FORM);
       loadListings();
-    } catch { setFormErr("Greška pri postavljanju oglasa"); }
+    } catch (e: any) {
+      setFormErr(e.message || "Failed to post listing — try again");
+    }
     setSubmitting(false);
   };
 
@@ -92,6 +99,15 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
   };
 
   const assetIcon = (asset: string) => ASSET_ICONS[asset] ?? "🪙";
+
+  const handleContact = async (listingId: number) => {
+    try {
+      const d = await fetch(`/api/market/listings/${listingId}/contact`, {
+        method: "POST", credentials: "include",
+      }).then(r => r.json());
+      if (d.room) onContactRoom(d.room);
+    } catch {}
+  };
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -120,26 +136,59 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
 
           {/* Create listing form */}
           {creating && (
-            <div className="bg-white border-b border-neutral-100 p-4 shrink-0 overflow-y-auto max-h-[75vh]">
+            <div className="bg-white border-b border-neutral-100 p-4 shrink-0 overflow-y-auto max-h-[80vh]">
               <div className="flex items-center justify-between mb-4">
-                <span className="font-extrabold text-black text-sm">Novi oglas</span>
+                <span className="font-extrabold text-black text-sm">New Listing</span>
                 <button onClick={() => { setCreating(false); setForm(DEFAULT_FORM); setFormErr(""); }}>
                   <X size={16} className="text-neutral-400"/>
                 </button>
               </div>
+
               <div className="space-y-3">
+                {/* Buy or Sell type */}
+                <div>
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">I want to…</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setForm(f => ({ ...f, listingType: "sell" }))}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-extrabold transition-all ${
+                        form.listingType === "sell"
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-neutral-600 border-neutral-200"
+                      }`}
+                    >
+                      <TrendingDown size={14}/> SELL
+                    </button>
+                    <button
+                      onClick={() => setForm(f => ({ ...f, listingType: "buy" }))}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-extrabold transition-all ${
+                        form.listingType === "buy"
+                          ? "bg-[#F7931A] text-white border-[#F7931A]"
+                          : "bg-white text-neutral-600 border-neutral-200"
+                      }`}
+                    >
+                      <TrendingUp size={14}/> BUY
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 mt-1">
+                    {form.listingType === "sell"
+                      ? "You are selling crypto/assets — buyer pays you in sats."
+                      : "You want to buy crypto/assets — you pay in sats."}
+                  </p>
+                </div>
+
                 {/* Asset selector */}
                 <div>
-                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Šta prodaješ?</p>
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
+                    {form.listingType === "sell" ? "What are you selling?" : "What do you want to buy?"}
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {ASSETS.map(a => (
                       <button
                         key={a}
                         onClick={() => setForm(f => ({ ...f, asset: a }))}
                         className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all ${
-                          form.asset === a
-                            ? "bg-black text-white"
-                            : "bg-neutral-100 text-neutral-600"
+                          form.asset === a ? "bg-black text-white" : "bg-neutral-100 text-neutral-600"
                         }`}
                       >
                         {assetIcon(a)} {a}
@@ -151,13 +200,13 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
                 {/* Asset amount */}
                 <div>
                   <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
-                    Koliko {form.asset} prodaješ? (opciono)
+                    Amount of {form.asset} (optional)
                   </p>
                   <input
                     type="number" step="any"
                     value={form.assetAmount}
                     onChange={e => setForm(f => ({ ...f, assetAmount: e.target.value }))}
-                    placeholder={`npr. 0.1 (${form.asset})`}
+                    placeholder={`e.g. 0.1 (${form.asset})`}
                     className="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-black"
                   />
                 </div>
@@ -165,7 +214,7 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
                 {/* Price in sats */}
                 <div>
                   <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
-                    Cena u satošima (šta kupac plaća tebi)
+                    Price in sats ⚡
                   </p>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#F7931A] font-extrabold text-sm">⚡</span>
@@ -173,7 +222,7 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
                       type="number"
                       value={form.priceSats}
                       onChange={e => setForm(f => ({ ...f, priceSats: e.target.value }))}
-                      placeholder="npr. 50000 sats"
+                      placeholder="e.g. 50000 sats"
                       className="w-full border border-neutral-200 rounded-xl pl-8 pr-3 py-2.5 text-sm outline-none focus:border-black"
                     />
                   </div>
@@ -182,31 +231,33 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
                 {/* Receiving address */}
                 <div>
                   <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">
-                    Tvoja adresa primanja ({paymentMethod})
+                    {form.listingType === "sell"
+                      ? `Your ${form.asset} address (buyer sends here)`
+                      : `Your Lightning address / IBAN (you receive sats here)`}
                   </p>
                   <textarea
                     value={form.receivingAddress}
                     onChange={e => setForm(f => ({ ...f, receivingAddress: e.target.value }))}
                     placeholder={
                       form.asset === "EUR" || form.asset === "USD" || form.asset === "RSD" || form.asset === "BAM"
-                        ? "IBAN / broj računa"
-                        : `${form.asset} wallet adresa`
+                        ? "IBAN / bank account number"
+                        : `${form.asset} wallet address`
                     }
                     rows={2}
                     className="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-black resize-none font-mono"
                   />
                   <p className="text-[10px] text-neutral-400 mt-0.5">
-                    Kupac će videti ovu adresu sa QR kodom
+                    Buyer will see this address with a QR code.
                   </p>
                 </div>
 
                 {/* Title */}
                 <div>
-                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Naslov oglasa</p>
+                  <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Listing Title</p>
                   <input
                     value={form.title}
                     onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                    placeholder={`npr. Prodajem ${form.assetAmount || "0.1"} ${form.asset} za sate`}
+                    placeholder={`e.g. ${form.listingType === "sell" ? "Selling" : "Buying"} ${form.assetAmount || "0.1"} ${form.asset}`}
                     className="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-black"
                   />
                 </div>
@@ -215,19 +266,23 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Napomena (opciono) — uslovi, rokovi isporuke…"
+                  placeholder="Notes (optional) — terms, delivery time…"
                   rows={2}
                   className="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-black resize-none"
                 />
 
-                {formErr && <p className="text-red-500 text-xs font-bold">{formErr}</p>}
+                {formErr && (
+                  <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700 font-bold">
+                    ⚠ {formErr}
+                  </div>
+                )}
 
                 <button
                   onClick={createListing}
                   disabled={submitting}
                   className="w-full bg-black text-white font-extrabold py-3 rounded-xl text-sm active:scale-[0.98] transition-transform disabled:opacity-50"
                 >
-                  {submitting ? "Postavljam…" : "Postavi oglas"}
+                  {submitting ? "Posting…" : "Post Listing"}
                 </button>
               </div>
             </div>
@@ -237,7 +292,7 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
           {!creating && (
             <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-neutral-100 shrink-0">
               <span className="text-xs font-bold text-neutral-400">
-                {listings.length} oglas{listings.length === 1 ? "" : listings.length >= 2 && listings.length <= 4 ? "a" : "a"}
+                {listings.length} listing{listings.length !== 1 ? "s" : ""}
               </span>
               <div className="flex gap-2">
                 <button
@@ -250,7 +305,7 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
                   onClick={() => setCreating(true)}
                   className="flex items-center gap-1.5 bg-black text-white text-xs font-extrabold px-3 py-2 rounded-xl active:scale-95 transition-transform"
                 >
-                  <Plus size={13}/> Prodaj
+                  <Plus size={13}/> Post Ad
                 </button>
               </div>
             </div>
@@ -262,7 +317,7 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <RefreshCw size={22} className="animate-spin text-neutral-300 mx-auto mb-2"/>
-                  <p className="text-xs text-neutral-400">Učitavam oglase…</p>
+                  <p className="text-xs text-neutral-400">Loading listings…</p>
                 </div>
               </div>
             )}
@@ -272,15 +327,15 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
                 <div className="w-14 h-14 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
                   <Tag size={22} className="text-neutral-300"/>
                 </div>
-                <p className="font-extrabold text-neutral-700 mb-1">Nema oglasa</p>
+                <p className="font-extrabold text-neutral-700 mb-1">No listings yet</p>
                 <p className="text-sm text-neutral-400 mb-5">
-                  Budi prvi — prodaj kripto ili valute za sate
+                  Be the first — buy or sell crypto for sats
                 </p>
                 <button
                   onClick={() => setCreating(true)}
                   className="bg-black text-white font-extrabold px-5 py-2.5 rounded-xl text-sm active:scale-95 transition-transform"
                 >
-                  <Plus size={14} className="inline mr-1.5 -mt-0.5"/>Postavi oglas
+                  <Plus size={14} className="inline mr-1.5 -mt-0.5"/> Post Listing
                 </button>
               </div>
             )}
@@ -288,18 +343,25 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
             {!loading && listings.map((l: any) => {
               const isOwn = l.seller_id === user.id;
               const icon  = assetIcon(l.asset ?? l.currency);
+              const isBuy = l.listing_type === "buy";
               return (
-                <div key={l.id} className="bg-white mx-4 mt-3 rounded-2xl border border-neutral-100 p-4">
-                  {/* Asset badge + title */}
+                <div key={l.id} className="bg-white mx-4 mt-3 rounded-2xl border border-neutral-100 p-4 shadow-sm">
+                  {/* Type badge + asset + title */}
                   <div className="flex items-start gap-2 mb-2">
                     <div className="w-9 h-9 rounded-xl bg-neutral-900 flex items-center justify-center text-sm shrink-0">
                       {icon}
                     </div>
                     <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className={`text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                          isBuy ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"
+                        }`}>
+                          {isBuy ? "BUYING" : "SELLING"}
+                        </span>
+                        <span className="text-[10px] text-neutral-400">@{l.seller_username}</span>
+                      </div>
                       <p className="font-extrabold text-black text-sm leading-tight truncate">{l.title}</p>
-                      <p className="text-[10px] text-neutral-400 mt-0.5">
-                        @{l.seller_username} · {l.payment_method ?? ""}
-                      </p>
+                      <p className="text-[10px] text-neutral-400 mt-0.5">{l.payment_method ?? ""}</p>
                     </div>
                   </div>
 
@@ -307,53 +369,58 @@ export default function MarketTab({ user, onBuy, onClose, onContactRoom }: Props
                     <p className="text-xs text-neutral-500 mb-2 leading-relaxed">{l.description}</p>
                   )}
 
-                  {/* Price row */}
-                  <div className="flex items-center justify-between mt-2">
+                  {/* Price + amount */}
+                  <div className="flex items-center justify-between mb-3">
                     <div>
+                      <span className="text-[#F7931A] font-extrabold text-base">
+                        ⚡ {Number(l.price_sats).toLocaleString()} sats
+                      </span>
                       {l.asset_amount && (
-                        <p className="text-[10px] text-neutral-400 font-bold mb-0.5">
-                          {l.asset_amount} {l.asset ?? l.currency}
-                        </p>
+                        <span className="ml-2 text-xs text-neutral-500">
+                          for {l.asset_amount} {l.asset ?? l.currency}
+                        </span>
                       )}
-                      <p className="font-extrabold text-base">
-                        <span className="text-[#F7931A]">⚡</span>
-                        {Number(l.price_sats).toLocaleString()}
-                        <span className="text-xs text-neutral-400 font-semibold ml-1">sats</span>
-                      </p>
                     </div>
+                  </div>
 
-                    {isOwn ? (
-                      <button
-                        onClick={() => cancelListing(l.id)}
-                        disabled={cancelling === l.id}
-                        className="text-xs font-bold text-red-400 border border-red-100 px-3 py-1.5 rounded-xl active:scale-95 transition-transform disabled:opacity-50"
-                      >
-                        {cancelling === l.id ? "…" : "Otkaži"}
-                      </button>
-                    ) : (
+                  {/* Actions */}
+                  {isOwn ? (
+                    <button
+                      onClick={() => cancelListing(l.id)}
+                      disabled={cancelling === l.id}
+                      className="w-full border border-red-200 text-red-500 text-xs font-bold py-2 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                      {cancelling === l.id ? "Removing…" : "Remove Listing"}
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
                       <button
                         onClick={() => setBuyTarget(l)}
-                        className="flex items-center gap-1.5 bg-[#F7931A] text-white text-xs font-extrabold px-4 py-2 rounded-xl active:scale-95 transition-transform shadow-sm"
+                        className="flex-1 bg-black text-white text-xs font-extrabold py-2.5 rounded-xl active:scale-[0.98] transition-transform"
                       >
-                        <ShoppingCart size={13}/> Kupi
+                        {isBuy ? "Contact Buyer" : "Buy with ⚡ sats"}
                       </button>
-                    )}
-                  </div>
+                      <button
+                        onClick={() => handleContact(l.id)}
+                        className="px-3 py-2.5 border border-neutral-200 text-neutral-600 text-xs font-bold rounded-xl hover:border-black transition-colors"
+                      >
+                        Chat
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
-            <div className="h-6"/>
+            <div className="h-4"/>
           </div>
         </div>
       )}
 
-      {/* Payment modal */}
       {buyTarget && (
         <PaymentModal
           listing={buyTarget}
-          user={user}
           onClose={() => setBuyTarget(null)}
-          onOpenChat={room => { onContactRoom(room); setBuyTarget(null); }}
+          onPaid={() => { setBuyTarget(null); loadListings(); }}
         />
       )}
     </div>
