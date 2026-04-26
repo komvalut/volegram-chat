@@ -22,6 +22,7 @@ import P2PVouchersPanel from "../components/P2PVouchersPanel";
 import AdsPanel         from "../components/AdsPanel";
 import OTPPanel         from "../components/OTPPanel";
 import CreditsPanel     from "../components/CreditsPanel";
+import PredictionPanel  from "../components/PredictionPanel";
 import DepositModal     from "../components/DepositModal";
 import { requestNotifPermission } from "../lib/ws";
 import { SOUND_OPTIONS, getNotifSound, setNotifSound, previewSound, type SoundKey } from "../lib/sounds";
@@ -137,6 +138,7 @@ export default function Chat({
   const [showOTP, setShowOTP]           = useState(false);
   const [showDeposit, setShowDeposit]   = useState(false);
   const [showCredits, setShowCredits]   = useState(false);
+  const [showPredict, setShowPredict]   = useState(false);
   const [notifSound, setNotifSoundState] = useState<SoundKey>(getNotifSound);
   const [adminMarketEnabled, setAdminMarketEnabled] = useState(true);
   const [userShowMarket, setUserShowMarket] = useState<boolean>(() =>
@@ -437,6 +439,16 @@ export default function Chat({
                     <p className="text-[10px] text-neutral-400">Virtual number · SMS</p>
                   </div>
                 </button>
+                <button onClick={() => setShowPredict(true)}
+                  className="flex items-center gap-2.5 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+                  <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
+                    <TrendingUp size={13} className="text-[#F7931A]"/>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-extrabold text-xs text-black">P2P Prediction</p>
+                    <p className="text-[10px] text-neutral-400">Bet sats · Earn</p>
+                  </div>
+                </button>
                 <button onClick={() => setShowESIM(true)}
                   className="flex items-center gap-2.5 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
                   <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
@@ -527,19 +539,14 @@ export default function Chat({
         {tab === "chats" && (
           <div className="flex-1 flex flex-col min-h-0">
             {activeRoom ? (
-              <>
-                <Hdr
-                  title={activeRoom.name ?? activeRoom.other_username ?? "Chat"}
-                  back={() => { setActive(null); api.rooms().then(setRooms).catch(() => {}); }}
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <ChatWindow
+                  room={activeRoom}
+                  user={user}
+                  onBack={() => { setActive(null); api.rooms().then(setRooms).catch(() => {}); }}
+                  onCreateGroup={() => setShowNewChat(true)}
                 />
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  <ChatWindow
-                    room={activeRoom}
-                    user={user}
-                    onCreateGroup={() => setShowNewChat(true)}
-                  />
-                </div>
-              </>
+              </div>
             ) : (
               <>
                 <Hdr
@@ -1122,6 +1129,13 @@ export default function Chat({
         <CreditsPanel
           user={user}
           onClose={() => setShowCredits(false)}
+          onBalanceChange={() => fetch("/api/wallet/balance", { credentials:"include" }).then(r=>r.json()).then(d => setUser((u:any) => u ? {...u, sats_balance: d.sats_balance} : u)).catch(()=>{})}
+        />
+      )}
+      {showPredict && (
+        <PredictionPanel
+          user={user}
+          onClose={() => setShowPredict(false)}
           onBalanceChange={() => fetch("/api/wallet/balance", { credentials:"include" }).then(r=>r.json()).then(d => setUser((u:any) => u ? {...u, sats_balance: d.sats_balance} : u)).catch(()=>{})}
         />
       )}
