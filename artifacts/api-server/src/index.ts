@@ -25,6 +25,7 @@ import adsRoutes        from "./routes/ads.js";
 import depositRoutes    from "./routes/deposit.js";
 import referralRoutes   from "./routes/referral.js";
 import otpMgmtRoutes    from "./routes/otp-mgmt.js";
+import creditsRoutes     from "./routes/credits.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -91,6 +92,7 @@ app.use("/api/ads",         adsRoutes);
 app.use("/api/deposit",     depositRoutes);
 app.use("/api/referral",    referralRoutes);
 app.use("/api/otp-mgmt",    otpMgmtRoutes);
+app.use("/api/credits",     creditsRoutes);
 app.use("/api",             messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 
