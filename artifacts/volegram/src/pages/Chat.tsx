@@ -43,7 +43,7 @@ function ReferralRedeem({ lang, onSuccess }: { lang: LangCode; onSuccess: (bonus
       });
       const d = await r.json();
       if (r.ok) { setMsg({ text: d.message ?? "✓ OK", ok: true }); setCode(""); if (d.bonus_sats > 0) onSuccess(d.bonus_sats); }
-      else setMsg({ text: d.error ?? "Greška", ok: false });
+      else setMsg({ text: d.error ?? "Error", ok: false });
     } catch { setMsg({ text: "Network error", ok: false }); }
     setLoading(false);
   };
@@ -348,7 +348,7 @@ export default function Chat({
                 </div>
                 <div className="text-left">
                   <p className="font-extrabold text-sm text-black">VBC Oglasi</p>
-                  <p className="text-[10px] text-neutral-400">Postavi oglas za sats · P2P klasifikovani</p>
+                  <p className="text-[10px] text-neutral-400">Post listings for sats · P2P classifieds</p>
                 </div>
                 <ChevronRight size={14} className="text-neutral-300 ml-auto shrink-0"/>
               </button>
@@ -379,7 +379,11 @@ export default function Chat({
                   back={() => { setActive(null); api.rooms().then(setRooms).catch(() => {}); }}
                 />
                 <div className="flex-1 min-h-0 overflow-hidden">
-                  <ChatWindow room={activeRoom} user={user}/>
+                  <ChatWindow
+                    room={activeRoom}
+                    user={user}
+                    onCreateGroup={() => setShowNewChat(true)}
+                  />
                 </div>
               </>
             ) : (
@@ -512,11 +516,11 @@ export default function Chat({
               <div className="flex gap-2 mt-4">
                 <button onClick={() => setShowDeposit(true)}
                   className="flex-1 flex items-center justify-center gap-1.5 bg-[#F7931A] text-black font-extrabold py-2.5 rounded-xl text-sm active:scale-[0.97] transition-all">
-                  <Zap size={14} fill="black" className="text-black"/> Dopuni
+                  <Zap size={14} fill="black" className="text-black"/> Top Up
                 </button>
                 <button onClick={() => setShowSend(true)}
                   className="flex-1 flex items-center justify-center gap-1.5 bg-white/10 text-white font-extrabold py-2.5 rounded-xl text-sm active:scale-[0.97] transition-all">
-                  <Send size={14}/> Pošalji
+                  <Send size={14}/> Send
                 </button>
               </div>
             </div>
