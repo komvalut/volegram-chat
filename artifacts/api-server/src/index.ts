@@ -541,6 +541,37 @@ async function migrate() {
       -- Clash of Clans
       ('coc',        'Clash of Clans',   '80 Dragulj.',  80,  2500, -1, '⚔️', 'Clash of Clans dragulji')
     ON CONFLICT DO NOTHING;
+
+    -- ─────────── OTP Orders ───────────
+    CREATE TABLE IF NOT EXISTS otp_orders (
+      id           SERIAL PRIMARY KEY,
+      user_id      INTEGER NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      country_id   INTEGER NOT NULL REFERENCES otp_countries(id),
+      price_sats   INTEGER NOT NULL DEFAULT 0,
+      service_name VARCHAR(50) DEFAULT 'Any',
+      status       VARCHAR(32) NOT NULL DEFAULT 'pending',
+      otp_code     VARCHAR(64),
+      delivered_at TIMESTAMPTZ,
+      refunded_at  TIMESTAMPTZ,
+      refund_reason TEXT,
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    -- add new columns if they don't exist (safe migrations)
+    ALTER TABLE otp_orders ADD COLUMN IF NOT EXISTS service_name VARCHAR(50) DEFAULT 'Any';
+    ALTER TABLE otp_orders ADD COLUMN IF NOT EXISTS refunded_at  TIMESTAMPTZ;
+    ALTER TABLE otp_orders ADD COLUMN IF NOT EXISTS refund_reason TEXT;
+
+    -- ─────────── API Providers (SMSPool, SMSHero, Airalo etc.) ───────────
+    CREATE TABLE IF NOT EXISTS vbc_api_providers (
+      id         SERIAL PRIMARY KEY,
+      provider   VARCHAR(50) NOT NULL UNIQUE,
+      api_key    TEXT,
+      api_secret TEXT,
+      enabled    BOOLEAN NOT NULL DEFAULT false,
+      config     JSONB   NOT NULL DEFAULT '{}',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   // Purge expired messages every minute
