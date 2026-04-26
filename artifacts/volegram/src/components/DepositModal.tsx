@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Zap, Copy, Check, Loader, RefreshCw, Wallet, Building2, Users, ChevronRight, ArrowRight, Loader2 } from "lucide-react";
+import { X, Zap, Copy, Check, Loader, RefreshCw, Wallet, Building2, Users, ChevronRight, ArrowRight, Loader2, AlertCircle, Info } from "lucide-react";
 import QRCode from "qrcode";
 
 const AMOUNT_PRESETS = [1000, 5000, 10000, 50000, 100000, 500000];
@@ -26,12 +26,12 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
   const [sbpReady, setSbpReady]   = useState<boolean | null>(null);
   const pollRef                   = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Bank transfer form
-  const [bankForm, setBankForm] = useState({ amount_fiat: "", currency: "EUR", note: "" });
-  const [bankBusy, setBankBusy] = useState(false);
-  const [bankSent, setBankSent] = useState(false);
-  const [bankMsg, setBankMsg]   = useState("");
-  const [adminIban, setAdminIban] = useState("");
+  const [bankForm, setBankForm]   = useState({ amount_fiat: "", currency: "EUR", note: "" });
+  const [bankBusy, setBankBusy]   = useState(false);
+  const [bankSent, setBankSent]   = useState(false);
+  const [bankMsg, setBankMsg]     = useState("");
+  const [adminIban, setAdminIban] = useState<any>(null);
+  const [copiedField, setCopiedField] = useState("");
 
   useEffect(() => {
     fetch("/api/deposit/sbp-status")
@@ -40,7 +40,10 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
       .catch(() => setSbpReady(false));
     fetch("/api/settings/public")
       .then(r => r.json())
-      .then(d => setAdminIban(d.iban ?? ""))
+      .then(d => {
+        if (d.bank?.iban) setAdminIban(d.bank);
+        else if (d.iban) setAdminIban({ iban: d.iban, holder: d.bankHolder, name: d.bankName, swift: d.bankSwift });
+      })
       .catch(() => {});
   }, []);
 
@@ -48,15 +51,19 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, []);
 
+  const copyField = (text: string, field: string) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(""), 2000);
+  };
+
   const copy = (text?: string) => {
-    navigator.clipboard.writeText(text ?? pr);
+    navigator.clipboard.writeText(text ?? pr).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const openWallet = () => {
-    window.open(`lightning:${pr}`, "_blank");
-  };
+  const openWallet = () => window.open(`lightning:${pr}`, "_blank");
 
   const fmtSats = (v: string) => {
     const n = parseInt(v.replace(/\D/g, ""));
@@ -73,7 +80,8 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount_sats: sats }),
       });
-      const d = await r.json();
+      let d: any = {};
+      try { d = await r.json(); } catch {}
       if (!r.ok) throw new Error(d.error ?? "Failed to create invoice");
       setPr(d.pr);
       setCheckoutId(d.checkoutId);
@@ -94,7 +102,8 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
       if (attempts > 120) { clearInterval(pollRef.current!); setPolling(false); return; }
       try {
         const r = await fetch(`/api/deposit/lightning/${cid}/check`, { credentials: "include" });
-        const d = await r.json();
+        let d: any = {};
+        try { d = await r.json(); } catch {}
         if (d.paid) {
           clearInterval(pollRef.current!);
           setPolling(false);
@@ -107,7 +116,7 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
 
   const submitBankRequest = async () => {
     const amt = parseFloat(bankForm.amount_fiat);
-    if (!amt || amt <= 0) { setBankMsg("Enter the amount you want to deposit"); return; }
+    if (!amt || amt <= 0) { setBankMsg("Enter the amount you sent"); return; }
     setBankBusy(true); setBankMsg("");
     try {
       const r = await fetch("/api/credits/topup-request", {
@@ -115,11 +124,14 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount_fiat: amt, currency: bankForm.currency, note: bankForm.note }),
       });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
+      let d: any = {};
+      try { d = await r.json(); } catch (jsonErr) {
+        throw new Error("Server error — please try again");
+      }
+      if (!r.ok) throw new Error(d.error ?? "Request failed");
       setBankSent(true);
     } catch (e: any) { setBankMsg(e.message); }
-    setBankBusy(false);
+    finally { setBankBusy(false); }
   };
 
   return (
@@ -135,7 +147,7 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
               <Zap size={18} fill="#F7931A" className="text-[#F7931A]"/>
             </div>
             <div>
-              <h2 className="font-extrabold text-black text-[15px]">Deposit Sats</h2>
+              <h2 className="font-extrabold text-black text-[15px]">Add Sats</h2>
               <p className="text-[10px] text-neutral-400">Choose how to top up your balance</p>
             </div>
           </div>
@@ -146,12 +158,11 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
 
         <div className="overflow-y-auto flex-1">
 
-          {/* MODE: choose */}
+          {/* ── MODE: choose ── */}
           {mode === "choose" && (
             <div className="px-5 py-5 space-y-3">
-              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">How do you want to top up?</p>
+              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Select deposit method</p>
 
-              {/* Option 1: Lightning */}
               <button onClick={() => setMode("lightning")}
                 className="w-full flex items-center gap-4 bg-black rounded-2xl p-4 active:scale-[0.98] transition-transform text-left">
                 <div className="w-10 h-10 rounded-xl bg-[#F7931A]/20 flex items-center justify-center shrink-0">
@@ -160,12 +171,11 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
                 <div className="flex-1">
                   <p className="font-extrabold text-white text-sm">Lightning Network</p>
                   <p className="text-[11px] text-neutral-400 mt-0.5">Instant · Any Lightning wallet</p>
-                  {!sbpReady && <p className="text-[10px] text-amber-400 mt-0.5">Use your Lightning address</p>}
+                  {!sbpReady && <p className="text-[10px] text-amber-400 mt-0.5">Via your Lightning address</p>}
                 </div>
                 <ChevronRight size={16} className="text-neutral-500"/>
               </button>
 
-              {/* Option 2: Bank Transfer */}
               <button onClick={() => setMode("bank")}
                 className="w-full flex items-center gap-4 bg-white border-2 border-neutral-100 rounded-2xl p-4 active:scale-[0.98] transition-transform text-left">
                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
@@ -174,12 +184,11 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
                 <div className="flex-1">
                   <p className="font-extrabold text-black text-sm">Bank Transfer (IBAN)</p>
                   <p className="text-[11px] text-neutral-400 mt-0.5">RSD · EUR · BAM · HRK · CHF</p>
-                  <p className="text-[10px] text-blue-600 mt-0.5 font-semibold">No crypto needed — Balkans friendly</p>
+                  <p className="text-[10px] text-blue-600 mt-0.5 font-semibold">No crypto needed · Balkans friendly</p>
                 </div>
                 <ChevronRight size={16} className="text-neutral-400"/>
               </button>
 
-              {/* Option 3: P2P market */}
               <button onClick={() => { onClose(); onGoToMarket?.(); }}
                 className="w-full flex items-center gap-4 bg-white border-2 border-neutral-100 rounded-2xl p-4 active:scale-[0.98] transition-transform text-left">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
@@ -187,27 +196,27 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
                 </div>
                 <div className="flex-1">
                   <p className="font-extrabold text-black text-sm">Buy from P2P Market</p>
-                  <p className="text-[11px] text-neutral-400 mt-0.5">Pay cash/Revolut/bank to a seller</p>
+                  <p className="text-[11px] text-neutral-400 mt-0.5">Pay cash · Revolut · bank to a seller</p>
                   <p className="text-[10px] text-[#F7931A] mt-0.5 font-semibold">Best for: Balkans, cash, RSD</p>
                 </div>
                 <ChevronRight size={16} className="text-neutral-400"/>
               </button>
 
               <div className="bg-neutral-50 rounded-2xl px-4 py-3 text-[11px] text-neutral-500 leading-relaxed">
-                <strong className="text-black">No Revolut? No problem.</strong> Use bank transfer or find a local P2P seller who accepts RSD/EUR cash.
-                All methods are anonymous — no KYC required.
+                All deposit methods are anonymous — <strong className="text-black">no KYC required</strong>.
+                Bank transfer and P2P are especially popular in the region.
               </div>
             </div>
           )}
 
-          {/* MODE: lightning */}
+          {/* ── MODE: lightning ── */}
           {mode === "lightning" && (
             <div className="px-5 py-5 space-y-4">
-              <button onClick={() => setMode("choose")} className="text-xs font-bold text-neutral-400 flex items-center gap-1 mb-1">
+              <button onClick={() => { setMode("choose"); setStep("amount"); setErr(""); }}
+                className="text-xs font-bold text-neutral-400 flex items-center gap-1 mb-1">
                 ← Back
               </button>
 
-              {/* SBP ready */}
               {sbpReady === true && step === "amount" && (
                 <>
                   <div>
@@ -248,7 +257,6 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
                 </>
               )}
 
-              {/* SBP NOT ready — show Lightning address */}
               {sbpReady === false && (
                 <div className="space-y-4">
                   <div className="bg-neutral-900 rounded-2xl p-4 text-center space-y-3">
@@ -272,18 +280,17 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
                     )}
                   </div>
                   <p className="text-[11px] text-neutral-500 text-center leading-relaxed">
-                    Share this address to receive sats from any Lightning wallet.<br/>
-                    <strong className="text-black">Phoenix, Wallet of Satoshi, Breez, Zeus</strong> — all work.
+                    Send sats directly to your Lightning address from any wallet.<br/>
+                    <strong className="text-black">Phoenix · Wallet of Satoshi · Breez · Zeus</strong> — all work.
                   </p>
                   <div className="bg-blue-50 rounded-xl px-4 py-3 text-[11px] text-blue-700">
-                    <strong>Don't have a Lightning wallet?</strong> Go back and try Bank Transfer — no wallet needed.
+                    <strong>No Lightning wallet?</strong> Go back and try Bank Transfer — no wallet needed.
                   </div>
                 </div>
               )}
 
               {sbpReady === null && <div className="flex justify-center py-8"><Loader size={20} className="animate-spin text-neutral-400"/></div>}
 
-              {/* Invoice QR */}
               {step === "invoice" && (
                 <div className="space-y-4">
                   {paid ? (
@@ -299,7 +306,7 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
                     <>
                       <div className="text-center">
                         <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-full mb-3">
-                          {polling ? <><RefreshCw size={11} className="animate-spin"/> Waiting…</> : "Invoice ready"}
+                          {polling ? <><RefreshCw size={11} className="animate-spin"/> Waiting for payment…</> : "Invoice ready"}
                         </div>
                         <p className="font-extrabold text-lg">⚡ {parseInt(amountSats).toLocaleString()} sats</p>
                       </div>
@@ -330,53 +337,105 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
             </div>
           )}
 
-          {/* MODE: bank */}
+          {/* ── MODE: bank ── */}
           {mode === "bank" && (
             <div className="px-5 py-5 space-y-4">
-              <button onClick={() => setMode("choose")} className="text-xs font-bold text-neutral-400 flex items-center gap-1 mb-1">
+              <button onClick={() => { setMode("choose"); setBankSent(false); setBankMsg(""); }}
+                className="text-xs font-bold text-neutral-400 flex items-center gap-1 mb-1">
                 ← Back
               </button>
 
               {bankSent ? (
-                <div className="text-center py-6 space-y-3">
+                <div className="text-center py-4 space-y-4">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                     <Check size={28} className="text-green-600"/>
                   </div>
-                  <p className="font-extrabold text-black text-lg">Request sent!</p>
-                  <p className="text-sm text-neutral-500 leading-relaxed">
-                    Admin will verify your transfer and credit sats to your balance, usually within a few hours.
-                  </p>
-                  <button onClick={onClose} className="w-full bg-black text-white font-extrabold py-3 rounded-xl text-sm mt-2">Close</button>
+                  <div>
+                    <p className="font-extrabold text-black text-lg">Deposit request sent!</p>
+                    <p className="text-sm text-neutral-500 mt-1">Admin has been notified.</p>
+                  </div>
+
+                  {/* How it works after sending */}
+                  <div className="bg-[#F7931A]/10 border border-[#F7931A]/30 rounded-2xl p-4 text-left space-y-3">
+                    <p className="text-xs font-extrabold text-[#F7931A] uppercase tracking-wide">What happens next?</p>
+                    <div className="space-y-2">
+                      {[
+                        { n: "1", text: "Admin verifies your bank transfer in the system" },
+                        { n: "2", text: "Your sats are credited at the current BTC rate" },
+                        { n: "3", text: "You receive a system notification with the amount" },
+                        { n: "4", text: "Sats appear directly in your wallet balance" },
+                      ].map(s => (
+                        <div key={s.n} className="flex items-start gap-2">
+                          <div className="w-5 h-5 rounded-full bg-black text-white text-[10px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">{s.n}</div>
+                          <p className="text-[11px] text-neutral-700">{s.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-white/60 rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-neutral-600 font-semibold">
+                        Typical processing time: <strong className="text-black">2–8 hours</strong> · Usually faster during business hours.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-neutral-50 rounded-xl px-4 py-3 text-[11px] text-neutral-500 text-left">
+                    <Info size={12} className="inline mr-1 text-neutral-400"/>
+                    If your transfer isn't credited within 24 hours, contact admin with your bank reference number.
+                  </div>
+
+                  <button onClick={onClose} className="w-full bg-black text-white font-extrabold py-3 rounded-xl text-sm">
+                    Close
+                  </button>
                 </div>
               ) : (
                 <>
-                  <div className="bg-blue-50 rounded-2xl p-4 space-y-2">
-                    <p className="text-xs font-extrabold text-blue-900 uppercase tracking-wide">Step 1 — Send bank transfer</p>
-                    {adminIban ? (
-                      <div>
-                        <p className="text-[11px] text-blue-700 mb-2">Send EUR/RSD/BAM to this account:</p>
-                        <div className="bg-white rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 border border-blue-200">
-                          <code className="text-xs font-bold text-black font-mono break-all">{adminIban}</code>
-                          <button onClick={() => copy(adminIban)} className="shrink-0">
-                            {copied ? <Check size={13} className="text-green-600"/> : <Copy size={13} className="text-blue-400"/>}
-                          </button>
+                  {/* Step 1 — IBAN */}
+                  <div className="bg-blue-50 rounded-2xl p-4 space-y-3">
+                    <p className="text-xs font-extrabold text-blue-900 uppercase tracking-wide">Step 1 — Send your bank transfer</p>
+
+                    {adminIban?.iban ? (
+                      <div className="space-y-2">
+                        <p className="text-[11px] text-blue-700">Send EUR / RSD / BAM to this account:</p>
+
+                        <IbanField label="IBAN" value={adminIban.iban} field="iban" copiedField={copiedField} onCopy={copyField}/>
+                        {adminIban.holder && <IbanField label="Account holder" value={adminIban.holder} field="holder" copiedField={copiedField} onCopy={copyField}/>}
+                        {adminIban.name   && <IbanField label="Bank" value={adminIban.name} field="bank" copiedField={copiedField} onCopy={copyField}/>}
+                        {adminIban.swift  && <IbanField label="SWIFT / BIC" value={adminIban.swift} field="swift" copiedField={copiedField} onCopy={copyField}/>}
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                          <p className="text-[10px] text-amber-800 font-semibold">
+                            ⚠️ Include your username <strong>@{user.username}</strong> in the payment reference/note so admin can identify your transfer.
+                          </p>
                         </div>
-                        <p className="text-[10px] text-blue-500 mt-1.5">Include your username <strong>@{user.username}</strong> in payment reference</p>
                       </div>
                     ) : (
-                      <p className="text-[11px] text-blue-700">Contact admin via Telegram <strong>@VOLEGRAMBOT</strong> for the IBAN details.</p>
+                      <div className="flex items-start gap-2 bg-white rounded-xl p-3 border border-blue-200">
+                        <AlertCircle size={14} className="text-blue-500 mt-0.5 shrink-0"/>
+                        <p className="text-[11px] text-blue-700">
+                          IBAN not set yet. Contact admin via Telegram <strong>@VOLEGRAMBOT</strong> for payment details.
+                        </p>
+                      </div>
                     )}
                   </div>
 
+                  {/* Step 2 — confirm */}
                   <div className="space-y-3">
                     <p className="text-xs font-extrabold text-neutral-500 uppercase tracking-wide">Step 2 — Confirm your transfer</p>
+                    <p className="text-[11px] text-neutral-400 -mt-1">
+                      Fill in the details below so admin can match your transfer and credit sats to your balance.
+                    </p>
 
                     <div>
                       <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Amount sent</label>
                       <div className="flex gap-2">
-                        <input type="number" value={bankForm.amount_fiat} onChange={e => setBankForm(f => ({ ...f, amount_fiat: e.target.value }))}
-                          placeholder="50" className="flex-1 border border-neutral-200 rounded-xl px-3 py-2.5 text-sm font-bold outline-none focus:border-black"/>
-                        <select value={bankForm.currency} onChange={e => setBankForm(f => ({ ...f, currency: e.target.value }))}
+                        <input
+                          type="number" value={bankForm.amount_fiat}
+                          onChange={e => setBankForm(f => ({ ...f, amount_fiat: e.target.value }))}
+                          placeholder="50"
+                          className="flex-1 border border-neutral-200 rounded-xl px-3 py-2.5 text-sm font-bold outline-none focus:border-black"
+                        />
+                        <select value={bankForm.currency}
+                          onChange={e => setBankForm(f => ({ ...f, currency: e.target.value }))}
                           className="border border-neutral-200 rounded-xl px-3 py-2.5 text-sm font-bold outline-none focus:border-black bg-white">
                           {["EUR","RSD","BAM","HRK","CHF","USD","GBP"].map(c => <option key={c}>{c}</option>)}
                         </select>
@@ -384,24 +443,34 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Note (optional)</label>
-                      <input value={bankForm.note} onChange={e => setBankForm(f => ({ ...f, note: e.target.value }))}
-                        placeholder="Transfer date, bank name, confirmation #…"
-                        className="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-black"/>
+                      <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1.5">Reference / note (optional)</label>
+                      <input value={bankForm.note}
+                        onChange={e => setBankForm(f => ({ ...f, note: e.target.value }))}
+                        placeholder="Transfer date, bank name, reference #…"
+                        className="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-black"
+                      />
                     </div>
 
-                    {bankMsg && <p className="text-xs text-red-600 font-semibold">{bankMsg}</p>}
+                    {bankMsg && (
+                      <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                        <AlertCircle size={13} className="text-red-500 mt-0.5 shrink-0"/>
+                        <p className="text-xs text-red-700 font-semibold">{bankMsg}</p>
+                      </div>
+                    )}
 
                     <button onClick={submitBankRequest} disabled={bankBusy || !bankForm.amount_fiat}
                       className="w-full flex items-center justify-center gap-2 bg-black text-white font-extrabold py-3 rounded-xl text-sm active:scale-[0.98] disabled:opacity-40">
                       {bankBusy ? <Loader2 size={15} className="animate-spin"/> : <ArrowRight size={15}/>}
-                      {bankBusy ? "Sending…" : "Notify Admin"}
+                      {bankBusy ? "Sending…" : "Notify Admin — I've Sent the Transfer"}
                     </button>
                   </div>
 
+                  {/* Info box */}
                   <div className="bg-neutral-50 rounded-xl px-4 py-3 text-[11px] text-neutral-500 leading-relaxed">
-                    Admin manually verifies transfers and credits sats at the current BTC rate.
-                    Typical processing time: <strong className="text-black">2–8 hours</strong>.
+                    <strong className="text-black">How it works:</strong> Once admin confirms your transfer,
+                    sats are credited to your balance at the current BTC/EUR rate.
+                    No bank account or crypto wallet needed on your end.
+                    Processing time: <strong className="text-black">2–8 hours</strong>.
                   </div>
                 </>
               )}
@@ -409,6 +478,22 @@ export default function DepositModal({ user, onClose, onSuccess, onGoToMarket }:
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function IbanField({ label, value, field, copiedField, onCopy }: { label: string; value: string; field: string; copiedField: string; onCopy: (v: string, f: string) => void }) {
+  return (
+    <div className="bg-white rounded-xl px-3 py-2 flex items-center justify-between gap-2 border border-blue-200">
+      <div className="min-w-0">
+        <p className="text-[9px] text-blue-400 font-bold uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-bold text-black font-mono break-all">{value}</p>
+      </div>
+      <button onClick={() => onCopy(value, field)} className="shrink-0 p-1">
+        {copiedField === field
+          ? <Check size={13} className="text-green-600"/>
+          : <Copy size={13} className="text-blue-400"/>}
+      </button>
     </div>
   );
 }
