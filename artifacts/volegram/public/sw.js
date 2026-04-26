@@ -1,4 +1,4 @@
-const CACHE_NAME = "vbc-v3";
+const CACHE_NAME = "vbc-v4";
 const SHELL = [
   "/",
   "/index.html",
