@@ -18,9 +18,9 @@ interface Ad {
 }
 
 const DURATION_OPTIONS = [
-  { days: 1,  label: "1 dan",    mult: 1   },
-  { days: 7,  label: "7 dana",   mult: 7   },
-  { days: 30, label: "30 dana",  mult: 30  },
+  { days: 1,  label: "1 day",    mult: 1   },
+  { days: 7,  label: "7 days",   mult: 7   },
+  { days: 30, label: "30 days",  mult: 30  },
 ];
 
 export default function AdsPanel({ user, onClose }: { user: any; onClose: () => void }) {
@@ -112,16 +112,16 @@ export default function AdsPanel({ user, onClose }: { user: any; onClose: () => 
 
         {/* Price bar */}
         <div className="px-5 py-2 bg-black flex items-center justify-between shrink-0">
-          <span className="text-[11px] text-white/50 font-bold uppercase tracking-wider">Cena oglasa</span>
-          <span className="text-sm font-extrabold text-[#F7931A]">⚡ {pricePerDay.toLocaleString()} sats/dan</span>
+          <span className="text-[11px] text-white/50 font-bold uppercase tracking-wider">Ad price</span>
+          <span className="text-sm font-extrabold text-[#F7931A]">⚡ {pricePerDay.toLocaleString()} sats/day</span>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b border-neutral-100 shrink-0 px-1">
           {[
-            { k: "browse", label: "Svi oglasi" },
-            { k: "create", label: "Postavi oglas" },
-            { k: "mine",   label: "Moji oglasi" },
+            { k: "browse", label: "All Ads" },
+            { k: "create", label: "Post Ad" },
+            { k: "mine",   label: "My Ads" },
           ].map(t => (
             <button key={t.k} onClick={() => { setTab(t.k as any); setError(""); setSuccess(""); }}
               className={`flex-1 py-3 text-xs font-bold transition-colors ${
@@ -144,11 +144,11 @@ export default function AdsPanel({ user, onClose }: { user: any; onClose: () => 
               {ads.length === 0 ? (
                 <div className="text-center py-12">
                   <Megaphone size={28} className="text-neutral-200 mx-auto mb-3"/>
-                  <p className="text-sm text-neutral-400">Nema aktivnih oglasa</p>
-                  <p className="text-[10px] text-neutral-300 mt-1">Budi prvi — postavi oglas za 1000 sats/dan</p>
+                  <p className="text-sm text-neutral-400">No active ads</p>
+                  <p className="text-[10px] text-neutral-300 mt-1">Be the first — post an ad for 1000 sats/day</p>
                   <button onClick={() => setTab("create")}
                     className="mt-3 text-xs font-bold px-4 py-2 rounded-xl bg-black text-white hover:bg-neutral-800">
-                    Postavi oglas
+                    Post Ad
                   </button>
                 </div>
               ) : ads.map(ad => <AdCard key={ad.id} ad={ad}/>)}
@@ -171,32 +171,32 @@ export default function AdsPanel({ user, onClose }: { user: any; onClose: () => 
               )}
 
               <div>
-                <label className="field-label">Naslov <span className="text-neutral-300">({title.length}/80)</span></label>
+                <label className="field-label">Title <span className="text-neutral-300">({title.length}/80)</span></label>
                 <input value={title} onChange={e => setTitle(e.target.value.slice(0,80))}
-                  placeholder="Prodajem laptop, nudim usluge, tražim saradnike…"
+                  placeholder="Selling laptop, offering services, looking for partners…"
                   className="input-modern text-sm w-full"/>
               </div>
               <div>
-                <label className="field-label">Opis <span className="text-neutral-300">({desc.length}/300)</span></label>
+                <label className="field-label">Description <span className="text-neutral-300">({desc.length}/300)</span></label>
                 <textarea value={desc} onChange={e => setDesc(e.target.value.slice(0,300))}
-                  rows={3} placeholder="Detalji oglasa…"
+                  rows={3} placeholder="Ad details…"
                   className="input-modern text-sm w-full resize-none"/>
               </div>
               <div>
-                <label className="field-label">Kontakt (WhatsApp/Telegram/email — opciono)</label>
+                <label className="field-label">Contact (WhatsApp/Telegram/email — optional)</label>
                 <input value={contact} onChange={e => setContact(e.target.value)}
                   placeholder="+381 60 000 0000 ili @username"
                   className="input-modern text-sm w-full"/>
               </div>
               <div>
-                <label className="field-label">Link (opciono)</label>
+                <label className="field-label">Link (optional)</label>
                 <input value={link} onChange={e => setLink(e.target.value)} type="url"
                   placeholder="https://…" className="input-modern text-sm w-full"/>
               </div>
 
               {/* Image */}
               <div>
-                <label className="field-label">Slika (opciono)</label>
+                <label className="field-label">Image (optional)</label>
                 <label className="block cursor-pointer">
                   {imgPrev ? (
                     <img src={imgPrev} alt="" className="w-full h-32 object-cover rounded-xl border border-neutral-200"/>
@@ -211,7 +211,7 @@ export default function AdsPanel({ user, onClose }: { user: any; onClose: () => 
 
               {/* Duration */}
               <div>
-                <label className="field-label">Trajanje</label>
+                <label className="field-label">Duration</label>
                 <div className="flex gap-2">
                   {DURATION_OPTIONS.map(opt => (
                     <button key={opt.days} type="button" onClick={() => setDays(opt.days)}
@@ -229,13 +229,13 @@ export default function AdsPanel({ user, onClose }: { user: any; onClose: () => 
 
               <div className="bg-black rounded-xl px-4 py-3 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider">Ukupno</p>
+                  <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider">Total</p>
                   <p className="text-lg font-extrabold text-[#F7931A]">⚡ {totalCost.toLocaleString()} sats</p>
                 </div>
                 <button type="submit" disabled={submitting || !title.trim() || !desc.trim()}
                   className="flex items-center gap-2 bg-[#F7931A] text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-[#e07f10] disabled:opacity-50 active:scale-95 transition-all">
                   {submitting ? <Loader size={13} className="animate-spin"/> : <Megaphone size={13}/>}
-                  {submitting ? "Šaljem…" : "Postavi"}
+                  {submitting ? "Posting…" : "Post"}
                 </button>
               </div>
             </form>
@@ -246,9 +246,9 @@ export default function AdsPanel({ user, onClose }: { user: any; onClose: () => 
             <div className="px-4 py-3 space-y-3 pb-6">
               {myAds.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-sm text-neutral-400">Nemaš oglasa</p>
+                  <p className="text-sm text-neutral-400">You have no ads</p>
                   <button onClick={() => setTab("create")}
-                    className="mt-3 text-xs font-bold px-4 py-2 rounded-xl bg-black text-white">Postavi oglas</button>
+                    className="mt-3 text-xs font-bold px-4 py-2 rounded-xl bg-black text-white">Post Ad</button>
                 </div>
               ) : myAds.map(ad => <AdCard key={ad.id} ad={ad} showStatus/>)}
             </div>
@@ -293,7 +293,7 @@ function AdCard({ ad, showStatus }: { ad: Ad; showStatus?: boolean }) {
           {ad.link && (
             <a href={ad.link} target="_blank" rel="noopener noreferrer"
                className="flex items-center gap-1 text-[10px] font-bold text-[#F7931A] hover:underline">
-              <ExternalLink size={10}/> Otvori
+              <ExternalLink size={10}/> Open
             </a>
           )}
         </div>
