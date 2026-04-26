@@ -16,11 +16,14 @@ function adminGuard(req: any, res: any, next: any) {
 
 /* PUBLIC: get a few settings clients can see (commission rate, IBAN for bank transfer, market toggle) */
 router.get("/public", async (_req, res) => {
-  const r = await db.execute(sql`SELECT key, value FROM vbc_settings WHERE key IN ('commission_rate','bank_iban','bank_holder','bank_name','bank_swift','support_message','market_enabled')`);
+  const r = await db.execute(sql`SELECT key, value FROM vbc_settings WHERE key IN ('commission_rate','bank_iban','bank_holder','bank_name','bank_swift','support_message','market_enabled','credits_commission','prediction_commission','swap_commission')`);
   const out: Record<string,string> = {};
   for (const row of r.rows as any[]) out[row.key] = row.value;
   res.json({
-    commissionRate: parseFloat(out.commission_rate ?? "0.02"),
+    commissionRate:        parseFloat(out.commission_rate ?? "0.02"),
+    creditsCommission:     parseFloat(out.credits_commission ?? "0.10"),
+    predictionCommission:  parseFloat(out.prediction_commission ?? "0.05"),
+    swapCommission:        parseFloat(out.swap_commission ?? "0.01"),
     bank: {
       iban:   out.bank_iban   ?? "",
       holder: out.bank_holder ?? "",
@@ -29,6 +32,7 @@ router.get("/public", async (_req, res) => {
     },
     supportMessage: out.support_message ?? "",
     marketEnabled:  out.market_enabled !== "false",
+    iban: out.bank_iban ?? "",
   });
 });
 
