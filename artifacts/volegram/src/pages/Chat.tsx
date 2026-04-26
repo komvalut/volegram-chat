@@ -19,6 +19,7 @@ import AIChat           from "../components/AIChat";
 import NewChatModal     from "../components/NewChatModal";
 import P2PVouchersPanel from "../components/P2PVouchersPanel";
 import AdsPanel         from "../components/AdsPanel";
+import OTPPanel         from "../components/OTPPanel";
 import DepositModal     from "../components/DepositModal";
 import { requestNotifPermission } from "../lib/ws";
 import { SOUND_OPTIONS, getNotifSound, setNotifSound, previewSound, type SoundKey } from "../lib/sounds";
@@ -131,6 +132,7 @@ export default function Chat({
   const [showNewChat, setShowNewChat]   = useState(false);
   const [showP2P, setShowP2P]           = useState(false);
   const [showAds, setShowAds]           = useState(false);
+  const [showOTP, setShowOTP]           = useState(false);
   const [showDeposit, setShowDeposit]   = useState(false);
   const [notifSound, setNotifSoundState] = useState<SoundKey>(getNotifSound);
   const [adminMarketEnabled, setAdminMarketEnabled] = useState(true);
@@ -143,7 +145,8 @@ export default function Chat({
   const [savingLn, setSavingLn]   = useState(false);
   const [copiedAddr, setCopiedAddr] = useState<string | null>(null);
   const [addingCrypto, setAddingCrypto] = useState(false);
-  const [newCrypto, setNewCrypto] = useState({ symbol: "BTC", name: "Bitcoin", address: "" });
+  const [cryptoSearch, setCryptoSearch] = useState("");
+  const [newCrypto, setNewCrypto] = useState({ symbol: "", name: "", address: "" });
   const [cryptoAddresses, setCryptoAddresses] = useState<{id:string;symbol:string;name:string;address:string}[]>(() => {
     try { return JSON.parse(localStorage.getItem("vbc-crypto-addrs") || "[]"); } catch { return []; }
   });
@@ -217,12 +220,18 @@ export default function Chat({
   };
 
   const addCryptoAddr = () => {
-    if (!newCrypto.address.trim()) return;
-    const entry = { id: Date.now().toString(), ...newCrypto, address: newCrypto.address.trim() };
+    if (!newCrypto.address.trim() || !newCrypto.symbol.trim()) return;
+    const entry = {
+      id: Date.now().toString(),
+      symbol: newCrypto.symbol.trim().toUpperCase(),
+      name: newCrypto.name.trim() || newCrypto.symbol.trim().toUpperCase(),
+      address: newCrypto.address.trim(),
+    };
     const updated = [...cryptoAddresses, entry];
     setCryptoAddresses(updated);
     localStorage.setItem("vbc-crypto-addrs", JSON.stringify(updated));
-    setNewCrypto({ symbol: "BTC", name: "Bitcoin", address: "" });
+    setNewCrypto({ symbol: "", name: "", address: "" });
+    setCryptoSearch("");
     setAddingCrypto(false);
   };
 
@@ -232,15 +241,72 @@ export default function Chat({
     localStorage.setItem("vbc-crypto-addrs", JSON.stringify(updated));
   };
 
-  const CRYPTO_PRESETS = [
-    { symbol: "BTC",  name: "Bitcoin"  },
-    { symbol: "ETH",  name: "Ethereum" },
-    { symbol: "USDT", name: "Tether USDT" },
-    { symbol: "SOL",  name: "Solana"   },
-    { symbol: "BNB",  name: "BNB"      },
-    { symbol: "TRX",  name: "Tron"     },
-    { symbol: "XMR",  name: "Monero"   },
-    { symbol: "CUSTOM", name: "Custom" },
+  const CRYPTO_LIST = [
+    { symbol:"BTC",   name:"Bitcoin" },
+    { symbol:"ETH",   name:"Ethereum" },
+    { symbol:"USDT",  name:"Tether USDT (ERC-20)" },
+    { symbol:"USDT",  name:"Tether USDT (TRC-20)" },
+    { symbol:"USDT",  name:"Tether USDT (BEP-20)" },
+    { symbol:"USDC",  name:"USD Coin" },
+    { symbol:"BNB",   name:"BNB (BEP-20)" },
+    { symbol:"SOL",   name:"Solana" },
+    { symbol:"XRP",   name:"Ripple XRP" },
+    { symbol:"ADA",   name:"Cardano" },
+    { symbol:"TRX",   name:"Tron" },
+    { symbol:"AVAX",  name:"Avalanche" },
+    { symbol:"DOT",   name:"Polkadot" },
+    { symbol:"MATIC", name:"Polygon MATIC" },
+    { symbol:"LTC",   name:"Litecoin" },
+    { symbol:"LINK",  name:"Chainlink" },
+    { symbol:"UNI",   name:"Uniswap" },
+    { symbol:"ATOM",  name:"Cosmos" },
+    { symbol:"XLM",   name:"Stellar" },
+    { symbol:"ALGO",  name:"Algorand" },
+    { symbol:"VET",   name:"VeChain" },
+    { symbol:"FIL",   name:"Filecoin" },
+    { symbol:"ICP",   name:"Internet Computer" },
+    { symbol:"ETC",   name:"Ethereum Classic" },
+    { symbol:"HBAR",  name:"Hedera" },
+    { symbol:"XMR",   name:"Monero" },
+    { symbol:"NEAR",  name:"NEAR Protocol" },
+    { symbol:"APT",   name:"Aptos" },
+    { symbol:"ARB",   name:"Arbitrum" },
+    { symbol:"OP",    name:"Optimism" },
+    { symbol:"INJ",   name:"Injective" },
+    { symbol:"SUI",   name:"Sui" },
+    { symbol:"AAVE",  name:"Aave" },
+    { symbol:"GRT",   name:"The Graph" },
+    { symbol:"SAND",  name:"The Sandbox" },
+    { symbol:"MANA",  name:"Decentraland" },
+    { symbol:"CRO",   name:"Cronos" },
+    { symbol:"EGLD",  name:"MultiversX" },
+    { symbol:"XTZ",   name:"Tezos" },
+    { symbol:"THETA", name:"Theta Network" },
+    { symbol:"FTM",   name:"Fantom" },
+    { symbol:"ROSE",  name:"Oasis Network" },
+    { symbol:"ZEC",   name:"Zcash" },
+    { symbol:"DASH",  name:"Dash" },
+    { symbol:"DCR",   name:"Decred" },
+    { symbol:"BCH",   name:"Bitcoin Cash" },
+    { symbol:"BSV",   name:"Bitcoin SV" },
+    { symbol:"BTG",   name:"Bitcoin Gold" },
+    { symbol:"KAS",   name:"Kaspa" },
+    { symbol:"TON",   name:"Toncoin" },
+    { symbol:"PEPE",  name:"Pepe (Meme)" },
+    { symbol:"DOGE",  name:"Dogecoin (Meme)" },
+    { symbol:"SHIB",  name:"Shiba Inu (Meme)" },
+    { symbol:"FLOKI", name:"Floki Inu (Meme)" },
+    { symbol:"BONK",  name:"Bonk (Meme)" },
+    { symbol:"WIF",   name:"Dogwifhat (Meme)" },
+    { symbol:"MEME",  name:"Memecoin (Meme)" },
+    { symbol:"TURBO", name:"Turbo (Meme)" },
+    { symbol:"MOG",   name:"Mog Coin (Meme)" },
+    { symbol:"BRETT", name:"Brett (Meme)" },
+    { symbol:"TRUMP", name:"TRUMP (Meme)" },
+    { symbol:"MELANIA",name:"MELANIA (Meme)" },
+    { symbol:"BABYDOGE",name:"Baby Doge (Meme)" },
+    { symbol:"SAFEMOON",name:"SafeMoon (Meme)" },
+    { symbol:"ELON",  name:"Dogelon Mars (Meme)" },
   ];
 
   const unread = rooms.filter(r => (r.unread_count ?? 0) > 0).length;
@@ -330,6 +396,16 @@ export default function Chat({
                   <p className="text-[10px] text-neutral-400">Buy with sats</p>
                 </div>
               </button>
+              <button onClick={() => setShowOTP(true)}
+                className="flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+                <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
+                  <MessageCircle size={14} className="text-[#F7931A]"/>
+                </div>
+                <div className="text-left">
+                  <p className="font-extrabold text-sm text-black">OTP Numbers</p>
+                  <p className="text-[10px] text-neutral-400">Virtual SMS · Pay with sats</p>
+                </div>
+              </button>
               <button onClick={() => setShowP2P(true)}
                 className="col-span-2 flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
                 <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
@@ -347,7 +423,7 @@ export default function Chat({
                   <Megaphone size={14} className="text-[#F7931A]"/>
                 </div>
                 <div className="text-left">
-                  <p className="font-extrabold text-sm text-black">VBC Oglasi</p>
+                  <p className="font-extrabold text-sm text-black">VBC Ads</p>
                   <p className="text-[10px] text-neutral-400">Post listings for sats · P2P classifieds</p>
                 </div>
                 <ChevronRight size={14} className="text-neutral-300 ml-auto shrink-0"/>
@@ -573,36 +649,80 @@ export default function Chat({
               </div>
 
               {addingCrypto && (
-                <div className="bg-white rounded-2xl border border-neutral-100 p-4 mb-2 space-y-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-extrabold text-black">Add Address</span>
-                    <button onClick={() => setAddingCrypto(false)}><X size={15} className="text-neutral-400"/></button>
+                <div className="bg-white rounded-2xl border border-neutral-100 p-4 mb-2 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold text-black">Add Crypto Address</span>
+                    <button onClick={() => { setAddingCrypto(false); setNewCrypto({ symbol:"", name:"", address:"" }); setCryptoSearch(""); }}>
+                      <X size={15} className="text-neutral-400"/>
+                    </button>
                   </div>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {CRYPTO_PRESETS.map(p => (
-                      <button key={p.symbol} onClick={() => setNewCrypto({ symbol: p.symbol, name: p.name, address: newCrypto.address })}
-                        className={`py-2 rounded-xl text-[10px] font-bold transition-all ${
-                          newCrypto.symbol === p.symbol ? "bg-black text-white" : "bg-neutral-100 text-neutral-600"
-                        }`}>
-                        {p.symbol === "CUSTOM" ? "+" : p.symbol}
-                      </button>
-                    ))}
-                  </div>
-                  {newCrypto.symbol === "CUSTOM" && (
+
+                  {/* Search / select coin */}
+                  <div className="relative">
                     <input
-                      value={newCrypto.name}
-                      onChange={e => setNewCrypto(n => ({ ...n, name: e.target.value }))}
-                      placeholder="Coin name (e.g. Cardano)"
-                      className="w-full border border-neutral-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-black"
+                      value={cryptoSearch}
+                      onChange={e => { setCryptoSearch(e.target.value); setNewCrypto(n => ({ ...n, symbol: e.target.value.toUpperCase(), name: e.target.value })); }}
+                      placeholder="Search or type any coin (e.g. DOGE, PEPE, custom…)"
+                      className="w-full border border-neutral-200 rounded-xl px-3 py-2.5 text-xs font-bold outline-none focus:border-black"
                     />
+                    {cryptoSearch.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl z-20 max-h-44 overflow-y-auto">
+                        {CRYPTO_LIST.filter(c =>
+                          c.symbol.toLowerCase().includes(cryptoSearch.toLowerCase()) ||
+                          c.name.toLowerCase().includes(cryptoSearch.toLowerCase())
+                        ).slice(0, 12).map((c, i) => (
+                          <button key={i} onClick={() => { setNewCrypto(n => ({ ...n, symbol: c.symbol, name: c.name })); setCryptoSearch(c.name); }}
+                            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 active:bg-neutral-100 text-left">
+                            <span className="w-10 text-[10px] font-extrabold text-neutral-700 bg-neutral-100 rounded-lg py-0.5 text-center shrink-0">
+                              {c.symbol.slice(0,6)}
+                            </span>
+                            <span className="text-xs text-black">{c.name}</span>
+                          </button>
+                        ))}
+                        {/* Custom entry if no match */}
+                        {CRYPTO_LIST.filter(c =>
+                          c.symbol.toLowerCase().includes(cryptoSearch.toLowerCase()) ||
+                          c.name.toLowerCase().includes(cryptoSearch.toLowerCase())
+                        ).length === 0 && (
+                          <button onClick={() => {
+                            const sym = cryptoSearch.toUpperCase().replace(/\s+/g,"");
+                            setNewCrypto(n => ({ ...n, symbol: sym, name: sym }));
+                            setCryptoSearch(sym);
+                          }} className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 text-left">
+                            <span className="w-10 text-[10px] font-extrabold text-[#F7931A] bg-orange-50 rounded-lg py-0.5 text-center shrink-0">NEW</span>
+                            <span className="text-xs text-black">Add "{cryptoSearch}" as custom token</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Selected coin + custom name override */}
+                  {newCrypto.symbol && (
+                    <div className="flex gap-2">
+                      <input
+                        value={newCrypto.symbol}
+                        onChange={e => setNewCrypto(n => ({ ...n, symbol: e.target.value.toUpperCase() }))}
+                        placeholder="SYM"
+                        className="w-20 border border-neutral-200 rounded-xl px-2 py-2 text-xs font-extrabold font-mono outline-none focus:border-black text-center uppercase"
+                        maxLength={12}
+                      />
+                      <input
+                        value={newCrypto.name}
+                        onChange={e => setNewCrypto(n => ({ ...n, name: e.target.value }))}
+                        placeholder="Full name (optional)"
+                        className="flex-1 border border-neutral-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-black"
+                      />
+                    </div>
                   )}
+
                   <input
                     value={newCrypto.address}
                     onChange={e => setNewCrypto(n => ({ ...n, address: e.target.value }))}
-                    placeholder={`${newCrypto.name} address`}
+                    placeholder="Wallet address"
                     className="w-full border border-neutral-200 rounded-xl px-3 py-2 text-xs font-mono outline-none focus:border-black"
                   />
-                  <button onClick={addCryptoAddr} disabled={!newCrypto.address.trim()}
+                  <button onClick={addCryptoAddr} disabled={!newCrypto.address.trim() || !newCrypto.symbol.trim()}
                     className="w-full bg-black text-white font-extrabold py-2.5 rounded-xl text-xs active:scale-[0.98] transition-transform disabled:opacity-40">
                     Save Address
                   </button>
@@ -918,6 +1038,7 @@ export default function Chat({
       {showESIM && <ESIMPanel user={user} onClose={() => setShowESIM(false)}/>}
       {showP2P  && <P2PVouchersPanel user={user} onClose={() => setShowP2P(false)}/>}
       {showAds  && <AdsPanel user={user} onClose={() => setShowAds(false)}/>}
+      {showOTP  && <OTPPanel user={user} onClose={() => setShowOTP(false)} onBalanceChange={() => fetch("/api/wallet/balance", { credentials:"include" }).then(r=>r.json()).then(d => setUser((u:any) => u ? {...u, sats_balance: d.sats_balance} : u)).catch(()=>{})}/>}
 
       {showAI && <AIChat onClose={() => setShowAI(false)}/>}
 
