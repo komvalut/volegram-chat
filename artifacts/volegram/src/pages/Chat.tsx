@@ -15,11 +15,13 @@ import MarketTab     from "../components/MarketTab";
 import QRModal       from "../components/QRModal";
 import SendModal     from "../components/SendModal";
 import ESIMPanel     from "../components/ESIMPanel";
+import HowItWorks    from "../components/HowItWorks";
 import AIChat           from "../components/AIChat";
 import NewChatModal     from "../components/NewChatModal";
 import P2PVouchersPanel from "../components/P2PVouchersPanel";
 import AdsPanel         from "../components/AdsPanel";
 import OTPPanel         from "../components/OTPPanel";
+import CreditsPanel     from "../components/CreditsPanel";
 import DepositModal     from "../components/DepositModal";
 import { requestNotifPermission } from "../lib/ws";
 import { SOUND_OPTIONS, getNotifSound, setNotifSound, previewSound, type SoundKey } from "../lib/sounds";
@@ -134,6 +136,7 @@ export default function Chat({
   const [showAds, setShowAds]           = useState(false);
   const [showOTP, setShowOTP]           = useState(false);
   const [showDeposit, setShowDeposit]   = useState(false);
+  const [showCredits, setShowCredits]   = useState(false);
   const [notifSound, setNotifSoundState] = useState<SoundKey>(getNotifSound);
   const [adminMarketEnabled, setAdminMarketEnabled] = useState(true);
   const [userShowMarket, setUserShowMarket] = useState<boolean>(() =>
@@ -374,60 +377,135 @@ export default function Chat({
               </div>
             </div>
 
-            <div className="px-4 mb-3 grid grid-cols-2 gap-2">
-              <a href="https://t.me/VOLEGRAMBOT" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                     style={{ background: "linear-gradient(135deg,#229ED9 0%,#1A7EB0 100%)" }}>
-                  <Send size={14} className="text-white"/>
+            {/* P2P SERVICES */}
+            <div className="px-4 mb-4">
+              <p className="text-[10px] font-bold vbc-text-dim uppercase tracking-widest mb-2">P2P Services</p>
+
+              {/* MicroSwap — full width hero card */}
+              <button onClick={() => { setTab("market"); }}
+                className="w-full mb-2 rounded-2xl overflow-hidden active:scale-[0.98] transition-transform"
+                style={{ background: "linear-gradient(135deg,#0f0f0f 0%,#1a1a1a 100%)" }}>
+                <div className="p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                       style={{ background: "linear-gradient(135deg,#F7931A,#FF6B00)" }}>
+                    <ArrowLeftRight size={16} className="text-white"/>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <p className="font-extrabold text-white text-sm">P2P MicroSwap</p>
+                      <span className="text-[9px] bg-[#F7931A]/20 text-[#F7931A] px-2 py-0.5 rounded-full font-bold uppercase">Live</span>
+                    </div>
+                    <p className="text-[11px] text-white/50 mt-0.5">BTC · USDT · ETH · any coin — swap P2P</p>
+                  </div>
+                  <ChevronRight size={15} className="text-white/30 shrink-0"/>
                 </div>
-                <div className="text-left">
-                  <p className="font-extrabold text-sm text-black">Telegram Bot</p>
-                  <p className="text-[10px] text-neutral-400">@VOLEGRAMBOT</p>
-                </div>
-              </a>
-              <button onClick={() => setShowESIM(true)}
-                className="flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
-                <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
-                  <Smartphone size={14} className="text-[#F7931A]"/>
-                </div>
-                <div className="text-left">
-                  <p className="font-extrabold text-sm text-black">eSIM Store</p>
-                  <p className="text-[10px] text-neutral-400">Buy with sats</p>
-                </div>
-              </button>
-              <button onClick={() => setShowOTP(true)}
-                className="flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
-                <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
-                  <MessageCircle size={14} className="text-[#F7931A]"/>
-                </div>
-                <div className="text-left">
-                  <p className="font-extrabold text-sm text-black">OTP Numbers</p>
-                  <p className="text-[10px] text-neutral-400">Virtual SMS · Pay with sats</p>
+                <div className="border-t border-white/5 px-4 py-2 text-[10px] text-white/30 text-left">
+                  Agree on price in chat · settle via Lightning · no exchange account needed
                 </div>
               </button>
-              <button onClick={() => setShowP2P(true)}
-                className="col-span-2 flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
-                <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
-                  <ShoppingBag size={14} className="text-[#F7931A]"/>
+
+              {/* Credits — full width */}
+              <button onClick={() => setShowCredits(true)}
+                className="w-full mb-2 rounded-2xl overflow-hidden active:scale-[0.98] transition-transform bg-white border border-neutral-100">
+                <div className="p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center shrink-0">
+                    <span className="text-[#F7931A] font-extrabold text-base">₿</span>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <p className="font-extrabold text-black text-sm">P2P Credits</p>
+                      <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">Earn interest</span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 mt-0.5">Lend sats · borrow sats · earn % in BTC</p>
+                  </div>
+                  <ChevronRight size={15} className="text-neutral-300 shrink-0"/>
                 </div>
-                <div className="text-left">
-                  <p className="font-extrabold text-sm text-black">P2P Voucher Store</p>
-                  <p className="text-[10px] text-neutral-400">X Bon · Mtel TV · Paysafe · Steam · PSN · Xbox</p>
+                <div className="border-t border-neutral-50 px-4 py-2 text-[10px] text-neutral-400 text-left">
+                  No banks · no KYC · all settled in ⚡ sats · you set the interest rate
                 </div>
-                <ChevronRight size={14} className="text-neutral-300 ml-auto shrink-0"/>
               </button>
-              <button onClick={() => setShowAds(true)}
-                className="col-span-2 flex items-center gap-3 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
-                <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
-                  <Megaphone size={14} className="text-[#F7931A]"/>
+
+              {/* 2-col grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => setShowOTP(true)}
+                  className="flex items-center gap-2.5 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+                  <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
+                    <MessageCircle size={13} className="text-[#F7931A]"/>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-extrabold text-xs text-black">P2P OTP Code</p>
+                    <p className="text-[10px] text-neutral-400">Virtual number · SMS</p>
+                  </div>
+                </button>
+                <button onClick={() => setShowESIM(true)}
+                  className="flex items-center gap-2.5 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+                  <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
+                    <Smartphone size={13} className="text-[#F7931A]"/>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-extrabold text-xs text-black">eSIM Store</p>
+                    <p className="text-[10px] text-neutral-400">Buy data · sats</p>
+                  </div>
+                </button>
+                <button onClick={() => setShowP2P(true)}
+                  className="flex items-center gap-2.5 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+                  <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
+                    <ShoppingBag size={13} className="text-[#F7931A]"/>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-extrabold text-xs text-black">Voucher Store</p>
+                    <p className="text-[10px] text-neutral-400">XBon · Steam · PSN</p>
+                  </div>
+                </button>
+                <button onClick={() => setShowAds(true)}
+                  className="flex items-center gap-2.5 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+                  <div className="w-8 h-8 rounded-xl bg-black flex items-center justify-center shrink-0">
+                    <Megaphone size={13} className="text-[#F7931A]"/>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-extrabold text-xs text-black">VBC Ads</p>
+                    <p className="text-[10px] text-neutral-400">P2P classifieds</p>
+                  </div>
+                </button>
+                <a href="https://t.me/VOLEGRAMBOT" target="_blank" rel="noopener noreferrer"
+                  className="col-span-2 flex items-center gap-2.5 bg-white rounded-2xl p-3.5 border border-neutral-100 active:scale-95 transition-transform">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                       style={{ background: "linear-gradient(135deg,#229ED9,#1A7EB0)" }}>
+                    <Send size={13} className="text-white"/>
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="font-extrabold text-xs text-black">Telegram Bot</p>
+                    <p className="text-[10px] text-neutral-400">@VOLEGRAMBOT · Support & alerts</p>
+                  </div>
+                  <ChevronRight size={14} className="text-neutral-200 shrink-0"/>
+                </a>
+              </div>
+            </div>
+
+            {/* BALKAN DEPOSIT INFO */}
+            <div className="px-4 mb-4">
+              <button onClick={() => setShowDeposit(true)}
+                className="w-full rounded-2xl border-2 border-blue-100 bg-blue-50 p-4 text-left active:scale-[0.98] transition-transform">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-xl">🏦</span>
+                  <div>
+                    <p className="font-extrabold text-blue-900 text-sm">Nema Revolut? Nema problema.</p>
+                    <p className="text-[11px] text-blue-600">Balkans top-up via bank transfer</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="font-extrabold text-sm text-black">VBC Ads</p>
-                  <p className="text-[10px] text-neutral-400">Post listings for sats · P2P classifieds</p>
+                <p className="text-[11px] text-blue-700 leading-relaxed">
+                  Pošalji <strong>EUR/RSD/BAM</strong> na naš bankovni račun → admin ti kredita sats na osnovu BTC kursa.
+                  Bez kripto novčanika, bez Revoluta, bez KYC.
+                </p>
+                <div className="mt-2 flex items-center gap-1 text-[10px] font-extrabold text-blue-800">
+                  <span>Vidi opcije depozita</span>
+                  <ChevronRight size={12}/>
                 </div>
-                <ChevronRight size={14} className="text-neutral-300 ml-auto shrink-0"/>
               </button>
+            </div>
+
+            <div className="px-4 mb-3">
+              <HowItWorks/>
             </div>
 
             <div className="px-4 mb-8">
@@ -1028,6 +1106,7 @@ export default function Chat({
         <DepositModal
           user={user}
           onClose={() => setShowDeposit(false)}
+          onGoToMarket={() => { setShowDeposit(false); setTab("market"); }}
           onSuccess={(newBal) => {
             setShowDeposit(false);
             setUser((u: any) => u ? { ...u, sats_balance: newBal } : u);
@@ -1039,6 +1118,13 @@ export default function Chat({
       {showP2P  && <P2PVouchersPanel user={user} onClose={() => setShowP2P(false)}/>}
       {showAds  && <AdsPanel user={user} onClose={() => setShowAds(false)}/>}
       {showOTP  && <OTPPanel user={user} onClose={() => setShowOTP(false)} onBalanceChange={() => fetch("/api/wallet/balance", { credentials:"include" }).then(r=>r.json()).then(d => setUser((u:any) => u ? {...u, sats_balance: d.sats_balance} : u)).catch(()=>{})}/>}
+      {showCredits && (
+        <CreditsPanel
+          user={user}
+          onClose={() => setShowCredits(false)}
+          onBalanceChange={() => fetch("/api/wallet/balance", { credentials:"include" }).then(r=>r.json()).then(d => setUser((u:any) => u ? {...u, sats_balance: d.sats_balance} : u)).catch(()=>{})}
+        />
+      )}
 
       {showAI && <AIChat onClose={() => setShowAI(false)}/>}
 
