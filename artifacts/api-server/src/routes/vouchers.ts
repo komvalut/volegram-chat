@@ -1,6 +1,20 @@
 import { Router } from "express";
 import { db } from "../db/index.js";
 import { sql } from "drizzle-orm";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
+const __dirname2 = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.join(__dirname2, "..", "..", "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (_req, file, cb) => cb(null, `vv-proof-${Date.now()}${path.extname(file.originalname)}`),
+});
+const upload = multer({ storage, limits: { fileSize: 8 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -197,6 +211,22 @@ router.delete("/:id", adminGuard, async (req, res) => {
   const id = parseInt(req.params.id);
   await db.execute(sql`UPDATE vbc_vouchers SET status = 'voided' WHERE id = ${id}`);
   res.json({ ok: true });
+});
+
+/* ─────────── User: upload bank-transfer payment proof ─────────── */
+router.post("/:id/proof", auth, upload.single("proof"), async (req: any, res) => {
+  const userId = (req.session as any).userId;
+  const id = parseInt(req.params.id);
+
+  const vRow = (await db.execute(sql`SELECT * FROM vbc_vouchers WHERE id = ${id} LIMIT 1`)).rows[0] as any;
+  if (!vRow) return res.status(404).json({ error: "Voucher not found" });
+  if (vRow.creator_id !== userId) return res.status(403).json({ error: "Not your voucher" });
+  if (vRow.payment_method !== "bank") return res.status(400).json({ error: "Proof only needed for bank transfers" });
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+  const proofUrl = `/uploads/${req.file.filename}`;
+  await db.execute(sql`UPDATE vbc_vouchers SET proof_url = ${proofUrl} WHERE id = ${id}`);
+  res.json({ ok: true, proofUrl });
 });
 
 // Helper fetch rate (BTC -> currency) used in redeem (also exposed via /api/rates)

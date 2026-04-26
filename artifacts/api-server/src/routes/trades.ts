@@ -59,7 +59,12 @@ router.post("/", auth, async (req, res) => {
   // For lightning trades: buyer pays full sats (escrow), seller receives sats - fee
   let invoice: { pr: string; checkoutId: string } | null = null;
   if (type === "lightning") {
-    invoice = await createInvoice(sats, `VBC Escrow: ${assetAmount} ${asset}`);
+    try {
+      invoice = await createInvoice(sats, `VBC Escrow: ${assetAmount} ${asset}`);
+    } catch (e: any) {
+      // SBP_API_KEY not configured — trade created without invoice (fiat-style flow)
+      console.warn("[VBC] Lightning invoice failed (SBP_API_KEY missing?):", e.message);
+    }
   }
 
   const [trade] = await db.insert(vbcTradesTable).values({

@@ -206,6 +206,12 @@ export default function Admin({ user }: { user: any }) {
                   </div>
                   <code className="text-xs font-mono text-neutral-600">{v.code}</code>
                   <p className="text-xs text-neutral-500">@{v.creator_username} → @{v.owner_username} · {new Date(v.created_at).toLocaleDateString()}</p>
+                  {v.proof_url && (
+                    <a href={v.proof_url} target="_blank" rel="noreferrer"
+                       className="text-[10px] text-blue-600 hover:underline font-bold">
+                      📎 View Payment Proof
+                    </a>
+                  )}
                 </div>
                 <div className="flex gap-1 shrink-0">
                   {v.status === "pending" && (

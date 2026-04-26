@@ -17,6 +17,7 @@ import otpRoutes      from "./routes/otp.js";
 import settingsRoutes from "./routes/settings.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app  = express();
@@ -66,6 +67,20 @@ app.use("/api/rates",    ratesRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api",          messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
+
+// ── In production, serve the built Volegram frontend ──
+if (process.env.NODE_ENV === "production") {
+  const frontendDist = path.resolve(__dirname, "..", "..", "..", "artifacts", "volegram", "dist", "public");
+  if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(frontendDist, "index.html"));
+    });
+    console.log("[VBC] Serving frontend from", frontendDist);
+  } else {
+    console.warn("[VBC] Frontend dist not found at", frontendDist, "— run volegram build first");
+  }
+}
 
 async function migrate() {
   await db.execute(sql`
@@ -233,6 +248,8 @@ async function migrate() {
       expires_at  TIMESTAMPTZ NOT NULL,
       created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    ALTER TABLE vbc_vouchers ADD COLUMN IF NOT EXISTS proof_url TEXT;
 
     -- Default commission = 2%
     INSERT INTO vbc_settings (key, value) VALUES ('commission_rate', '0.02')

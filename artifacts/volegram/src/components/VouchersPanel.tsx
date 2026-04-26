@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Gift, Send, Ticket, Copy, Check, Sparkles, Shuffle } from "lucide-react";
+import { X, Gift, Send, Ticket, Copy, Check, Sparkles, Shuffle, Upload } from "lucide-react";
 import { api } from "../lib/api";
 
 type Currency = { code: string; symbol: string; name: string };
@@ -52,6 +52,10 @@ export default function VouchersPanel({
   const [sendModal, setSendModal]         = useState<Voucher | null>(null);
   const [sendTo, setSendTo]               = useState("");
 
+  // Proof upload
+  const [uploadingProof, setUploadingProof] = useState<number | null>(null);
+  const [proofDone, setProofDone]           = useState<Record<number, boolean>>({});
+
   // Redeem
   const [redeemCode, setRedeemCode]       = useState("");
   const [redeemMsg, setRedeemMsg]         = useState<string | null>(null);
@@ -97,6 +101,25 @@ export default function VouchersPanel({
     navigator.clipboard.writeText(txt);
     setCopiedCode(txt);
     setTimeout(() => setCopiedCode(null), 1500);
+  };
+
+  const handleProofUpload = async (voucherId: number, file: File) => {
+    setUploadingProof(voucherId);
+    try {
+      const formData = new FormData();
+      formData.append("proof", file);
+      const r = await fetch(`/api/vouchers/${voucherId}/proof`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      if (!r.ok) throw new Error(await r.text());
+      setProofDone(prev => ({ ...prev, [voucherId]: true }));
+    } catch (e: any) {
+      alert(e.message || "Upload failed");
+    } finally {
+      setUploadingProof(null);
+    }
   };
 
   const handleSend = async () => {
@@ -333,6 +356,20 @@ export default function VouchersPanel({
                         <button onClick={() => { setSendModal(v); setSendTo(""); }} className="p-2 rounded-lg bg-black text-white hover:bg-neutral-800" title="Send as gift">
                           <Send size={14}/>
                         </button>
+                      )}
+                      {v.status === "pending" && v.payment_method === "bank" && v.creator_username === user.username && (
+                        proofDone[v.id] ? (
+                          <span className="px-2 py-1 text-[10px] bg-green-100 text-green-800 rounded-lg font-bold flex items-center gap-1">
+                            <Check size={10}/> Sent
+                          </span>
+                        ) : (
+                          <label className={`p-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 cursor-pointer flex items-center gap-1 text-[10px] font-bold ${uploadingProof === v.id ? "opacity-60" : ""}`} title="Upload payment proof">
+                            {uploadingProof === v.id ? "…" : <><Upload size={12}/> Proof</>}
+                            <input type="file" accept="image/*,application/pdf" className="hidden"
+                              onChange={e => { const f = e.target.files?.[0]; if (f) handleProofUpload(v.id, f); }}
+                            />
+                          </label>
+                        )
                       )}
                     </div>
                   </div>

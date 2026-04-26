@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: volegram-api
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: >
+      npm install -g pnpm &&
+      pnpm install --frozen-lockfile &&
+      PORT=21394 BASE_PATH=/ pnpm --filter @workspace/volegram run build
+    startCommand: pnpm --filter @workspace/api-server run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SBP_API_KEY
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
