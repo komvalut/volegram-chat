@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles, KeyRound } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles, KeyRound, Phone, ChevronDown, Search } from "lucide-react";
 import { api, uploadFile } from "../lib/api";
 import HowItWorks from "../components/HowItWorks";
+import { COUNTRIES_SORTED, type Country } from "../lib/countries";
 
 type Step = "address" | "profile";
 type Mode = "lightning" | "otp";
+type OtpSubMode = "identifier" | "phone";
 
 export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
   const [step, setStep]       = useState<Step>("address");
@@ -21,21 +23,45 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
   const [loading, setLoading] = useState(false);
 
   // OTP state
+  const [otpSubMode, setOtpSubMode] = useState<OtpSubMode>("identifier");
   const [otpId, setOtpId]     = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpDevCode, setOtpDevCode] = useState<string | null>(null);
 
+  // Phone / country picker
+  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES_SORTED[0]);
+  const [phoneNum, setPhoneNum] = useState("");
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setShowCountryPicker(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const filteredCountries = COUNTRIES_SORTED.filter(c =>
+    !countrySearch || c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.dial.includes(countrySearch)
+  );
+
+  const getOtpIdentifier = () =>
+    otpSubMode === "phone" ? `${selectedCountry.dial}${phoneNum.replace(/^0/, "")}` : otpId.trim();
+
   const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otpId.trim()) { setErr("Enter your email, lightning address, or username"); return; }
+    const identifier = getOtpIdentifier();
+    if (!identifier) { setErr("Enter your contact info"); return; }
     setLoading(true); setErr("");
     try {
-      const r = await api.otpRequest(otpId.trim());
+      const r = await api.otpRequest(identifier);
       setOtpSent(true);
       setOtpDevCode(r.devCode ?? null);
     } catch (e: any) {
-      setErr(e.message?.includes("not found") ? "User not found. Sign up via Lightning Address first." : (e.message || "Failed to send code"));
+      setErr(e.message?.includes("not found") ? "Korisnik nije pronađen. Prvo se registruj putem Lightning adrese." : (e.message || "Failed to send code"));
     } finally { setLoading(false); }
   };
 
@@ -44,7 +70,8 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
     if (!otpCode.trim()) { setErr("Enter the 6-digit code"); return; }
     setLoading(true); setErr("");
     try {
-      const r = await api.otpVerify(otpId.trim(), otpCode.trim());
+      const identifier = getOtpIdentifier();
+      const r = await api.otpVerify(identifier, otpCode.trim());
       onLogin(r.user);
     } catch (e: any) {
       setErr(e.message || "Invalid code");
@@ -173,26 +200,106 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
 
               {mode === "otp" && !otpSent && (
                 <form onSubmit={handleRequestOtp} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                      Email · Username · Lightning Address
-                    </label>
-                    <input
-                      value={otpId}
-                      onChange={e => setOtpId(e.target.value)}
-                      placeholder="email@example.com or @username"
-                      className="input-modern text-sm"
-                      autoFocus
-                    />
-                    <p className="text-xs text-[var(--text-dim)] mt-2">
-                      We'll send a 6-digit one-time code to log you in. Existing accounts only.
-                    </p>
+                  {/* Sub-mode toggle: identifier vs phone */}
+                  <div className="flex gap-1 p-1 bg-neutral-50 rounded-lg border border-neutral-100">
+                    <button type="button" onClick={() => { setOtpSubMode("identifier"); setErr(""); }}
+                      className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+                        otpSubMode === "identifier" ? "bg-white shadow-sm text-black" : "text-neutral-400"
+                      }`}>
+                      Email / Korisnik
+                    </button>
+                    <button type="button" onClick={() => { setOtpSubMode("phone"); setErr(""); }}
+                      className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase tracking-wide flex items-center justify-center gap-1 transition-all ${
+                        otpSubMode === "phone" ? "bg-white shadow-sm text-black" : "text-neutral-400"
+                      }`}>
+                      <Phone size={10}/> Telefon
+                    </button>
                   </div>
+
+                  {otpSubMode === "identifier" ? (
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                        Email · Korisničko ime · Lightning adresa
+                      </label>
+                      <input
+                        value={otpId}
+                        onChange={e => setOtpId(e.target.value)}
+                        placeholder="email@example.com or @username"
+                        className="input-modern text-sm"
+                        autoFocus
+                      />
+                      <p className="text-xs text-[var(--text-dim)] mt-2">
+                        Samo za postojeće naloge.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
+                        Broj telefona
+                      </label>
+                      <div className="flex gap-2">
+                        {/* Country picker button */}
+                        <div className="relative" ref={pickerRef}>
+                          <button type="button"
+                            onClick={() => setShowCountryPicker(v => !v)}
+                            className="h-full flex items-center gap-1 px-3 py-2.5 bg-white border border-neutral-200 rounded-xl text-sm font-medium hover:border-neutral-300 transition-colors whitespace-nowrap">
+                            <span>{selectedCountry.flag}</span>
+                            <span className="text-neutral-600 text-xs">{selectedCountry.dial}</span>
+                            <ChevronDown size={12} className="text-neutral-400"/>
+                          </button>
+
+                          {showCountryPicker && (
+                            <div className="absolute left-0 top-full mt-1 z-50 w-64 bg-white border border-neutral-200 rounded-2xl shadow-2xl overflow-hidden">
+                              <div className="p-2 border-b border-neutral-100">
+                                <div className="flex items-center gap-2 bg-neutral-50 rounded-xl px-3 py-2">
+                                  <Search size={13} className="text-neutral-400"/>
+                                  <input autoFocus value={countrySearch} onChange={e => setCountrySearch(e.target.value)}
+                                    placeholder="Pretraži…" className="flex-1 text-xs bg-transparent outline-none"/>
+                                </div>
+                              </div>
+                              <div className="max-h-48 overflow-y-auto">
+                                {filteredCountries.map((c, i) =>
+                                  c.code === "_" ? (
+                                    <div key={i} className="px-3 py-1 text-[9px] text-neutral-300 font-bold uppercase tracking-wider"
+                                         style={{ pointerEvents:"none" }}>─</div>
+                                  ) : (
+                                    <button key={c.code} type="button"
+                                      onClick={() => { setSelectedCountry(c); setShowCountryPicker(false); setCountrySearch(""); }}
+                                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-neutral-50 transition-colors ${
+                                        c.code === selectedCountry.code ? "bg-orange-50" : ""
+                                      }`}>
+                                      <span className="text-base">{c.flag}</span>
+                                      <span className="text-xs text-neutral-700 flex-1 truncate">{c.name}</span>
+                                      <span className="text-[10px] font-mono text-neutral-400">{c.dial}</span>
+                                    </button>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <input
+                          value={phoneNum}
+                          onChange={e => setPhoneNum(e.target.value.replace(/[^\d\s\-]/g, ""))}
+                          placeholder="060 000 0000"
+                          className="input-modern text-sm flex-1 font-mono"
+                          type="tel"
+                          autoFocus
+                        />
+                      </div>
+                      <p className="text-xs text-[var(--text-dim)] mt-2">
+                        Unesi broj koji si registrovao/la na Volegram.
+                      </p>
+                    </div>
+                  )}
 
                   {err && <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">{err}</div>}
 
-                  <button type="submit" disabled={loading || !otpId.trim()} className="btn-accent w-full">
-                    {loading ? "Sending…" : (<><KeyRound size={16}/> Send Code</>)}
+                  <button type="submit"
+                    disabled={loading || (otpSubMode === "identifier" ? !otpId.trim() : !phoneNum.trim())}
+                    className="btn-accent w-full">
+                    {loading ? "Sending…" : (<><KeyRound size={16}/> Pošalji kod</>)}
                   </button>
                 </form>
               )}
@@ -327,6 +434,24 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
             Copy
           </button>
         </div>
+
+        {/* Discreet admin shortcut — bottom of page, invisible to regular users */}
+        {step === "address" && mode === "lightning" && (
+          <div className="mt-8 mb-2 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setMode("lightning");
+                const el = document.querySelector<HTMLInputElement>("input[type=text], input:not([type])");
+                if (el) { el.focus(); el.select(); }
+              }}
+              className="text-[10px] text-neutral-200 hover:text-neutral-400 transition-colors select-none px-4 py-2"
+              title="Admin login"
+            >
+              ·&nbsp;·&nbsp;·
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

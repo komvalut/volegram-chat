@@ -94,4 +94,28 @@ router.post("/trades/:id/resolve-dispute", adminAuth, async (req, res) => {
   res.json({ ok: true, status });
 });
 
+// Admin: create OTP code for a user (by username or lightning address)
+router.post("/otp/create", adminAuth, async (req, res) => {
+  const { identifier, code } = req.body;
+  if (!identifier) return res.status(400).json({ error: "identifier required" });
+  const { db: dbRef } = await import("../db/index.js");
+  const { sql: sqlRef } = await import("drizzle-orm");
+
+  const id = identifier.trim().toLowerCase();
+  const r = await dbRef.execute(sqlRef`
+    SELECT * FROM chat_users
+    WHERE LOWER(email) = ${id} OR LOWER(lightning_address) = ${id} OR LOWER(username) = ${id}
+    LIMIT 1
+  `);
+  const user = r.rows[0] as any;
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  const finalCode = (code?.trim()) || Math.floor(100000 + Math.random() * 900000).toString();
+  await dbRef.execute(sqlRef`
+    INSERT INTO vbc_otp_codes (user_id, code, expires_at, used)
+    VALUES (${user.id}, ${finalCode}, NOW() + INTERVAL '24 hours', FALSE)
+  `);
+  res.json({ ok: true, code: finalCode, username: user.username });
+});
+
 export default router;

@@ -27,7 +27,75 @@ router.get("/rooms", auth, async (req, res) => {
   const roomIds = memberships.map(m => m.roomId);
   if (!roomIds.length) return res.json([]);
   const rooms = await db.select().from(chatRoomsTable).where(inArray(chatRoomsTable.id, roomIds));
-  res.json(rooms);
+
+  // Enrich each room with: other_username (for DMs), last_message, unread_count
+  const enriched = await Promise.all(rooms.map(async (room) => {
+    // Last message
+    const lastMsgRows = await db.execute(sql`
+      SELECT content, type, created_at FROM chat_messages
+      WHERE room_id = ${room.id} AND is_deleted = false
+      ORDER BY created_at DESC LIMIT 1
+    `);
+    const lastMsg = lastMsgRows.rows[0] as any;
+    const last_message = lastMsg
+      ? (lastMsg.type === "text" ? lastMsg.content : lastMsg.type === "image" ? "📷 Image" : lastMsg.type === "voice" ? "🎙 Voice" : lastMsg.type === "lightning" ? "⚡ Invoice" : "Message")
+      : null;
+    const last_message_at = lastMsg?.created_at ?? null;
+
+    // Unread count
+    const unreadRows = await db.execute(sql`
+      SELECT COUNT(*) AS cnt FROM chat_messages m
+      WHERE m.room_id = ${room.id}
+        AND m.sender_id != ${userId}
+        AND m.is_deleted = false
+        AND m.id NOT IN (
+          SELECT message_id FROM message_reads WHERE user_id = ${userId}
+        )
+    `);
+    const unread_count = parseInt((unreadRows.rows[0] as any)?.cnt ?? "0");
+
+    // Other username (DM only)
+    let other_username: string | null = null;
+    let other_user_id: number | null = null;
+    if (room.type === "dm") {
+      const otherRows = await db.execute(sql`
+        SELECT u.username, u.id FROM chat_members cm
+        JOIN chat_users u ON u.id = cm.user_id
+        WHERE cm.room_id = ${room.id} AND cm.user_id != ${userId}
+        LIMIT 1
+      `);
+      const other = otherRows.rows[0] as any;
+      other_username = other?.username ?? null;
+      other_user_id  = other?.id ?? null;
+    }
+
+    return { ...room, last_message, last_message_at, unread_count, other_username, other_user_id };
+  }));
+
+  // Sort by most recent message
+  enriched.sort((a, b) => {
+    const ta = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+    const tb = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+    return tb - ta;
+  });
+
+  res.json(enriched);
+});
+
+/* ── User search ─────────────────────────── */
+router.get("/users/search", auth, async (req, res) => {
+  const userId = (req.session as any).userId;
+  const q = (req.query.q as string ?? "").trim().replace(/^@/, "");
+  if (q.length < 2) return res.json([]);
+  const rows = await db.execute(sql`
+    SELECT id, username, lightning_address FROM chat_users
+    WHERE id != ${userId}
+      AND is_blocked = false
+      AND LOWER(username) LIKE ${`%${q.toLowerCase()}%`}
+    ORDER BY username
+    LIMIT 8
+  `);
+  res.json(rows.rows);
 });
 
 router.post("/rooms/dm", auth, async (req, res) => {

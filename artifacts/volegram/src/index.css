@@ -54,6 +54,44 @@
   --radius-xl: 28px;
 }
 
+/* ── Theme CSS Variables ────────────────── */
+:root {
+  --app-bg:           #f8f8f8;
+  --app-card:         #ffffff;
+  --app-nav:          #ffffff;
+  --app-header:       #ffffff;
+  --app-border:       #f0f0f0;
+  --app-text:         #0a0a0a;
+  --app-text-sub:     #525252;
+  --app-text-dim:     #a3a3a3;
+  --app-accent:       #F7931A;
+  --app-accent-text:  #ffffff;
+  --app-balance-bg:   #000000;
+  --app-balance-text: #ffffff;
+  --app-balance-sub:  rgba(255,255,255,0.35);
+  --app-bubble-me:    #0a0a0a;
+  --app-bubble-me-text: #ffffff;
+  --app-divider:      #f5f5f5;
+  --app-input-bg:     #f8f8f8;
+}
+
+.vbc-bg       { background-color: var(--app-bg)     !important; }
+.vbc-card     { background-color: var(--app-card)   !important; border-color: var(--app-border) !important; }
+.vbc-nav      { background-color: var(--app-nav)    !important; border-color: var(--app-border) !important; }
+.vbc-header   { background-color: var(--app-header) !important; border-color: var(--app-border) !important; }
+.vbc-text     { color: var(--app-text)     !important; }
+.vbc-text-sub { color: var(--app-text-sub) !important; }
+.vbc-text-dim { color: var(--app-text-dim) !important; }
+.vbc-border   { border-color: var(--app-border) !important; }
+.vbc-divider  { background-color: var(--app-divider) !important; }
+.vbc-input    { background-color: var(--app-input-bg) !important; border-color: var(--app-border) !important; color: var(--app-text) !important; }
+.vbc-accent-btn { background-color: var(--app-accent) !important; color: var(--app-accent-text) !important; }
+.vbc-balance-card { background-color: var(--app-balance-bg) !important; }
+.vbc-balance-text { color: var(--app-balance-text) !important; }
+.vbc-balance-sub  { color: var(--app-balance-sub) !important; }
+.vbc-bubble-me { background: var(--app-bubble-me) !important; color: var(--app-bubble-me-text) !important; }
+.vbc-accent-glow { box-shadow: 0 4px 20px color-mix(in srgb, var(--app-accent) 40%, transparent) !important; }
+
 /* ── Base ──────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -376,3 +414,69 @@ input::placeholder, textarea::placeholder {
 }
 
 .text-xxs { font-size: 11px; line-height: 1.4; }
+
+/* ══════════════════════════════════════════
+   DARK MODE
+   ══════════════════════════════════════════ */
+html.dark {
+  --bg:         #0f0f0f;
+  --bg-1:       #161616;
+  --bg-2:       #1a1a1a;
+  --bg-3:       #212121;
+  --surface:    #161616;
+  --surface-2:  #111111;
+  --border:     #2a2a2a;
+  --border-strong: #3a3a3a;
+  --text:       #f0f0f0;
+  --text-muted: #a0a0a0;
+  --text-dim:   #555555;
+  --bubble-them-bg:     #1f1f1f;
+  --bubble-them-border: #2d2d2d;
+  --bubble-them-text:   #f0f0f0;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow:    0 4px 12px rgba(0,0,0,0.6);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.7);
+}
+
+html.dark body,
+html.dark #root { background: #0f0f0f; color: #f0f0f0; }
+
+html.dark .bg-white         { background-color: #1a1a1a !important; }
+html.dark .bg-\[\#f8f8f8\] { background-color: #111111 !important; }
+html.dark .bg-\[\#f5f5f5\] { background-color: #111111 !important; }
+html.dark .bg-neutral-50    { background-color: #1d1d1d !important; }
+html.dark .bg-neutral-100   { background-color: #252525 !important; }
+html.dark .bg-neutral-200   { background-color: #303030 !important; }
+
+html.dark .text-black       { color: #f0f0f0 !important; }
+html.dark .text-neutral-700 { color: #c0c0c0 !important; }
+html.dark .text-neutral-600 { color: #aaaaaa !important; }
+html.dark .text-neutral-500 { color: #888888 !important; }
+html.dark .text-neutral-400 { color: #666666 !important; }
+html.dark .text-neutral-300 { color: #555555 !important; }
+
+html.dark .border-neutral-100 { border-color: #2a2a2a !important; }
+html.dark .border-neutral-200 { border-color: #333333 !important; }
+
+html.dark .divide-neutral-50 > * + * { border-color: #2a2a2a !important; }
+
+html.dark input,
+html.dark textarea {
+  background-color: #1a1a1a !important;
+  color: #f0f0f0 !important;
+  border-color: #333333 !important;
+}
+
+html.dark .hover\:bg-neutral-50:hover  { background-color: #1d1d1d !important; }
+html.dark .hover\:bg-neutral-100:hover { background-color: #252525 !important; }
+html.dark .active\:bg-neutral-50:active { background-color: #1d1d1d !important; }
+html.dark .active\:bg-neutral-100:active { background-color: #252525 !important; }
+
+html.dark ::-webkit-scrollbar-thumb { background: #3a3a3a; }
+
+html.dark .input-modern {
+  background: #1a1a1a !important;
+  color: #f0f0f0 !important;
+  border-color: #333333 !important;
+}
+html.dark .input-modern:focus { background: #111 !important; }

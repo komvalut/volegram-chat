@@ -14,9 +14,9 @@ function adminGuard(req: any, res: any, next: any) {
   isAdmin(id).then(ok => ok ? next() : res.status(403).json({ error: "Admin only" }));
 }
 
-/* PUBLIC: get a few settings clients can see (commission rate, IBAN for bank transfer) */
+/* PUBLIC: get a few settings clients can see (commission rate, IBAN for bank transfer, market toggle) */
 router.get("/public", async (_req, res) => {
-  const r = await db.execute(sql`SELECT key, value FROM vbc_settings WHERE key IN ('commission_rate','bank_iban','bank_holder','bank_name','bank_swift','support_message')`);
+  const r = await db.execute(sql`SELECT key, value FROM vbc_settings WHERE key IN ('commission_rate','bank_iban','bank_holder','bank_name','bank_swift','support_message','market_enabled')`);
   const out: Record<string,string> = {};
   for (const row of r.rows as any[]) out[row.key] = row.value;
   res.json({
@@ -28,6 +28,7 @@ router.get("/public", async (_req, res) => {
       swift:  out.bank_swift  ?? "",
     },
     supportMessage: out.support_message ?? "",
+    marketEnabled:  out.market_enabled !== "false",
   });
 });
 

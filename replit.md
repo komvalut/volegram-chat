@@ -9,10 +9,15 @@ A self-contained port of `komvalut/volegram-chat` running on Replit as two artif
   - Auto-runs `CREATE TABLE IF NOT EXISTS` migrations on startup against the Replit Postgres database (`DATABASE_URL`)
   - Sessions via `express-session` (`SESSION_SECRET`)
   - Lightning invoice creation via Speed (SBP) — gracefully no-ops when `SBP_API_KEY` is not set
-  - Routes: `auth`, `auth/otp`, `messages`, `admin`, `profile` (incl. `/api/profile/admin`), `swap`, `trades`,
-    `vouchers` (Volegram Vouchers VV), `rates` (live BTC/fiat from CoinGecko + blockchain.info fallback),
-    `settings` (admin commission rate, IBAN, user mgmt)
-  - Tables added for VV: `vbc_vouchers`, `vbc_voucher_transfers`, `vbc_settings`, `vbc_otp_codes`
+  - Routes: `auth`, `auth/otp`, `messages`, `admin`, `profile`, `swap`, `trades`,
+    `vouchers`, `rates`, `settings`, `esim`, `ai` (OpenAI), `wallet`, `p2pvouchers`,
+    `ads` (Paid ads system), `deposit` (Lightning top-up via SBP + webhook),
+    `referral` (admin CRUD unlimited referral codes, user redeem),
+    `otp-mgmt` (admin manage OTP countries/numbers with custom pricing)
+  - Tables: `vbc_vouchers`, `vbc_voucher_transfers`, `vbc_settings`, `vbc_otp_codes`,
+    `esim_listings`, `esim_orders`, `p2p_voucher_listings`, `p2p_voucher_orders`,
+    `vbc_ads`, `vbc_deposits`, `referral_codes`, `referral_uses`, `otp_countries`
+  - P2P default seed: X Bon, Aircash, Paysafe Card, Steam, Google Play, Apple/iTunes, Netflix, Spotify, Amazon
   - Dev script: `tsx watch src/index.ts`
 
 - **`artifacts/volegram`** — React 18 + Vite 5 + Tailwind v4 frontend (root `/`)
@@ -37,6 +42,7 @@ A self-contained port of `komvalut/volegram-chat` running on Replit as two artif
 | `SESSION_SECRET`  | yes      | Used by `express-session`                          |
 | `SBP_API_KEY`     | no       | Speed Lightning. Without it, invoice ops no-op     |
 | `MICROSWAP_API_URL` | no     | Defaults to `https://sonero-p2p.onrender.com`      |
+| `OPENAI_API_KEY`    | no     | AI chat assistant. Returns placeholder when missing |
 
 ## Running locally on Replit
 

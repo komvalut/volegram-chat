@@ -7,7 +7,11 @@ async function req(method: string, path: string, body?: object) {
     headers: body ? { "Content-Type": "application/json" } : {},
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!r.ok) throw new Error(await r.text());
+  if (!r.ok) {
+    let msg = await r.text();
+    try { msg = JSON.parse(msg).error ?? msg; } catch {}
+    throw new Error(msg);
+  }
   return r.json();
 }
 
@@ -66,6 +70,50 @@ export const api = {
     voucherListAll: () => req("GET", "/api/vouchers/admin/all"),
     voucherConfirm: (id: number) => req("POST", `/api/vouchers/${id}/confirm-payment`),
     voucherVoid:    (id: number) => req("DELETE", `/api/vouchers/${id}`),
+    esimList:       () => req("GET", "/api/esim/admin/all"),
+    esimOrders:     () => req("GET", "/api/esim/admin/orders"),
+    esimCreate:     (d: any) => req("POST", "/api/esim/admin/create", d),
+    esimUpdate:     (id: number, d: any) => req("PUT", `/api/esim/admin/${id}`, d),
+    esimDelete:     (id: number) => req("DELETE", `/api/esim/admin/${id}`),
+    esimOrderStatus:(id: number, status: string) => req("PUT", `/api/esim/admin/order/${id}/status`, { status }),
+  },
+
+  esim: {
+    list:    () => req("GET", "/api/esim"),
+    buy:     (id: number) => req("POST", `/api/esim/buy/${id}`),
+    orders:  () => req("GET", "/api/esim/orders"),
+  },
+
+  ai: {
+    chat: (messages: { role: string; content: string }[]) => req("POST", "/api/ai/chat", { messages }),
+  },
+
+  ads: {
+    list:      () => req("GET",  "/api/ads"),
+    pricing:   () => req("GET",  "/api/ads/pricing"),
+    create:    (d: any) => req("POST", "/api/ads", d),
+    mine:      () => req("GET",  "/api/ads/mine"),
+    admin: {
+      listAll:   () => req("GET",    "/api/ads/admin/all"),
+      setStatus: (id: number, status: string) => req("PUT", `/api/ads/admin/${id}`, { status }),
+      remove:    (id: number) => req("DELETE", `/api/ads/admin/${id}`),
+      setPrice:  (price_per_day: number) => req("PUT", "/api/ads/admin/settings/price", { price_per_day }),
+    },
+  },
+
+  p2p: {
+    list:      () => req("GET", "/api/p2pvouchers"),
+    buy:       (id: number) => req("POST", `/api/p2pvouchers/buy/${id}`),
+    myOrders:  () => req("GET", "/api/p2pvouchers/orders"),
+
+    admin: {
+      listAll:     () => req("GET",  "/api/p2pvouchers/admin/all"),
+      listOrders:  () => req("GET",  "/api/p2pvouchers/admin/orders"),
+      create:      (d: any) => req("POST",   "/api/p2pvouchers/admin/create", d),
+      update:      (id: number, d: any) => req("PUT", `/api/p2pvouchers/admin/${id}`, d),
+      remove:      (id: number) => req("DELETE", `/api/p2pvouchers/admin/${id}`),
+      deliver:     (orderId: number, code: string) => req("POST", `/api/p2pvouchers/admin/orders/${orderId}/deliver`, { code }),
+    },
   },
 };
 

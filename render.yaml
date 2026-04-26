@@ -1,13 +1,13 @@
 services:
   - type: web
-    name: volegram-api
+    name: volegram-chat
     runtime: node
     region: frankfurt
     plan: free
     buildCommand: >
       npm install -g pnpm &&
-      pnpm install --frozen-lockfile &&
-      PORT=21394 BASE_PATH=/ pnpm --filter @workspace/volegram run build
+      pnpm install &&
+      pnpm --filter @workspace/volegram run build
     startCommand: pnpm --filter @workspace/api-server run start
     healthCheckPath: /health
     envVars:
