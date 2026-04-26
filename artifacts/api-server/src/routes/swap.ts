@@ -15,29 +15,50 @@ function auth(req: any, res: any, next: any) {
   next();
 }
 
+const DEMO_LISTINGS = [
+  { id: 1, title: "Buy BTC via EUR bank transfer", priceSats: 10000, currency: "EUR", amount: 6.65, sellerUsername: "demo_seller_1", type: "buy_crypto" },
+  { id: 2, title: "Sell sats for RSD cash", priceSats: 5000, currency: "RSD", amount: 391, sellerUsername: "demo_seller_2", type: "buy_sats" },
+  { id: 3, title: "Buy sats with USDT", priceSats: 20000, currency: "USD", amount: 15.6, sellerUsername: "demo_seller_3", type: "buy_crypto" },
+];
+
+async function fetchWithTimeout(url: string, ms = 5000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
+    clearTimeout(id);
+    return r;
+  } catch (e) {
+    clearTimeout(id);
+    throw e;
+  }
+}
+
 // Proxy listings from MICROSWAP — no CORS issues for client
 router.get("/listings", async (req, res) => {
   try {
     const qs = new URLSearchParams(req.query as any).toString();
-    const r  = await fetch(`${MICROSWAP_API}/api/listings${qs ? "?" + qs : ""}`,
-      { headers: { "Accept": "application/json" } });
-    if (!r.ok) return res.status(r.status).json({ error: "MICROSWAP unavailable" });
+    const r  = await fetchWithTimeout(`${MICROSWAP_API}/api/listings${qs ? "?" + qs : ""}`);
+    if (!r.ok) return res.json({ listings: DEMO_LISTINGS, demo: true });
     const data = await r.json();
     res.json(data);
   } catch {
-    res.status(502).json({ error: "Cannot reach MICROSWAP" });
+    res.json({ listings: DEMO_LISTINGS, demo: true });
   }
 });
 
 // Proxy single listing
 router.get("/listings/:id", async (req, res) => {
   try {
-    const r = await fetch(`${MICROSWAP_API}/api/listings/${req.params.id}`,
-      { headers: { "Accept": "application/json" } });
-    if (!r.ok) return res.status(r.status).json({ error: "Not found" });
+    const r = await fetchWithTimeout(`${MICROSWAP_API}/api/listings/${req.params.id}`);
+    if (!r.ok) {
+      const demo = DEMO_LISTINGS.find(l => l.id === parseInt(req.params.id));
+      return demo ? res.json(demo) : res.status(404).json({ error: "Not found" });
+    }
     res.json(await r.json());
   } catch {
-    res.status(502).json({ error: "Cannot reach MICROSWAP" });
+    const demo = DEMO_LISTINGS.find(l => l.id === parseInt(req.params.id));
+    return demo ? res.json(demo) : res.status(404).json({ error: "Not found" });
   }
 });
 

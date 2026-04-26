@@ -68,7 +68,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api",          messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 
-// ── In production, serve the built Volegram frontend ──
+// ── In production: serve built frontend; in dev: proxy to Vite ──
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path.resolve(__dirname, "..", "..", "..", "artifacts", "volegram", "dist", "public");
   if (fs.existsSync(frontendDist)) {
@@ -80,6 +80,20 @@ if (process.env.NODE_ENV === "production") {
   } else {
     console.warn("[VBC] Frontend dist not found at", frontendDist, "— run volegram build first");
   }
+} else {
+  // Dev: proxy all non-API requests to the Vite dev server
+  const { createProxyMiddleware } = await import("http-proxy-middleware");
+  const VITE_PORT = process.env.VITE_PORT ?? "21394";
+  const viteProxy = createProxyMiddleware({
+    target: `http://localhost:${VITE_PORT}`,
+    changeOrigin: true,
+    ws: false,
+  });
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/api/") || req.path.startsWith("/uploads/")) return next();
+    return viteProxy(req, res, next);
+  });
+  console.log(`[VBC] Dev mode — proxying frontend to Vite at :${VITE_PORT}`);
 }
 
 async function migrate() {
