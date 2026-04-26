@@ -67,8 +67,7 @@ router.get("/currencies", async (_req, res) => {
     ],
     paymentMethods: [
       { code: "lightning", name: "Lightning / Bitcoin (instant)", instant: true },
-      { code: "bank",      name: "Bank Transfer (IBAN — admin confirms)", instant: false },
-      { code: "card",      name: "Card Payment (coming soon)", instant: false, disabled: true },
+      { code: "bank",      name: "Bank Transfer — IBAN (admin confirms)", instant: false },
     ],
   });
 });
