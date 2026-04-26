@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles, KeyRound, Phone, ChevronDown, Search, Copy } from "lucide-react";
+import { MessageCircle, Zap, Shield, Coins, ArrowRight, Camera, Sparkles, KeyRound, Phone, ChevronDown, Search, Copy, Download, Smartphone, Monitor } from "lucide-react";
 import { api, uploadFile } from "../lib/api";
 import HowItWorks from "../components/HowItWorks";
 import { COUNTRIES_SORTED, type Country } from "../lib/countries";
@@ -10,6 +10,10 @@ type OtpSubMode = "identifier" | "phone";
 
 export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
   const [step, setStep]       = useState<Step>("address");
+  const [pwaPrompt, setPwaPrompt]   = useState<any>(null);
+  const [isIOS, setIsIOS]           = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showIOSHint, setShowIOSHint] = useState(false);
   const [mode, setMode]       = useState<Mode>("lightning");
   const [addr, setAddr]       = useState("");
   const [username, setUname]  = useState("");
@@ -42,6 +46,28 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone) {
+      setIsInstalled(true); return;
+    }
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(ios);
+    if (!ios) {
+      const handler = (e: any) => { e.preventDefault(); setPwaPrompt(e); };
+      window.addEventListener("beforeinstallprompt", handler);
+      return () => window.removeEventListener("beforeinstallprompt", handler);
+    }
+  }, []);
+
+  const handleInstall = async () => {
+    if (isIOS) { setShowIOSHint(h => !h); return; }
+    if (!pwaPrompt) { window.open(window.location.href, "_blank"); return; }
+    pwaPrompt.prompt();
+    const { outcome } = await pwaPrompt.userChoice;
+    if (outcome === "accepted") setIsInstalled(true);
+    setPwaPrompt(null);
+  };
 
   const filteredCountries = COUNTRIES_SORTED.filter(c =>
     !countrySearch || c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.dial.includes(countrySearch)
@@ -429,7 +455,43 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
           </div>
         )}
 
-        <div className="surface-card mt-6 px-4 py-3 flex items-center gap-3">
+        {/* ── Install App block ── */}
+        {!isInstalled && (
+          <div className="mt-5 space-y-2">
+            <div className="surface-card px-4 py-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-2xl bg-black flex items-center justify-center shrink-0">
+                  <Download size={18} className="text-[#F7931A]"/>
+                </div>
+                <div className="flex-1">
+                  <p className="font-extrabold text-[var(--text)] text-sm">Install Volegram</p>
+                  <p className="text-[11px] text-[var(--text-muted)]">Add to home screen — works offline</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleInstall}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-black text-white text-xs font-extrabold uppercase tracking-wide hover:bg-neutral-800 transition-colors">
+                  {isIOS ? <><Smartphone size={13}/> iPhone / iPad</> : <><Monitor size={13}/> Install App</>}
+                </button>
+                <button onClick={() => { navigator.clipboard.writeText(window.location.origin); }}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-neutral-200 text-neutral-600 text-xs font-bold hover:bg-neutral-50 transition-colors">
+                  <Copy size={12}/> Copy link
+                </button>
+              </div>
+              {showIOSHint && (
+                <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 space-y-1">
+                  <p className="font-bold">How to install on iPhone / iPad:</p>
+                  <p>1. Tap the <strong>Share button</strong> (⬆) in Safari</p>
+                  <p>2. Scroll down and tap <strong>Add to Home Screen</strong></p>
+                  <p>3. Tap <strong>Add</strong> — done!</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Invite friends ── */}
+        <div className="surface-card mt-3 px-4 py-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                style={{ background: "var(--accent-dim)" }}>
             <Zap size={18} className="accent" />
