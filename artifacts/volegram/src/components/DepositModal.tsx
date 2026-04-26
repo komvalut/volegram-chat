@@ -52,7 +52,7 @@ export default function DepositModal({ user, onClose, onSuccess }: Props) {
 
   const createInvoice = async () => {
     const sats = parseInt(amountSats.replace(/\D/g, ""));
-    if (!sats || sats < 100) { setErr("Minimum deposit is 100 sats"); return; }
+    if (!sats || sats < 1) { setErr("Enter an amount (minimum 1 sat)"); return; }
     setLoading(true); setErr("");
     try {
       const r = await fetch("/api/deposit/lightning", {
@@ -173,7 +173,7 @@ export default function DepositModal({ user, onClose, onSuccess }: Props) {
                       onKeyDown={e => e.key === "Enter" && createInvoice()}
                       placeholder="10000"
                       type="number"
-                      min="100"
+                      min="1"
                       className="w-full border border-neutral-200 rounded-xl pl-9 pr-4 py-3 text-xl font-extrabold font-mono outline-none focus:border-black"
                       autoFocus
                     />
