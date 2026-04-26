@@ -9,6 +9,11 @@ function auth(req: any, res: any, next: any) {
   next();
 }
 
+async function getCreditsCommission(): Promise<number> {
+  const r = await db.execute(sql`SELECT value FROM vbc_settings WHERE key = 'credits_commission' LIMIT 1`);
+  return parseFloat((r.rows[0] as any)?.value ?? "0.10");
+}
+
 // GET /api/credits — open listings
 router.get("/", auth, async (_req, res) => {
   const r = await db.execute(sql`
@@ -116,11 +121,19 @@ router.post("/:id/repay", auth, async (req, res) => {
   if (!borrower || borrower.sats_balance < total)
     return res.status(400).json({ error: `Need ${total} sats to repay (principal + ${interest} interest).` });
 
+  // Admin takes commission from the interest only
+  const commissionRate = await getCreditsCommission();
+  const adminCut = Math.floor(interest * commissionRate);
+  const lenderReceives = total - adminCut;
+
   await db.execute(sql`UPDATE chat_users SET sats_balance = sats_balance - ${total} WHERE id = ${userId}`);
-  await db.execute(sql`UPDATE chat_users SET sats_balance = sats_balance + ${total} WHERE id = ${credit.user_id}`);
+  await db.execute(sql`UPDATE chat_users SET sats_balance = sats_balance + ${lenderReceives} WHERE id = ${credit.user_id}`);
+  if (adminCut > 0) {
+    await db.execute(sql`UPDATE chat_users SET sats_balance = sats_balance + ${adminCut} WHERE is_admin = true LIMIT 1`);
+  }
   await db.execute(sql`UPDATE p2p_credits SET status = 'repaid', repaid_at = NOW() WHERE id = ${id}`);
 
-  res.json({ ok: true, message: `Repaid ⚡${total} sats (${credit.amount_sats} + ${interest} interest).` });
+  res.json({ ok: true, message: `Repaid ⚡${total} sats. Lender got ⚡${lenderReceives}, platform fee ⚡${adminCut}.` });
 });
 
 // DELETE /api/credits/:id — cancel open listing
