@@ -699,16 +699,16 @@ export default function Admin({ user }: { user: any }) {
           <div className="space-y-4">
             {/* Price setting */}
             <section className="surface-card p-5">
-              <h3 className="font-extrabold text-base mb-1 flex items-center gap-2"><Megaphone size={16}/> Cena oglasa</h3>
-              <p className="text-xs text-neutral-500 mb-3">Sats po danu oglasavanja (podrazumevano 1000)</p>
+              <h3 className="font-extrabold text-base mb-1 flex items-center gap-2"><Megaphone size={16}/> Ad Price</h3>
+              <p className="text-xs text-neutral-500 mb-3">Sats per advertising day (default 1000)</p>
               <div className="flex items-center gap-3">
                 <input type="number" value={adsPriceInput} onChange={e => setAdsPriceInput(e.target.value)}
                   className="input-modern font-mono w-36 text-sm" min="1"/>
-                <span className="text-sm text-neutral-600 font-medium">sats/dan</span>
+                <span className="text-sm text-neutral-600 font-medium">sats/day</span>
                 <button onClick={async () => {
                   await api.ads.admin.setPrice(parseInt(adsPriceInput));
-                  setAdsPriceMsg("✓ Sačuvano"); setTimeout(() => setAdsPriceMsg(""), 2000);
-                }} className="btn-accent py-2 px-4 text-sm">Sačuvaj</button>
+                  setAdsPriceMsg("✓ Saved"); setTimeout(() => setAdsPriceMsg(""), 2000);
+                }} className="btn-accent py-2 px-4 text-sm">Save</button>
                 {adsPriceMsg && <span className="text-green-600 text-sm font-bold">{adsPriceMsg}</span>}
               </div>
             </section>
@@ -716,7 +716,7 @@ export default function Admin({ user }: { user: any }) {
             {/* Ads list */}
             <div className="space-y-2">
               {adsAll.length === 0 ? (
-                <p className="text-sm text-neutral-400 py-8 text-center">Nema oglasa.</p>
+                <p className="text-sm text-neutral-400 py-8 text-center">No ads yet.</p>
               ) : adsAll.map((ad: any) => (
                 <div key={ad.id} className="surface-card p-4 flex gap-4 items-start">
                   {ad.image_url && (
@@ -756,11 +756,11 @@ export default function Admin({ user }: { user: any }) {
                         await api.ads.admin.setStatus(ad.id, "rejected");
                         setAdsAll(a => a.map(x => x.id === ad.id ? { ...x, status: "rejected" } : x));
                       }} className="text-[11px] font-bold px-2 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200">
-                        Odbij
+                        Reject
                       </button>
                     )}
                     <button onClick={async () => {
-                      if (!confirm("Obriši oglas?")) return;
+                      if (!confirm("Delete ad?")) return;
                       await api.ads.admin.remove(ad.id);
                       setAdsAll(a => a.filter(x => x.id !== ad.id));
                     }} className="p-1.5 rounded-lg bg-neutral-100 hover:bg-red-100 text-red-700" title="Delete">
@@ -880,12 +880,12 @@ export default function Admin({ user }: { user: any }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-extrabold text-base text-black">Referral Kodovi</h2>
-                <p className="text-xs text-neutral-500">Neograničen broj kodova · korisnici unesu kod i dobiju bonus sats</p>
+                <h2 className="font-extrabold text-base text-black">Referral Codes</h2>
+                <p className="text-xs text-neutral-500">Unlimited codes · users enter a code and receive bonus sats</p>
               </div>
               <button onClick={() => setRefForm({ code: "", bonus_sats: 1000, max_uses: "", description: "", expires_at: "", active: true })}
                 className="flex items-center gap-1.5 bg-black text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-neutral-800">
-                <Plus size={13}/> Novi kod
+                <Plus size={13}/> New code
               </button>
             </div>
 
@@ -955,15 +955,15 @@ export default function Admin({ user }: { user: any }) {
                     setRefSaving(false);
                   }} className="flex items-center gap-1 text-sm font-bold px-4 py-2 rounded-xl bg-black text-white disabled:opacity-60">
                     {refSaving ? <Loader2 size={13} className="animate-spin"/> : <Check size={13}/>}
-                    {refForm.id ? "Sačuvaj" : "Kreiraj"}
+                    {refForm.id ? "Save" : "Create"}
                   </button>
-                  <button onClick={() => setRefForm(null)} className="text-sm px-4 py-2 rounded-xl bg-neutral-100 text-neutral-700 font-bold">Otkaži</button>
+                  <button onClick={() => setRefForm(null)} className="text-sm px-4 py-2 rounded-xl bg-neutral-100 text-neutral-700 font-bold">Cancel</button>
                 </div>
               </div>
             )}
 
             {refCodes.length === 0 && !refForm && (
-              <div className="text-center py-8 text-neutral-400 text-sm">Nema referral kodova. Kreirajte prvi.</div>
+              <div className="text-center py-8 text-neutral-400 text-sm">No referral codes yet. Create the first one.</div>
             )}
             {refCodes.map(rc => (
               <div key={rc.id} className="surface-card p-4">
@@ -991,7 +991,7 @@ export default function Admin({ user }: { user: any }) {
                       <Edit2 size={13} className="text-neutral-500"/>
                     </button>
                     <button onClick={async () => {
-                      if (!confirm(`Obriši kod "${rc.code}"?`)) return;
+                      if (!confirm(`Delete code "${rc.code}"?`)) return;
                       await fetch(`/api/referral/admin/${rc.id}`, { method: "DELETE", credentials: "include" });
                       setRefCodes(cs => cs.filter(c => c.id !== rc.id));
                     }} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-red-50">
@@ -1009,12 +1009,12 @@ export default function Admin({ user }: { user: any }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-extrabold text-base text-black">OTP Upravljanje</h2>
-                <p className="text-xs text-neutral-500">Neograničen broj zemalja i SMS brojeva s prilagođenim cenama</p>
+                <h2 className="font-extrabold text-base text-black">OTP Management</h2>
+                <p className="text-xs text-neutral-500">Unlimited countries and SMS numbers with custom pricing</p>
               </div>
               <button onClick={() => setOtpCForm({ country_code: "", country_name: "", phone_prefix: "+", price_sats: 0, phone_number: "", notes: "", active: true, sort_order: 0 })}
                 className="flex items-center gap-1.5 bg-black text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-neutral-800">
-                <Plus size={13}/> Dodaj
+                <Plus size={13}/> Add
               </button>
             </div>
 
@@ -1046,7 +1046,7 @@ export default function Admin({ user }: { user: any }) {
                       className="input-modern text-sm w-full"/>
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">SMS broj (opciono)</label>
+                    <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">SMS number (optional)</label>
                     <input value={otpCForm.phone_number} onChange={e => setOtpCForm((f:any)=>({...f,phone_number:e.target.value}))}
                       placeholder="+381601234567" className="input-modern text-sm w-full font-mono"/>
                   </div>
@@ -1083,15 +1083,15 @@ export default function Admin({ user }: { user: any }) {
                     setOtpCSaving(false);
                   }} className="flex items-center gap-1 text-sm font-bold px-4 py-2 rounded-xl bg-black text-white disabled:opacity-60">
                     {otpCSaving ? <Loader2 size={13} className="animate-spin"/> : <Check size={13}/>}
-                    {otpCForm.id ? "Sačuvaj" : "Dodaj"}
+                    {otpCForm.id ? "Save" : "Add"}
                   </button>
-                  <button onClick={() => setOtpCForm(null)} className="text-sm px-4 py-2 rounded-xl bg-neutral-100 text-neutral-700 font-bold">Otkaži</button>
+                  <button onClick={() => setOtpCForm(null)} className="text-sm px-4 py-2 rounded-xl bg-neutral-100 text-neutral-700 font-bold">Cancel</button>
                 </div>
               </div>
             )}
 
             {otpCountries.length === 0 && !otpCForm && (
-              <div className="text-center py-8 text-neutral-400 text-sm">Nema unetih zemalja. Dodajte prvu.</div>
+              <div className="text-center py-8 text-neutral-400 text-sm">No countries added yet. Add the first one.</div>
             )}
             {otpCountries.map(oc => (
               <div key={oc.id} className="surface-card p-4">
@@ -1119,7 +1119,7 @@ export default function Admin({ user }: { user: any }) {
                       <Edit2 size={13} className="text-neutral-500"/>
                     </button>
                     <button onClick={async () => {
-                      if (!confirm(`Obriši "${oc.country_name}"?`)) return;
+                      if (!confirm(`Delete "${oc.country_name}"?`)) return;
                       await fetch(`/api/otp-mgmt/countries/${oc.id}`, { method: "DELETE", credentials: "include" });
                       setOtpCountries(cs => cs.filter(c => c.id !== oc.id));
                     }} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-red-50">
