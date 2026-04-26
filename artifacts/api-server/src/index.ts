@@ -15,6 +15,7 @@ import voucherRoutes  from "./routes/vouchers.js";
 import ratesRoutes    from "./routes/rates.js";
 import otpRoutes      from "./routes/otp.js";
 import settingsRoutes from "./routes/settings.js";
+import marketRoutes   from "./routes/market.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -65,6 +66,7 @@ app.use("/api/trades",   tradeRoutes);
 app.use("/api/vouchers", voucherRoutes);
 app.use("/api/rates",    ratesRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/market",   marketRoutes);
 app.use("/api",          messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 
@@ -187,6 +189,18 @@ async function migrate() {
     ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS trade_type VARCHAR(20) NOT NULL DEFAULT 'lightning';
     ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS fee_sats   INTEGER     NOT NULL DEFAULT 0;
     ALTER TABLE vbc_trades ADD COLUMN IF NOT EXISTS fee_rate   VARCHAR(10) NOT NULL DEFAULT '0.01';
+
+    CREATE TABLE IF NOT EXISTS vbc_listings (
+      id             SERIAL PRIMARY KEY,
+      seller_id      INTEGER      NOT NULL REFERENCES chat_users(id),
+      title          VARCHAR(200) NOT NULL,
+      description    TEXT         NOT NULL DEFAULT '',
+      price_sats     INTEGER      NOT NULL,
+      currency       VARCHAR(10)  NOT NULL DEFAULT 'BTC',
+      payment_method VARCHAR(100) NOT NULL DEFAULT 'Lightning',
+      status         VARCHAR(20)  NOT NULL DEFAULT 'active',
+      created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    );
 
     CREATE TABLE IF NOT EXISTS vbc_splits (
       id                SERIAL PRIMARY KEY,
