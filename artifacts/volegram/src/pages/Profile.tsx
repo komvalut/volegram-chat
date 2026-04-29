@@ -199,13 +199,20 @@ export default function Profile({ currentUser }: { currentUser: any }) {
                 )}
               </div>
 
-              {/* Lightning address */}
-              <button onClick={copyLN}
-                className="mt-2 flex items-center gap-1.5 text-[10px] text-white/50 hover:text-[#F7931A] font-mono transition-colors max-w-full">
-                <Zap size={10} fill="currentColor"/>
-                <span className="truncate">{profile.lightningAddress}</span>
-                {copied ? <Check size={10} className="text-green-400 shrink-0"/> : <Copy size={10} className="shrink-0"/>}
-              </button>
+              {/* Email address */}
+              <div className="mt-2 flex items-center gap-1.5 text-[10px] text-white/50 font-mono max-w-full">
+                <span className="truncate">{profile.email}</span>
+                <button onClick={() => { navigator.clipboard.writeText(profile.email); setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
+                  className="hover:text-[#F7931A] transition-colors">
+                  {copied ? <Check size={10} className="text-green-400 shrink-0"/> : <Copy size={10} className="shrink-0"/>}
+                </button>
+              </div>
+              {profile.lightningAddress && (
+                <div className="mt-1 flex items-center gap-1 text-[10px] text-white/30 font-mono truncate">
+                  <Zap size={9} fill="currentColor"/>
+                  {profile.lightningAddress}
+                </div>
+              )}
             </div>
           </div>
 
@@ -236,25 +243,25 @@ export default function Profile({ currentUser }: { currentUser: any }) {
             </div>
 
             <div>
+              <label className="field-label">Email Address (Login Identity)</label>
+              <input value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value.trim() }))}
+                type="email"
+                className="input-modern text-sm"/>
+            </div>
+
+            <div>
               <label className="field-label">Lightning Address ⚡</label>
               <input value={form.lightningAddress}
                 onChange={e => setForm(f => ({ ...f, lightningAddress: e.target.value.trim() }))}
                 placeholder="you@walletofsatoshi.com"
                 className="input-modern font-mono text-sm"/>
-              <p className="text-[10px] text-neutral-400 mt-1">Changing this will update your login identity</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="field-label">Email <span className="text-neutral-300 font-normal normal-case">(private)</span></label>
-                <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  type="email" placeholder="for OTP login" className="input-modern text-sm"/>
-              </div>
-              <div>
-                <label className="field-label">Phone <span className="text-neutral-300 font-normal normal-case">(private)</span></label>
-                <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  type="tel" placeholder="+381 60 …" className="input-modern text-sm"/>
-              </div>
+            <div>
+              <label className="field-label">Phone <span className="text-neutral-300 font-normal normal-case">(private)</span></label>
+              <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                type="tel" placeholder="+381 60 …" className="input-modern text-sm"/>
             </div>
 
             {saveMsg && (

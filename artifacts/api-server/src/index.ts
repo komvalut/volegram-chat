@@ -95,8 +95,45 @@ app.use("/api/referral",    referralRoutes);
 app.use("/api/otp-mgmt",    otpMgmtRoutes);
 app.use("/api/credits",      creditsRoutes);
 app.use("/api/predictions",  predictionsRoutes);
-app.use("/api",             messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
+app.use("/api",             messageRoutes);
+
+// Swiss Bitcoin Pay Webhook
+app.post("/api/webhook/sbp", async (req, res) => {
+  const { id, status, isPaid } = req.body;
+  console.log(`[SBP Webhook] Received: ${id}, status: ${status}, paid: ${isPaid}`);
+
+  if (isPaid) {
+    const { chatMessagesTable, chatUsersTable, vbcTradesTable, vbcDepositsTable } = await import("./db/schema.js");
+    const { broadcastRoom, notifyUser } = await import("./lib/ws.js");
+
+    // 1. Check chat messages
+    const [msg] = await db.select().from(chatMessagesTable).where(eq(chatMessagesTable.sbpCheckoutId as any, id)).limit(1);
+    if (msg) {
+      await db.update(chatMessagesTable).set({ invoicePaid: true }).where(eq(chatMessagesTable.id, msg.id));
+      broadcastRoom(msg.roomId, { type: "payment_confirmed", messageId: msg.id });
+    }
+
+    // 2. Check trades
+    const [trade] = await db.select().from(vbcTradesTable).where(eq(vbcTradesTable.sbpCheckoutId as any, id)).limit(1);
+    if (trade && trade.status === "pending") {
+      await db.update(vbcTradesTable).set({ status: "funded", updatedAt: new Date() }).where(eq(vbcTradesTable.id, trade.id));
+      const [fullTrade] = await db.select().from(vbcTradesTable).where(eq(vbcTradesTable.id, trade.id)).limit(1);
+      notifyUser(trade.buyerId,  { type: "trade_update", trade: fullTrade });
+      notifyUser(trade.sellerId, { type: "trade_update", trade: fullTrade });
+    }
+
+    // 3. Check deposits (internal balances)
+    const [dep] = await db.select().from(vbcDepositsTable).where(eq(vbcDepositsTable.checkoutId as any, id)).limit(1);
+    if (dep && dep.status === "pending") {
+      await db.update(vbcDepositsTable).set({ status: "completed", completedAt: new Date() }).where(eq(vbcDepositsTable.id, dep.id));
+      await db.execute(sql`UPDATE chat_users SET sats_balance = sats_balance + ${dep.amountSats} WHERE id = ${dep.userId}`);
+      notifyUser(dep.userId, { type: "deposit_confirmed", amount: dep.amountSats });
+    }
+  }
+
+  res.json({ ok: true });
+});
 
 // ── In production: serve built frontend; in dev: proxy to Vite ──
 if (process.env.NODE_ENV === "production") {
@@ -145,12 +182,12 @@ async function migrate() {
 
     CREATE TABLE IF NOT EXISTS chat_users (
       id                SERIAL PRIMARY KEY,
-      lightning_address VARCHAR(200) UNIQUE NOT NULL,
+      email             VARCHAR(200) UNIQUE NOT NULL,
       username          VARCHAR(80)  UNIQUE NOT NULL,
       avatar_seed       VARCHAR(40)  NOT NULL,
+      lightning_address VARCHAR(200),
       avatar_url        TEXT,
       bio               TEXT,
-      email             VARCHAR(200),
       phone             VARCHAR(40),
       sats_balance      INTEGER      NOT NULL DEFAULT 0,
       is_admin          BOOLEAN      NOT NULL DEFAULT FALSE,
@@ -164,6 +201,15 @@ async function migrate() {
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_admin       BOOLEAN      NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_blocked     BOOLEAN      NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS privacy_level  VARCHAR(20)  NOT NULL DEFAULT 'private';
+
+    -- Ensure email is unique and not null if it exists
+    DO $$ BEGIN
+      ALTER TABLE chat_users ADD CONSTRAINT chat_users_email_unique UNIQUE (email);
+    EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL; END $$;
+    DO $$ BEGIN
+      ALTER TABLE chat_users ALTER COLUMN email SET NOT NULL;
+    EXCEPTION WHEN others THEN NULL; END $$;
+    ALTER TABLE chat_users ALTER COLUMN lightning_address DROP NOT NULL;
 
     CREATE TABLE IF NOT EXISTS chat_rooms (
       id         SERIAL PRIMARY KEY,
@@ -183,6 +229,7 @@ async function migrate() {
       type         msg_type   NOT NULL DEFAULT 'text',
       content      TEXT,
       invoice_pr   TEXT,
+      sbp_checkout_id TEXT,
       invoice_paid BOOLEAN    NOT NULL DEFAULT FALSE,
       file_url     TEXT,
       sats         INTEGER,
@@ -190,6 +237,7 @@ async function migrate() {
       expires_at   TIMESTAMPTZ,
       created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS sbp_checkout_id TEXT;
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted  BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS expires_at  TIMESTAMPTZ;
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER;

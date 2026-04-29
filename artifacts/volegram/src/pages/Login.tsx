@@ -106,7 +106,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
 
   const handleAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addr.trim()) { setErr("Enter your Lightning address"); return; }
+    if (!addr.trim() || !addr.includes("@")) { setErr("Enter a valid email address"); return; }
     setLoading(true); setErr("");
     try {
       const { user: u, isNew } = await api.login(addr.trim().toLowerCase());
@@ -116,7 +116,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
       else onLogin(u);
     } catch (err: any) {
       const msg = err.message ?? "";
-      setErr(msg.includes("suspended") ? "Account suspended — contact admin" : "Login failed. Check your Lightning address and try again.");
+      setErr(msg.includes("suspended") ? "Account suspended — contact admin" : "Login failed. Check your email and try again.");
     } finally { setLoading(false); }
   };
 
@@ -183,7 +183,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                   className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
                     mode === "lightning" ? "bg-white shadow-sm text-black" : "text-neutral-500"
                   }`}>
-                  ⚡ Lightning
+                  📧 Email Login
                 </button>
                 <button type="button" onClick={() => { setMode("otp"); setErr(""); }}
                   className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
@@ -197,17 +197,18 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                 <form onSubmit={handleAddress} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                      Your Lightning Address
+                      Your Email Address
                     </label>
                     <input
                       value={addr}
                       onChange={e => setAddr(e.target.value)}
-                      placeholder="you@walletofsatoshi.com"
-                      className="input-modern font-mono text-sm"
+                      placeholder="you@example.com"
+                      className="input-modern text-sm"
+                      type="email"
                       autoFocus
                     />
                     <p className="text-xs text-[var(--text-dim)] mt-2">
-                      Use any Lightning address — no email or phone needed. Account created automatically.
+                      Enter your email to sign in. Account created automatically for new users.
                     </p>
                   </div>
 

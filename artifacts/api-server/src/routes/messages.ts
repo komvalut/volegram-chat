@@ -255,7 +255,7 @@ router.post("/rooms/:roomId/invoice", auth, async (req, res) => {
   const [msg] = await db.insert(chatMessagesTable).values({
     roomId, senderId, type: "lightning",
     content: note ?? `⚡ ${sats} sats`,
-    invoicePr: inv.pr, sats,
+    invoicePr: inv.pr, sbpCheckoutId: inv.checkoutId, sats,
   }).returning();
   const [sender] = await db.select().from(chatUsersTable)
     .where(eq(chatUsersTable.id, senderId)).limit(1);
