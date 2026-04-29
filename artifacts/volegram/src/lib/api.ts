@@ -16,7 +16,7 @@ async function req(method: string, path: string, body?: object) {
 }
 
 export const api = {
-  login:            (email: string) => req("POST", "/api/auth/login", { email }),
+  login:            (identifier: string) => req("POST", "/api/auth/login", { identifier }),
   me:               () => req("GET", "/api/auth/me"),
   logout:           () => req("POST", "/api/auth/logout"),
   deleteAccount:    () => req("DELETE", "/api/auth/account"),

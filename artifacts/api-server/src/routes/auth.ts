@@ -1,23 +1,27 @@
 import { Router } from "express";
 import { db } from "../db/index.js";
 import { chatUsersTable, chatRewardsTable, chatMembersTable, chatMessagesTable } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 
 const router = Router();
 
 router.post("/login", async (req, res) => {
-  const { email } = req.body;
-  if (!email || typeof email !== "string" || !email.includes("@"))
-    return res.status(400).json({ error: "Valid email required" });
+  const { identifier } = req.body;
+  if (!identifier || typeof identifier !== "string" || !identifier.includes("@"))
+    return res.status(400).json({ error: "Valid identifier required" });
 
+  const iden = identifier.trim().toLowerCase();
   let [user] = await db.select().from(chatUsersTable)
-    .where(eq(chatUsersTable.email, email.trim().toLowerCase())).limit(1);
+    .where(or(
+      eq(chatUsersTable.email, iden),
+      eq(chatUsersTable.lightningAddress, iden)
+    )).limit(1);
 
   if (user?.isBlocked) return res.status(403).json({ error: "Account suspended" });
 
   const isNew = !user;
   if (!user) {
-    const rawLocal = email.split("@")[0];
+    const rawLocal = iden.split("@")[0];
     const cleaned  = rawLocal.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 20);
     const base     = cleaned.length >= 2 ? cleaned : "user";
     const suffix   = Math.floor(Math.random() * 9000 + 1000);
@@ -25,7 +29,8 @@ router.post("/login", async (req, res) => {
     const seed     = Math.random().toString(36).slice(2, 10);
 
     [user] = await db.insert(chatUsersTable).values({
-      email: email.trim().toLowerCase(),
+      email: iden,
+      lightningAddress: iden,
       username, avatarSeed: seed, satsBalance: 1000,
     }).returning();
 

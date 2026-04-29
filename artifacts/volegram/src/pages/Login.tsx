@@ -116,7 +116,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
       else onLogin(u);
     } catch (err: any) {
       const msg = err.message ?? "";
-      setErr(msg.includes("suspended") ? "Account suspended — contact admin" : "Login failed. Check your email and try again.");
+      setErr(msg.includes("suspended") ? "Account suspended — contact admin" : "Login failed. Check your address and try again.");
     } finally { setLoading(false); }
   };
 
@@ -183,7 +183,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                   className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
                     mode === "lightning" ? "bg-white shadow-sm text-black" : "text-neutral-500"
                   }`}>
-                  📧 Email Login
+                  📧 Lightning / Email
                 </button>
                 <button type="button" onClick={() => { setMode("otp"); setErr(""); }}
                   className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
@@ -197,7 +197,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                 <form onSubmit={handleAddress} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-                      Your Email Address
+                      Lightning or Email Address
                     </label>
                     <input
                       value={addr}
@@ -208,7 +208,7 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
                       autoFocus
                     />
                     <p className="text-xs text-[var(--text-dim)] mt-2">
-                      Enter your email to sign in. Account created automatically for new users.
+                      Use any Lightning address (e.g. you@walletofsatoshi.com) or Email. Account created automatically.
                     </p>
                   </div>
 

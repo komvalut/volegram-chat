@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
@@ -628,6 +629,33 @@ async function migrate() {
     ALTER TABLE otp_orders ADD COLUMN IF NOT EXISTS service_name VARCHAR(50) DEFAULT 'Any';
     ALTER TABLE otp_orders ADD COLUMN IF NOT EXISTS refunded_at  TIMESTAMPTZ;
     ALTER TABLE otp_orders ADD COLUMN IF NOT EXISTS refund_reason TEXT;
+
+    -- ─────────── P2P Credits & Loans ───────────
+    CREATE TABLE IF NOT EXISTS p2p_credits (
+      id              SERIAL PRIMARY KEY,
+      user_id         INTEGER     NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      borrower_id     INTEGER     REFERENCES chat_users(id) ON DELETE CASCADE,
+      type            VARCHAR(20) NOT NULL, -- 'offer' or 'request'
+      amount_sats     INTEGER     NOT NULL,
+      interest_pct    NUMERIC(5,2) NOT NULL DEFAULT 0,
+      duration_days   INTEGER     NOT NULL DEFAULT 7,
+      description     TEXT,
+      status          VARCHAR(20) NOT NULL DEFAULT 'open',
+      due_at          TIMESTAMPTZ,
+      repaid_at       TIMESTAMPTZ,
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS topup_requests (
+      id            SERIAL PRIMARY KEY,
+      user_id       INTEGER      NOT NULL REFERENCES chat_users(id) ON DELETE CASCADE,
+      amount_fiat   NUMERIC(12,2) NOT NULL,
+      currency      VARCHAR(10)  NOT NULL,
+      note          TEXT,
+      status        VARCHAR(20)  NOT NULL DEFAULT 'pending',
+      amount_sats   INTEGER,
+      processed_at  TIMESTAMPTZ,
+      created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    );
 
     -- ─────────── API Providers (SMSPool, SMSHero, Airalo etc.) ───────────
     CREATE TABLE IF NOT EXISTS vbc_api_providers (
