@@ -18,15 +18,25 @@ export function setupWS(server: Server) {
   wss.on("connection", (ws, req) => {
     const url    = new URL(req.url ?? "/", "http://localhost");
     const userId = parseInt(url.searchParams.get("userId") ?? "0");
-    if (!userId) { ws.close(); return; }
+    console.log(`[WS] New connection, userId: ${userId}, url: ${req.url}`);
+    
+    if (!userId) { 
+      console.log(`[WS] Connection rejected: No userId`);
+      ws.close(); 
+      return; 
+    }
 
     const client: Client = { ws, userId, rooms: new Set() };
     clients.set(userId, client);
 
     ws.on("message", async (raw) => {
+      console.log(`[WS] Message from ${userId}: ${raw.toString()}`);
       try { await handleMessage(client, JSON.parse(raw.toString())); } catch {}
     });
-    ws.on("close", () => clients.delete(userId));
+    ws.on("close", () => {
+      console.log(`[WS] Connection closed for ${userId}`);
+      clients.delete(userId);
+    });
     ws.send(JSON.stringify({ type: "connected", userId }));
   });
 }

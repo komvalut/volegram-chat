@@ -170,19 +170,24 @@ router.post("/rooms/:roomId/read", auth, async (req, res) => {
 
 /* ── Lightning invoice ───────────────────── */
 router.post("/rooms/:roomId/invoice", auth, async (req, res) => {
-  const roomId   = parseInt(req.params.roomId);
-  const senderId = (req.session as any).userId;
-  const { sats, note } = req.body;
-  const inv = await createInvoice(sats, note ?? `VBC payment — ${sats} sats`);
-  const [msg] = await db.insert(chatMessagesTable).values({
-    roomId, senderId, type: "lightning",
-    content: note ?? `⚡ ${sats} sats`,
-    invoicePr: inv.pr, sats,
-  }).returning();
-  const [sender] = await db.select().from(chatUsersTable)
-    .where(eq(chatUsersTable.id, senderId)).limit(1);
-  notifyUser(senderId, { type: "message", message: { ...msg, sender } });
-  res.json({ message: { ...msg, sender }, invoice: inv });
+  try {
+    const roomId   = parseInt(req.params.roomId);
+    const senderId = (req.session as any).userId;
+    const { sats, note } = req.body;
+    const inv = await createInvoice(sats, note ?? `VBC payment — ${sats} sats`);
+    const [msg] = await db.insert(chatMessagesTable).values({
+      roomId, senderId, type: "lightning",
+      content: note ?? `⚡ ${sats} sats`,
+      invoicePr: inv.pr, sbpCheckoutId: inv.checkoutId, sats,
+    }).returning();
+    const [sender] = await db.select().from(chatUsersTable)
+      .where(eq(chatUsersTable.id, senderId)).limit(1);
+    notifyUser(senderId, { type: "message", message: { ...msg, sender } });
+    res.json({ message: { ...msg, sender }, invoice: inv });
+  } catch (err: any) {
+    console.error(`[InvoiceCreate] Error: ${err.message}`);
+    res.status(500).json({ error: "Invoice creation failed" });
+  }
 });
 
 /* ── Upload ──────────────────────────────── */

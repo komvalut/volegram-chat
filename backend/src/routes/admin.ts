@@ -5,13 +5,16 @@ import { eq, desc, sum, count, and } from "drizzle-orm";
 
 const router = Router();
 
-function adminAuth(req: any, res: any, next: any) {
+async function adminAuth(req: any, res: any, next: any) {
   const userId = (req.session as any).userId;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
-  db.select().from(chatUsersTable).where(eq(chatUsersTable.id, userId)).limit(1).then(([u]) => {
+  try {
+    const [u] = await db.select().from(chatUsersTable).where(eq(chatUsersTable.id, userId)).limit(1);
     if (!u?.isAdmin) return res.status(403).json({ error: "Forbidden" });
     next();
-  });
+  } catch {
+    res.status(500).json({ error: "Server error" });
+  }
 }
 
 router.get("/users", adminAuth, async (_req, res) => {
@@ -33,11 +36,11 @@ router.post("/unblock/:userId", adminAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-router.post("/delete-message/:msgId", adminAuth, async (_req, res) => {
+router.post("/delete-message/:msgId", adminAuth, async (req, res) => {
   const { chatMessagesTable } = await import("../db/schema.js");
   await db.update(chatMessagesTable)
     .set({ isDeleted: true })
-    .where(eq(chatMessagesTable.id, parseInt(_req.params.msgId)));
+    .where(eq(chatMessagesTable.id, parseInt(req.params.msgId)));
   res.json({ ok: true });
 });
 

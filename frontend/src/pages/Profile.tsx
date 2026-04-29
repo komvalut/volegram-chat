@@ -92,12 +92,18 @@ export default function Profile({ currentUser }: { currentUser: any }) {
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-black text-white">@{profile.username}</h1>
               <div className="flex items-center gap-2 mt-1">
-                <Zap size={11} className="text-[white]"/>
-                <span className="text-xs text-neutral-500 font-mono truncate">{profile.lightningAddress}</span>
-                <button onClick={copyLN} className="text-neutral-700 hover:text-[white] transition-colors">
+                <span className="text-xs text-neutral-500 font-mono truncate">{profile.email}</span>
+                <button onClick={() => { navigator.clipboard.writeText(profile.email); setCopied(true); setTimeout(() => setCopied(false), 2000); }} 
+                  className="text-neutral-700 hover:text-[white] transition-colors">
                   {copied ? <Check size={11} className="text-green-400"/> : <Copy size={11}/>}
                 </button>
               </div>
+              {profile.lightningAddress && (
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Zap size={11} className="text-yellow-500"/>
+                  <span className="text-[10px] text-neutral-600 font-mono truncate">{profile.lightningAddress}</span>
+                </div>
+              )}
               <p className="text-[10px] text-neutral-700 mt-1">Member since {new Date(profile.createdAt).toLocaleDateString()}</p>
             </div>
 
@@ -124,29 +130,26 @@ export default function Profile({ currentUser }: { currentUser: any }) {
                 className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
             </div>
             <div>
+              <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email Address (Login Identity)</label>
+              <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value.trim() }))} type="email"
+                className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
+            </div>
+            <div>
               <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Lightning Address ⚡</label>
               <input value={form.lightningAddress} onChange={e => setForm(f => ({ ...f, lightningAddress: e.target.value.trim() }))}
                 placeholder="you@walletofsatoshi.com"
                 className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-base px-3 py-2.5 outline-none focus:border-[white] font-mono"/>
-              <p className="text-[11px] text-neutral-700 mt-1">Changing this will be your new login identity</p>
             </div>
             <div>
               <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Bio</label>
               <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} rows={3} maxLength={160}
                 className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-3 py-2.5 outline-none focus:border-[white] font-mono resize-none"/>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Email (private)</label>
-                <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} type="email"
-                  className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
-              </div>
               <div>
                 <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1">Phone (private)</label>
                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} type="tel"
                   className="w-full bg-[#080808] border border-[#1a1a1a] text-white text-sm px-2 py-2 outline-none focus:border-[white] font-mono"/>
               </div>
-            </div>
             <div className="flex gap-2 pt-1">
               <button type="submit" disabled={loading}
                 className="bg-[white] text-black font-black text-xs uppercase tracking-widest px-5 py-2 hover:bg-neutral-200 disabled:opacity-40">

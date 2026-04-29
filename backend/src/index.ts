@@ -1,10 +1,11 @@
+import "dotenv/config";
 import express from "express";
 import session from "express-session";
 import cors from "cors";
 import { createServer } from "http";
 import { setupWS } from "./lib/ws.js";
 import { db } from "./db/index.js";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import authRoutes    from "./routes/auth.js";
 import messageRoutes from "./routes/messages.js";
 import adminRoutes   from "./routes/admin.js";
@@ -59,6 +60,37 @@ app.use("/api/trades",   tradeRoutes);
 app.use("/api",          messageRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true, app: "VBC" }));
 
+// Swiss Bitcoin Pay Webhook
+app.post("/api/webhook/sbp", async (req, res) => {
+  const { id, status, isPaid } = req.body;
+  console.log(`[SBP Webhook] Received: ${id}, status: ${status}, paid: ${isPaid}`);
+
+  if (isPaid) {
+    // 1. Check chat messages
+    const { chatMessagesTable, chatUsersTable, vbcTradesTable } = await import("./db/schema.js");
+    const [msg] = await db.select().from(chatMessagesTable).where(eq(chatMessagesTable.sbpCheckoutId as any, id)).limit(1);
+    
+    if (msg) {
+      await db.update(chatMessagesTable).set({ invoicePaid: true }).where(eq(chatMessagesTable.id, msg.id));
+      const { broadcastRoom } = await import("./lib/ws.js");
+      broadcastRoom(msg.roomId, { type: "payment_confirmed", messageId: msg.id });
+    }
+
+    // 2. Check trades
+    const [trade] = await db.select().from(vbcTradesTable).where(eq(vbcTradesTable.sbpCheckoutId, id)).limit(1);
+    if (trade && trade.status === "pending") {
+      await db.update(vbcTradesTable).set({ status: "funded", updatedAt: new Date() }).where(eq(vbcTradesTable.id, trade.id));
+      const { notifyUser } = await import("./lib/ws.js");
+      const [fullTrade] = await db.select().from(vbcTradesTable).where(eq(vbcTradesTable.id, trade.id)).limit(1);
+      notifyUser(trade.buyerId,  { type: "trade_update", trade: fullTrade });
+      notifyUser(trade.sellerId, { type: "trade_update", trade: fullTrade });
+    }
+  }
+
+  res.json({ ok: true });
+});
+
+
 async function migrate() {
   await db.execute(sql`
     DO $$ BEGIN
@@ -70,16 +102,17 @@ async function migrate() {
 
     CREATE TABLE IF NOT EXISTS chat_users (
       id                SERIAL PRIMARY KEY,
-      lightning_address VARCHAR(200) UNIQUE NOT NULL,
+      email             VARCHAR(200) UNIQUE NOT NULL,
       username          VARCHAR(80)  UNIQUE NOT NULL,
       avatar_seed       VARCHAR(40)  NOT NULL,
+      lightning_address VARCHAR(200) UNIQUE,
       avatar_url        TEXT,
       bio               TEXT,
-      email             VARCHAR(200),
       phone             VARCHAR(40),
       sats_balance      INTEGER      NOT NULL DEFAULT 0,
       is_admin          BOOLEAN      NOT NULL DEFAULT FALSE,
       is_blocked        BOOLEAN      NOT NULL DEFAULT FALSE,
+      privacy_level     VARCHAR(20)  NOT NULL DEFAULT 'private',
       created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     );
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS avatar_url     TEXT;
@@ -89,6 +122,13 @@ async function migrate() {
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_admin       BOOLEAN      NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS is_blocked     BOOLEAN      NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS privacy_level  VARCHAR(20)  NOT NULL DEFAULT 'private';
+    ALTER TABLE chat_users ADD COLUMN IF NOT EXISTS lightning_address VARCHAR(200);
+    
+    -- Ensure email is unique and not null if it exists
+    DO $$ BEGIN
+      ALTER TABLE chat_users ADD CONSTRAINT chat_users_email_unique UNIQUE (email);
+    EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL; END $$;
+
 
     CREATE TABLE IF NOT EXISTS chat_rooms (
       id         SERIAL PRIMARY KEY,
@@ -108,6 +148,7 @@ async function migrate() {
       type         msg_type   NOT NULL DEFAULT 'text',
       content      TEXT,
       invoice_pr   TEXT,
+      sbp_checkout_id TEXT,
       invoice_paid BOOLEAN    NOT NULL DEFAULT FALSE,
       file_url     TEXT,
       sats         INTEGER,
@@ -117,6 +158,7 @@ async function migrate() {
     );
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS is_deleted  BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS expires_at  TIMESTAMPTZ;
+    ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS sbp_checkout_id TEXT;
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER;
     ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS reactions   TEXT NOT NULL DEFAULT '{}';
     ALTER TABLE chat_rooms    ADD COLUMN IF NOT EXISTS is_incognito BOOLEAN NOT NULL DEFAULT FALSE;

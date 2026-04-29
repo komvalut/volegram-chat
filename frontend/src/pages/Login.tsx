@@ -93,10 +93,10 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
 
             <form onSubmit={handleAddress} className="space-y-3">
               <div>
-                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1.5">Lightning Address</label>
+                <label className="block text-xs text-neutral-500 uppercase tracking-widest mb-1.5">Email Address</label>
                 <input
                   value={addr} onChange={e => setAddr(e.target.value)}
-                  placeholder="you@walletofsatoshi.com"
+                  placeholder="you@example.com"
                   className="w-full bg-[#080808] border border-[#2a2a2a] text-white text-base px-3 py-3 outline-none focus:border-white font-mono placeholder:text-neutral-800 transition-colors"
                 />
               </div>
@@ -108,10 +108,10 @@ export default function Login({ onLogin }: { onLogin: (u: any) => void }) {
             </form>
             <div className="mt-5 border border-[#1e1e1e] bg-[#080808] px-4 py-3">
               <p className="text-[11px] text-neutral-500 leading-relaxed">
-                <span style={{ color: "var(--accent)" }}>⚡ Note:</span> A <strong className="text-neutral-300">valid Lightning address</strong> is required for sending sats and Lightning payments to work. We accept any input — if your address doesn't work, that's on you.
+                <span style={{ color: "var(--accent)" }}>⚡ Note:</span> A <strong className="text-neutral-300">valid email address</strong> is required for login. All payment notifications and account updates will be sent to this email.
               </p>
               <p className="text-[10px] text-neutral-700 mt-1.5">
-                Examples: <span className="font-mono">user@walletofsatoshi.com</span> · <span className="font-mono">you@muun.com</span> · <span className="font-mono">satoshi@blink.sv</span>
+                Example: <span className="font-mono">satoshi@vbc.com</span> · <span className="font-mono">hal@finney.org</span>
               </p>
             </div>
           </>

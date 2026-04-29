@@ -12,7 +12,7 @@ async function req(method: string, path: string, body?: object) {
 }
 
 export const api = {
-  login:            (lightningAddress: string) => req("POST", "/api/auth/login", { lightningAddress }),
+  login:            (email: string) => req("POST", "/api/auth/login", { email }),
   me:               () => req("GET", "/api/auth/me"),
   logout:           () => req("POST", "/api/auth/logout"),
   deleteAccount:    () => req("DELETE", "/api/auth/account"),

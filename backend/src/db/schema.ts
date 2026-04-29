@@ -5,12 +5,12 @@ export const roomTypeEnum    = pgEnum("room_type", ["dm", "group"]);
 
 export const chatUsersTable = pgTable("chat_users", {
   id:               serial("id").primaryKey(),
-  lightningAddress: varchar("lightning_address", { length: 200 }).notNull().unique(),
+  email:            varchar("email", { length: 200 }).notNull().unique(),
   username:         varchar("username", { length: 80 }).notNull().unique(),
   avatarSeed:       varchar("avatar_seed", { length: 40 }).notNull(),
+  lightningAddress: varchar("lightning_address", { length: 200 }).unique(),
   avatarUrl:        text("avatar_url"),
   bio:              text("bio"),
-  email:            varchar("email", { length: 200 }),
   phone:            varchar("phone", { length: 40 }),
   satsBalance:      integer("sats_balance").notNull().default(0),
   isAdmin:          boolean("is_admin").notNull().default(false),
@@ -41,6 +41,7 @@ export const chatMessagesTable = pgTable("chat_messages", {
   type:        messageTypeEnum("type").notNull().default("text"),
   content:     text("content"),
   invoicePr:   text("invoice_pr"),
+  sbpCheckoutId: text("sbp_checkout_id"),
   invoicePaid: boolean("invoice_paid").notNull().default(false),
   fileUrl:     text("file_url"),
   sats:        integer("sats"),

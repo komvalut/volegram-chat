@@ -41,44 +41,49 @@ async function broadcast(trade: any) {
 
 // POST /api/trades — create trade
 router.post("/", auth, async (req, res) => {
-  const buyerId = (req.session as any).userId;
-  const { roomId, sellerUsername, sats, asset, assetAmount, tradeType } = req.body;
+  try {
+    const buyerId = (req.session as any).userId;
+    const { roomId, sellerUsername, sats, asset, assetAmount, tradeType } = req.body;
 
-  if (!sats || !asset || !assetAmount || !roomId)
-    return res.status(400).json({ error: "Missing fields" });
+    if (!sats || !asset || !assetAmount || !roomId)
+      return res.status(400).json({ error: "Missing fields" });
 
-  const [seller] = await db.select().from(chatUsersTable)
-    .where(eq(chatUsersTable.username, sellerUsername)).limit(1);
-  if (!seller) return res.status(404).json({ error: "Seller not found" });
-  if (seller.id === buyerId) return res.status(400).json({ error: "Cannot trade with yourself" });
+    const [seller] = await db.select().from(chatUsersTable)
+      .where(eq(chatUsersTable.username, sellerUsername)).limit(1);
+    if (!seller) return res.status(404).json({ error: "Seller not found" });
+    if (seller.id === buyerId) return res.status(400).json({ error: "Cannot trade with yourself" });
 
-  const type    = tradeType === "fiat" ? "fiat" : "lightning";
-  const feeRate = parseFloat(process.env.TRADE_FEE_RATE ?? "0.01");
-  const feeSats = Math.ceil(sats * feeRate);
+    const type    = tradeType === "fiat" ? "fiat" : "lightning";
+    const feeRate = parseFloat(process.env.TRADE_FEE_RATE ?? "0.01");
+    const feeSats = Math.ceil(sats * feeRate);
 
-  // For lightning trades: buyer pays full sats (escrow), seller receives sats - fee
-  let invoice: { pr: string; checkoutId: string } | null = null;
-  if (type === "lightning") {
-    invoice = await createInvoice(sats, `VBC Escrow: ${assetAmount} ${asset}`);
+    // For lightning trades: buyer pays full sats (escrow), seller receives sats - fee
+    let invoice: { pr: string; checkoutId: string } | null = null;
+    if (type === "lightning") {
+      invoice = await createInvoice(sats, `VBC Escrow: ${assetAmount} ${asset}`);
+    }
+
+    const [trade] = await db.insert(vbcTradesTable).values({
+      roomId,
+      buyerId,
+      sellerId:      seller.id,
+      sats,
+      asset:         asset.toUpperCase(),
+      assetAmount,
+      invoicePr:     invoice?.pr,
+      sbpCheckoutId: invoice?.checkoutId,
+      tradeType:     type,
+      feeSats,
+      feeRate:       feeRate.toString(),
+      status:        "pending",
+    }).returning();
+
+    const full = await broadcast(trade);
+    res.json({ trade: full, invoice });
+  } catch (err: any) {
+    console.error(`[TradeCreate] Error: ${err.message}`);
+    res.status(500).json({ error: "Trade creation failed" });
   }
-
-  const [trade] = await db.insert(vbcTradesTable).values({
-    roomId,
-    buyerId,
-    sellerId:      seller.id,
-    sats,
-    asset:         asset.toUpperCase(),
-    assetAmount,
-    invoicePr:     invoice?.pr,
-    sbpCheckoutId: invoice?.checkoutId,
-    tradeType:     type,
-    feeSats,
-    feeRate:       feeRate.toString(),
-    status:        "pending",
-  }).returning();
-
-  const full = await broadcast(trade);
-  res.json({ trade: full, invoice });
 });
 
 // GET /api/trades/:id

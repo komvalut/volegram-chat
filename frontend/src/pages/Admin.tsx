@@ -33,7 +33,8 @@ export default function Admin({ user }: { user: any }) {
 
   const filtered = users.filter(u =>
     u.username.toLowerCase().includes(search.toLowerCase()) ||
-    u.lightningAddress.toLowerCase().includes(search.toLowerCase())
+    u.email.toLowerCase().includes(search.toLowerCase()) ||
+    (u.lightningAddress && u.lightningAddress.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -68,7 +69,7 @@ export default function Admin({ user }: { user: any }) {
         {tab === "users" && (
           <>
             <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search username or Lightning address…"
+              placeholder="Search username, email or Lightning address…"
               className="w-full max-w-md bg-[#0a0a0a] border border-[#1a1a1a] text-white text-xs px-3 py-2 mb-4 outline-none focus:border-white font-mono"/>
             <div className="space-y-1">
               {filtered.map(u => (
